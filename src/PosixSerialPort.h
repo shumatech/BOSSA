@@ -1,22 +1,20 @@
-#ifndef _WINSERIALPORT_H
-#define _WINSERIALPORT_H
+#ifndef _POSIXSERIALPORT_H
+#define _POSIXSERIALPORT_H
 
 #include "SerialPort.h"
 
-#include <memory>
-#include <windows.h>
-
-class WinSerialPort : public SerialPort
+class PosixSerialPort : public SerialPort
 {
 public:
-    WinSerialPort(const std::string& name);
-    virtual ~WinSerialPort();
+    PosixSerialPort(const std::string& name);
+    virtual ~PosixSerialPort();
     
     bool open(int baud = 115200,
               int data = 8,
               SerialPort::Parity parity = SerialPort::ParityNone,
               SerialPort::StopBit stop = SerialPort::StopBitOne);
     void close();
+    void flush();
     bool isUsb() { return _isUsb; };
 
     bool timeout(int millisecs);
@@ -26,8 +24,9 @@ public:
     int put(int c);
 
 private:
-    HANDLE _handle;
+    int _devfd;
     bool _isUsb;
+    int _timeout;
 };
 
-#endif // _WINSERIALPORT_H
+#endif // _POSIXSERIALPORT_H

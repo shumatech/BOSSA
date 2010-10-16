@@ -1,139 +1,134 @@
-#include <dirent.h>
+#include "PosixSerialPort.h"
+
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <termios.h>
+#include <errno.h>
 
 #include <string>
 
-using namespace std;
-
-class LinuxSerialEnum
+PosixSerialPort::PosixSerialPort(const std::string& name) :
+    SerialPort("/dev/" + name), _devfd(-1), _isUsb(false), _timeout(0)
 {
-public:
-    LinuxSerialEnum();
-    virtual ~LinuxSerialEnum();
-
-    string begin();
-    string next();
-    string end();
-
-private:
-    DIR* _dir;
-};
-
-LinuxSerialEnum::LinuxSerialEnum()
-{
-    _dir = opendir("/dev");
+    if (name.find("USB") != std::string::npos)
+        _isUsb = true;
 }
 
-LinuxSerialEnum::~LinuxSerialEnum()
+PosixSerialPort::~PosixSerialPort()
 {
-    if (_dir)
-        closedir(_dir);
+    if (_devfd >= 0)
+        ::close(_devfd);
 }
 
-string
-LinuxSerialEnum::begin()
+bool
+PosixSerialPort::open(int baud,
+                      int data,
+                      SerialPort::Parity parity,
+                      SerialPort::StopBit stop)
 {
-    struct dirent* entry;
-
-    if (!_dir)
-        return end();
-
-    rewinddir(_dir);
-
-    return next();
-}
-
-string
-LinuxSerialEnum::next()
-{
-    struct dirent* entry;
-
-    if (!_dir)
-        return end();
-
-    while ((entry = readdir(_dir)))
-    {
-        if (strncmp("ttyUSB", entry->d_name, sizeof("ttyUSB") - 1) == 0)
-            return string(entry->d_name);
-        else if (strncmp("ttyS", entry->d_name, sizeof("ttyS") - 1) == 0)
-            return string(entry->d_name);
-    }
-
-    return end();
-}
-
-string
-LinuxSerialEnum::end()
-{
-    return string();
-}
-
-class PosixSerialPort
-{
-public:
-    PosixSerialPort(const char* dev, int baud);
-    virtual ~PosixSerialPort();
-
-    int read(void *buffer, int len);
-    int write(const void *buffer, int len);
-
-private:
-    int _devfd;
-    int _timeout;
-};
-
-PosixSerialPort::PosixSerialPort(const char* dev, int baud) : _timeout(0)
-{
-    string devPath("/dev/");
     struct termios options;
     speed_t speed;
 
-    devPath += dev;
-
-    _devfd = open(devPath.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
+    _devfd = ::open(_name.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
     if (_devfd == -1)
-        throw string("open");
+        return false;
    
     if (tcgetattr(_devfd, &options) == -1)
     {
-        close(_devfd);
-        _devfd = -1;
-        throw string("tcgetattr");
+        close();
+        return false;
     }
 
     switch (baud)
     {
+    case 9600:
+        speed = B9600;
+        break;
+    case 19200:
+        speed = B19200;
+        break;
+    case 38400:
+        speed = B38400;
+        break;
+    case 57600:
+        speed = B57600;
+        break;
     case 115200:
         speed = B115200;
+        break;
+    case 230400:
+        speed = B230400;
+        break;
+    case 460800:
+        speed = B460800;
         break;
     case 921600:
         speed = B921600;
         break;
     default:
-        throw string("baud");
+        close();
+        return false;
     }
 
-    cfsetispeed(&options, speed);
-    cfsetospeed(&options, speed);
+    if (cfsetispeed(&options, speed) || cfsetospeed(&options, speed))
+    {
+        close();
+        return false;
+    }
    
     options.c_cflag |= (CLOCAL | CREAD);
 
-    // No parity
-    options.c_cflag &= ~PARENB;
-    //options.c_iflag |= (INPCK | ISTRIP); if parity
+    switch (data)
+    {
+        case 8:
+            options.c_cflag &= ~CSIZE;
+            options.c_cflag |= CS8;
+            break;
+        case 7:
+            options.c_cflag &= ~CSIZE;
+            options.c_cflag |= CS7;
+            break;
+        default:
+            close();
+            return false;
+    }
+        
+    switch (parity)
+    {
+        case SerialPort::ParityNone:
+            options.c_cflag &= ~PARENB;
+            break;
+        case SerialPort::ParityOdd:
+            options.c_cflag |= PARENB;
+            options.c_cflag |= PARODD;
+            options.c_iflag |= (INPCK | ISTRIP);
+            break;
+        case SerialPort::ParityEven:
+            options.c_cflag |= PARENB;
+            options.c_cflag &= ~PARODD;
+            options.c_iflag |= (INPCK | ISTRIP);
+            break;
+        default:
+            close();
+            return false;
+    }
 
-    // Stop bit
-    options.c_cflag &= ~CSTOPB;
-
-    // 8 bits
-    options.c_cflag &= ~CSIZE;
-    options.c_cflag |= CS8;
-   
+    switch (stop)
+    {
+    case StopBitOne:
+        options.c_cflag &= ~CSTOPB;
+        break;
+    case StopBitTwo:
+        options.c_cflag |= CSTOPB;
+        break;
+    default:
+        close();
+        return false;
+    }
+    
     // No hardware flow control
     options.c_cflag &= ~CRTSCTS;
 
@@ -150,25 +145,28 @@ PosixSerialPort::PosixSerialPort(const char* dev, int baud) : _timeout(0)
     options.c_cc[VMIN]  = 0;
     options.c_cc[VTIME] = 0;
 
-    if (tcsetattr(_devfd, TCSANOW, &options) == -1)
+    if (tcsetattr(_devfd, TCSANOW, &options))
     {
-        close(_devfd);
-        _devfd = -1;
-        throw string("tcsetattr");
+        close();
+        return false;
     }
+    
+    return true;
 }
 
-PosixSerialPort::~PosixSerialPort()
+void
+PosixSerialPort::close()
 {
-    if (_devfd != -1)
-        close(_devfd);
+    if (_devfd >= 0)
+        ::close(_devfd);
+    _devfd = -1;
 }
 
 int
-PosixSerialPort::read(void *buffer, int len)
+PosixSerialPort::read(uint8_t* buffer, int len)
 {
     fd_set fds;
-    struct timeval timeout;
+    struct timeval tv;
     int numread = 0;
     int retval;
 
@@ -180,10 +178,10 @@ PosixSerialPort::read(void *buffer, int len)
         FD_ZERO(&fds);
         FD_SET(_devfd, &fds);
        
-        timeout.tv_sec  = 0;
-        timeout.tv_usec = _timeout * 1000;
+        tv.tv_sec  = 0;
+        tv.tv_usec = _timeout * 1000;
        
-        retval = select(_devfd + 1, &fds, NULL, NULL, &timeout);
+        retval = select(_devfd + 1, &fds, NULL, NULL, &tv);
        
         if (retval < 0)
             return -1;
@@ -195,10 +193,12 @@ PosixSerialPort::read(void *buffer, int len)
             return -1;
         numread += retval;
     }
+    
+    return numread;
 }
 
 int
-PosixSerialPort::write(const void *buffer, int len)
+PosixSerialPort::write(const uint8_t* buffer, int len)
 {
     if (_devfd == -1)
         return -1;
@@ -207,33 +207,32 @@ PosixSerialPort::write(const void *buffer, int len)
 }
 
 int
-main(int argc, char* argv[])
+PosixSerialPort::get()
 {
-    LinuxSerialEnum serialEnum;
-    string portIter;
+    uint8_t byte;
+    
+    if (_devfd == -1)
+        return -1;
 
-    for (portIter = serialEnum.begin();
-         portIter != serialEnum.end();
-         portIter = serialEnum.next())
-    {
-        printf("Open %s\n", portIter.c_str());
-        try
-        {
-            PosixSerialPort port(portIter.c_str(), 115200);
-            port.write("ls\n", 3);
-            sleep(1);
-            char buffer[1024];
-            int bytes = port.read(buffer, sizeof(buffer) - 1);
-            printf("read %d bytes\n", bytes);
-            buffer[bytes] = '\0';
-            printf("Buffer:\n%s\n", buffer);
-        }
-        catch (string& s)
-        {
-            printf("Exception: %s\n", s.c_str());
-        }
-    }
+    if (read(&byte, 1) != 1)
+        return -1;
+    
+    return byte;
+}
 
-    return 0;
+int
+PosixSerialPort::put(int c)
+{
+    uint8_t byte;
+    
+    byte = c;
+    return write(&byte, 1);
+}
+
+bool
+PosixSerialPort::timeout(int millisecs)
+{
+    _timeout = millisecs;
+    return true;
 }
 

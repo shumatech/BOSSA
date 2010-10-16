@@ -8,6 +8,8 @@ class BossaBitmaps
 public:
     BossaBitmaps();
     
+    void init();
+    
     const wxBitmap& getBossaLogo() { return _bossaLogo; }
     const wxBitmap& getBossaIcon() { return _bossaIcon; }
     const wxBitmap& getShumaTechLogo() { return _shumaTechLogo; }

@@ -9,16 +9,21 @@ COMMON_SRCS=Samba.cpp Flash.cpp EfcFlash.cpp EefcFlash.cpp FlashFactory.cpp Appl
 APPLET_SRCS=WordCopyArm.asm
 BOSSA_SRCS=BossaForm.cpp BossaWindow.cpp BossaAbout.cpp BossaApp.cpp BossaBitmaps.cpp BossaInfo.cpp BossaThread.cpp BossaProgress.cpp
 BOSSA_PNGS=BossaLogo.png BossaIcon.png ShumaTechLogo.png
-BOSSA_RC=BossaRes.rc
 BOSSAC_SRCS=bossac.cpp CmdOpts.cpp
 
 #
 # Windows sources
 #
-OS:=$(shell uname -o)
-ifeq ($(OS),Msys)
+OS:=$(shell uname -s)
+ifeq ($(OS),MINGW32_NT-6.1)
 EXE=.exe
 COMMON_SRCS+=WinSerialPort.cpp WinPortFactory.cpp
+COMMON_LDFLAGS=-Wl,--enable-auto-import
+COMMON_LIBS=-lsetupapi
+BOSSA_RC=BossaRes.rc
+endif
+ifeq ($(OS),Linux)
+COMMON_SRCS+=PosixSerialPort.cpp LinuxPortFactory.cpp
 endif
 
 #
@@ -33,7 +38,10 @@ RESDIR=res
 #
 COMMON_OBJS=$(foreach src,$(COMMON_SRCS),$(OBJDIR)/$(src:%.cpp=%.o))
 APPLET_OBJS=$(foreach src,$(APPLET_SRCS),$(OBJDIR)/$(src:%.asm=%.o))
-BOSSA_OBJS=$(APPLET_OBJS) $(COMMON_OBJS) $(foreach src,$(BOSSA_SRCS),$(OBJDIR)/$(src:%.cpp=%.o)) $(OBJDIR)/$(BOSSA_RC:%.rc=%.o)
+BOSSA_OBJS=$(APPLET_OBJS) $(COMMON_OBJS) $(foreach src,$(BOSSA_SRCS),$(OBJDIR)/$(src:%.cpp=%.o))
+ifdef BOSSA_RC
+BOSSA_OBJS+=$(OBJDIR)/$(BOSSA_RC:%.rc=%.o)
+endif
 BOSSAC_OBJS=$(APPLET_OBJS) $(COMMON_OBJS) $(foreach src,$(BOSSAC_SRCS),$(OBJDIR)/$(src:%.cpp=%.o))
 
 #
@@ -56,23 +64,22 @@ ARMOBJCOPY=$(ARM)objcopy
 #
 # CXX Flags
 #
-COMMON_CXXFLAGS=-Wall -Werror -MT $@ -MD -MP -MF $(@:%.o=%.d) -O2 -DVERSION=\"$(VERSION)\" -g
-WX_CXXFLAGS:=$(shell wx-config --cxxflags)
+COMMON_CXXFLAGS+=-Wall -Werror -MT $@ -MD -MP -MF $(@:%.o=%.d) -DVERSION=\"$(VERSION)\" -g
+WX_CXXFLAGS:=$(shell wx-config --cxxflags) -DWX_PRECOMP -pthread -Wno-ctor-dtor-privacy -O2 -fno-strict-aliasing
 BOSSA_CXXFLAGS=$(COMMON_CXXFLAGS) $(WX_CXXFLAGS) 
-#-DWX_PRECOMP -mthreads -Wno-ctor-dtor-privacy -fno-strict-aliasing
 BOSSAC_CXXFLAGS=$(COMMON_CXXFLAGS)
 
 #
 # LD Flags
 #
-COMMON_LDFLAGS=-Wl,--enable-auto-import -g -static-libstdc++ -static-libgcc
+COMMON_LDFLAGS+=-g -static-libstdc++ -static-libgcc
 BOSSA_LDFLAGS=$(COMMON_LDFLAGS)
 BOSSAC_LDFLAGS=$(COMMON_LDFLAGS)
 
 #
 # Libs
 #
-COMMON_LIBS=-lsetupapi
+COMMON_LIBS+=
 WX_LIBS:=$(shell wx-config --libs)
 BOSSA_LIBS=$(COMMON_LIBS) $(WX_LIBS)
 BOSSAC_LIBS=$(COMMON_LIBS)

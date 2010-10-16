@@ -29,6 +29,9 @@ WinSerialPort::open(int baud, int data, SerialPort::Parity parity, SerialPort::S
 {
     DCB dcbSerialParams;
     
+    if (_handle == INVALID_HANDLE_VALUE)
+        return false;
+    
     _handle = CreateFile(_name.c_str(),
                          GENERIC_READ | GENERIC_WRITE,
                          0,
@@ -100,13 +103,7 @@ WinSerialPort::close()
 {
     if (_handle != INVALID_HANDLE_VALUE)
         CloseHandle(_handle);
-}
-
-void
-WinSerialPort::flush()
-{
-    if (_handle != INVALID_HANDLE_VALUE)
-        FlushFileBuffers(_handle);
+    _handle = INVALID_HANDLE_VALUE;
 }
 
 bool
@@ -168,7 +165,7 @@ WinSerialPort::write(const uint8_t* data, int size)
 }
 
 int
-WinSerialPort::getc()
+WinSerialPort::get()
 {
     uint8_t val;
     DWORD bytes;
@@ -186,7 +183,7 @@ WinSerialPort::getc()
 }
 
 int
-WinSerialPort::putc(int c)
+WinSerialPort::put(int c)
 {
     uint8_t val = c;
     DWORD bytes;

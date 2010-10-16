@@ -25,6 +25,7 @@ BossaApp::BossaApp() : config("Bossa")
 bool
 BossaApp::OnInit()
 {
+    bitmaps.init();
     _window = new BossaWindow();
     _window->Show(true);
     SetTopWindow(_window);

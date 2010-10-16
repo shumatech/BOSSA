@@ -20,6 +20,7 @@
 #include <exception>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "CmdOpts.h"
 #include "Samba.h"
@@ -433,7 +434,7 @@ infoFlash(Samba& samba, Flash::Ptr& flash)
 
     printf("Device       : %s\n", flash->name().c_str());
     printf("Chip ID      : %08x\n", samba.chipId());
-    printf("Version      : %s", samba.version().c_str());
+    printf("Version      : %s\n", samba.version().c_str());
     printf("Pages        : %d\n", flash->numPages());
     printf("Page Size    : %d bytes\n", flash->pageSize());
     printf("Total Size   : %dKB\n", flash->numPages() * flash->pageSize() / 1024);

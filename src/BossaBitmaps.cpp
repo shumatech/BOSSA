@@ -9,7 +9,11 @@
 BossaBitmaps::BossaBitmaps()
 {
     wxImage::AddHandler(new wxPNGHandler);
+}
 
+void
+BossaBitmaps::init()
+{
     _bossaLogo = GetBitmapFromMemory(BossaLogo_png, sizeof(BossaLogo_png));
     _bossaIcon = GetBitmapFromMemory(BossaIcon_png, sizeof(BossaIcon_png));
     _shumaTechLogo = GetBitmapFromMemory(ShumaTechLogo_png, sizeof(ShumaTechLogo_png));
@@ -21,4 +25,5 @@ BossaBitmaps::GetBitmapFromMemory(const unsigned char *data, int length)
     wxMemoryInputStream is(data, length);
     return wxBitmap(wxImage(is, wxBITMAP_TYPE_ANY, -1), -1);
 }
+
 

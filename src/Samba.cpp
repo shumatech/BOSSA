@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <ctype.h>
 
 using namespace std;
 
@@ -37,11 +38,11 @@ Samba::init()
     if (!_isUsb)
     {
         // RS-232 auto-baud sequence
-        _port->putc(0x80);
-        _port->getc();
-        _port->putc(0x80);
-        _port->getc();
-        _port->putc('#');
+        _port->put(0x80);
+        _port->get();
+        _port->put(0x80);
+        _port->get();
+        _port->put('#');
         _port->read(cmd, 3);
     }
     
@@ -115,7 +116,7 @@ Samba::connect(SerialPort::Ptr port)
     if (_isUsb && _port->open(921600) && init())
         return true;
     _isUsb = false;
-    
+
     // Try the serial port at slower speed
     if (_port->open(115200) && init())
         return true;
@@ -272,7 +273,7 @@ Samba::readXmodem(uint8_t* buffer, int size)
         for (retries = 0; retries < MAX_RETRIES; retries++)
         {
             if (blkNum == 1)
-                _port->putc(START);
+                _port->put(START);
 
             if (_port->read(blk, sizeof(blk)) == sizeof(blk) &&
                 blk[0] == SOH &&
@@ -281,12 +282,12 @@ Samba::readXmodem(uint8_t* buffer, int size)
                 break;
             
             if (blkNum != 1)
-                _port->putc(NAK);
+                _port->put(NAK);
         }
         if (retries == MAX_RETRIES)
             throw SambaError();
             
-        _port->putc(ACK);
+        _port->put(ACK);
         
         memcpy(buffer, &blk[3], min(size, BLK_SIZE));
         buffer += BLK_SIZE;
@@ -296,12 +297,12 @@ Samba::readXmodem(uint8_t* buffer, int size)
     
     for (retries = 0; retries < MAX_RETRIES; retries++)
     {
-        if (_port->getc() == EOT)
+        if (_port->get() == EOT)
         {
-            _port->putc(ACK);
+            _port->put(ACK);
             break;
         }
-        _port->putc(NAK);
+        _port->put(NAK);
     }
     if (retries == MAX_RETRIES)
         throw SambaError();
@@ -316,7 +317,7 @@ Samba::writeXmodem(const uint8_t* buffer, int size)
     
     for (retries = 0; retries < MAX_RETRIES; retries++)
     {
-        if (_port->getc() == START)
+        if (_port->get() == START)
             break;
     }
     if (retries == MAX_RETRIES)
@@ -337,7 +338,7 @@ Samba::writeXmodem(const uint8_t* buffer, int size)
             if (_port->write(blk, sizeof(blk)) != sizeof(blk))
                 throw SambaError();
 
-            if (_port->getc() == ACK)
+            if (_port->get() == ACK)
                 break;
         }
         
@@ -351,8 +352,8 @@ Samba::writeXmodem(const uint8_t* buffer, int size)
     
     for (retries = 0; retries < MAX_RETRIES; retries++)
     {
-        _port->putc(EOT);
-        if (_port->getc() == ACK)
+        _port->put(EOT);
+        if (_port->get() == ACK)
             break;
     }
     if (retries == MAX_RETRIES)
@@ -437,6 +438,7 @@ std::string
 Samba::version()
 {
     uint8_t cmd[32];
+    char* str;
     int size;
     
     cmd[0] = 'V';
@@ -447,7 +449,13 @@ Samba::version()
     if (size <= 0)
         throw SambaError();
     
-    std::string ver((char*) cmd, size);
+    str = (char*) cmd;
+    size = strlen(str);
+    
+    while (size > 0 && isspace(str[size - 1]))
+        str[--size] = '\0';
+    
+    std::string ver(str);
     
     if (_debug)
         printf("%s()=%s\n", __FUNCTION__, ver.c_str());

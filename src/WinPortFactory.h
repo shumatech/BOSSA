@@ -32,7 +32,7 @@ public:
     virtual ~WinPortFactory();
     
     std::string begin();
-    const std::string& end();
+    std::string end();
     std::string next();
     
     SerialPort::Ptr create(const std::string& name);
@@ -44,7 +44,6 @@ private:
     HINSTANCE _cfgMgr;
     CM_Open_DevNode_Key _devNode;
     int _devNum;
-    std::string _empty;
     
     void cleanup();
     std::string error();

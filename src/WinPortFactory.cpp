@@ -95,10 +95,10 @@ WinPortFactory::begin()
     return next();
 }
 
-const std::string&
+std::string
 WinPortFactory::end()
 {
-    return _empty;
+    return std::string();
 }
 
 std::string
@@ -146,6 +146,6 @@ WinPortFactory::next()
         if (strncmp("COM", (char*) devName, 3) == 0)
             break;
     }
-    
+
     return std::string((char*) devName, len);
 }
