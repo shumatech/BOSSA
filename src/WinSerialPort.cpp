@@ -29,7 +29,7 @@ WinSerialPort::open(int baud, int data, SerialPort::Parity parity, SerialPort::S
 {
     DCB dcbSerialParams;
     
-    if (_handle == INVALID_HANDLE_VALUE)
+    if (_handle != INVALID_HANDLE_VALUE)
         return false;
     
     _handle = CreateFile(_name.c_str(),

@@ -296,6 +296,8 @@ BossaWindow::OnAutoScan(wxCommandEvent& event)
     PortFactory& portFactory = wxGetApp().portFactory;
     Samba& samba = wxGetApp().samba;
 
+    RefreshSerial();
+    
     for (port = portFactory.begin();
          port != portFactory.end();
          port = portFactory.next())

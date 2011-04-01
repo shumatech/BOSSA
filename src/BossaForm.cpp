@@ -253,11 +253,11 @@ AboutDialog::AboutDialog( wxWindow* parent, wxWindowID id, const wxString& title
 	_titleStaticText->Wrap( -1 );
 	_topBoxSizer->Add( _titleStaticText, 0, wxALL, 5 );
 	
-	_versionStaticText = new wxStaticText( this, wxID_ANY, wxT("Version"), wxDefaultPosition, wxDefaultSize, 0 );
+	_versionStaticText = new wxStaticText( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
 	_versionStaticText->Wrap( -1 );
 	_topBoxSizer->Add( _versionStaticText, 0, wxALL, 5 );
 	
-	_wxStaticText = new wxStaticText( this, wxID_ANY, wxT("Built with wxWidgets 2.8.11"), wxDefaultPosition, wxDefaultSize, 0 );
+	_wxStaticText = new wxStaticText( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
 	_wxStaticText->Wrap( -1 );
 	_topBoxSizer->Add( _wxStaticText, 0, wxALL, 5 );
 	

@@ -10,7 +10,8 @@ void
 BossaProgress::SetValue(int pos)
 {
     // Work around slow update on Windows 7
-    _statusGauge->SetValue(pos + 1);
+    _statusGauge->SetValue(pos);
+    _statusGauge->SetValue(pos - 1);
     _statusGauge->SetValue(pos);
 }
 

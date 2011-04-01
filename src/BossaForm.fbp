@@ -108,7 +108,7 @@
             <event name="OnSetFocus"></event>
             <event name="OnSize"></event>
             <event name="OnUpdateUI"></event>
-            <object class="wxBoxSizer" expanded="0">
+            <object class="wxBoxSizer" expanded="1">
                 <property name="minimum_size"></property>
                 <property name="name">_topBoxSizer</property>
                 <property name="orient">wxVERTICAL</property>
@@ -2688,7 +2688,7 @@
                         <property name="gripper">0</property>
                         <property name="hidden">0</property>
                         <property name="id">wxID_ANY</property>
-                        <property name="label">Version</property>
+                        <property name="label"></property>
                         <property name="layer"></property>
                         <property name="maximize_button">0</property>
                         <property name="maximum_size"></property>
@@ -2772,7 +2772,7 @@
                         <property name="gripper">0</property>
                         <property name="hidden">0</property>
                         <property name="id">wxID_ANY</property>
-                        <property name="label">Built with wxWidgets 2.8.11</property>
+                        <property name="label"></property>
                         <property name="layer"></property>
                         <property name="maximize_button">0</property>
                         <property name="maximum_size"></property>

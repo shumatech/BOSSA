@@ -17,8 +17,9 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ///////////////////////////////////////////////////////////////////////////////
 #include "BossaAbout.h"
-
 #include "BossaApp.h"
+
+#include "wx/version.h"
 
 BossaAbout::BossaAbout(wxWindow* parent) : AboutDialog(parent)
 {
@@ -27,5 +28,6 @@ BossaAbout::BossaAbout(wxWindow* parent) : AboutDialog(parent)
     _bossaBitmap->SetBitmap(app.bitmaps.getBossaLogo());
     _shumatechBitmap->SetBitmap(app.bitmaps.getShumaTechLogo());
     _versionStaticText->SetLabel(wxString::Format(wxT("Version: %s"), VERSION));
+    _wxStaticText->SetLabel(wxString::Format(wxT("Built with %s"), wxVERSION_STRING));
     GetSizer()->Fit(this);
 }
