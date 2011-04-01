@@ -100,6 +100,8 @@ PosixSerialPort::open(int baud,
     {
         case SerialPort::ParityNone:
             options.c_cflag &= ~PARENB;
+            options.c_cflag &= ~PARODD;
+            options.c_iflag &= ~(INPCK | ISTRIP);
             break;
         case SerialPort::ParityOdd:
             options.c_cflag |= PARENB;
@@ -136,6 +138,7 @@ PosixSerialPort::open(int baud,
     options.c_iflag &= ~(IXON | IXOFF | IXANY);
 
     // Raw input
+    options.c_iflag &= ~(BRKINT | ICRNL);
     options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
 
     // Raw output
@@ -182,16 +185,18 @@ PosixSerialPort::read(uint8_t* buffer, int len)
         tv.tv_usec = _timeout * 1000;
        
         retval = select(_devfd + 1, &fds, NULL, NULL, &tv);
-       
+        
         if (retval < 0)
             return -1;
         else if (retval == 0)
             return numread;
-
-        retval = ::read(_devfd, (uint8_t*) buffer + numread, len - numread);
-        if (retval < 0)
-            return -1;
-        numread += retval;
+        else if (FD_ISSET(_devfd, &fds))
+        {
+            retval = ::read(_devfd, (uint8_t*) buffer + numread, len - numread);
+            if (retval < 0)
+                return -1;
+            numread += retval;
+        }
     }
     
     return numread;
