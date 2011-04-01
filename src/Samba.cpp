@@ -267,6 +267,7 @@ Samba::readXmodem(uint8_t* buffer, int size)
     uint8_t blk[BLK_SIZE + 5];
     uint32_t blkNum = 1;
     int retries;
+    int bytes;
     
     while (size > 0)
     {
@@ -275,7 +276,8 @@ Samba::readXmodem(uint8_t* buffer, int size)
             if (blkNum == 1)
                 _port->put(START);
 
-            if (_port->read(blk, sizeof(blk)) == sizeof(blk) &&
+            bytes = _port->read(blk, sizeof(blk));
+            if (bytes == sizeof(blk) &&
                 blk[0] == SOH &&
                 blk[1] == (blkNum & 0xff) &&
                 crc16Check(blk))
@@ -314,6 +316,7 @@ Samba::writeXmodem(const uint8_t* buffer, int size)
     uint8_t blk[BLK_SIZE + 5];
     uint32_t blkNum = 1;
     int retries;
+    int bytes;
     
     for (retries = 0; retries < MAX_RETRIES; retries++)
     {
@@ -335,7 +338,8 @@ Samba::writeXmodem(const uint8_t* buffer, int size)
         
         for (retries = 0; retries < MAX_RETRIES; retries++)
         {
-            if (_port->write(blk, sizeof(blk)) != sizeof(blk))
+            bytes = _port->write(blk, sizeof(blk));
+            if (bytes != sizeof(blk))
                 throw SambaError();
 
             if (_port->get() == ACK)
