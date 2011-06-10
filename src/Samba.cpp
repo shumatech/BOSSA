@@ -37,6 +37,9 @@ Samba::init()
     
     if (!_isUsb)
     {
+        if (_debug)
+            printf("Send auto-baud\n");
+            
         // RS-232 auto-baud sequence
         _port->put(0x80);
         _port->get();
@@ -47,6 +50,8 @@ Samba::init()
     }
     
     // Set binary mode
+    if (_debug)
+        printf("Set binary mode\n");
     cmd[0] = 'N';
     cmd[1] = '#';
     _port->write(cmd, 2);
@@ -470,13 +475,16 @@ Samba::version()
 uint32_t
 Samba::chipId()
 {
+    uint32_t vector;
     uint32_t cid;
     
-    cid = readWord(0x400e0740);
-    if (cid != 0xffffffff)
-        return cid;
-    
-    cid = readWord(0xfffff240);
+    vector = readWord(0x0);
+    if (vector == 0xea000013)
+        cid = readWord(0xfffff240);
+    else if (vector == 0x20001000)
+        cid = readWord(0x400e0740);
+    else
+        cid = 0;
     
     return cid;
 }

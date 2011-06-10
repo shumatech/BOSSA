@@ -3,6 +3,7 @@
 #include <string.h>
 #include <assert.h>
 #include <limits.h>
+#include <stdio.h>
 
 #define USB_DEVICE_NAME "\\Device\\USB"
 
@@ -24,6 +25,32 @@ WinSerialPort::~WinSerialPort()
     close();
 }
 
+#ifdef DEBUG
+static void
+printLastError()
+{
+    char buffer[100];
+    DWORD dw = GetLastError();
+    
+    if (FormatMessage(
+        FORMAT_MESSAGE_FROM_SYSTEM |
+        FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL,
+        dw,
+        0,
+        buffer,
+        sizeof(buffer),
+        NULL ))
+    {
+        printf("Error (%d): %s", (int) dw, (LPSTR) buffer);
+    }
+    else
+    {
+        printf("Error (%d)\n", (int) dw);
+    }
+}
+#endif
+
 bool
 WinSerialPort::open(int baud, int data, SerialPort::Parity parity, SerialPort::StopBit stop)
 {
@@ -32,7 +59,8 @@ WinSerialPort::open(int baud, int data, SerialPort::Parity parity, SerialPort::S
     if (_handle != INVALID_HANDLE_VALUE)
         return false;
     
-    _handle = CreateFile(_name.c_str(),
+    std::string device = "\\\\.\\" + _name;
+    _handle = CreateFile(device.c_str(),
                          GENERIC_READ | GENERIC_WRITE,
                          0,
                          0,
@@ -42,7 +70,7 @@ WinSerialPort::open(int baud, int data, SerialPort::Parity parity, SerialPort::S
 
     if (_handle == INVALID_HANDLE_VALUE)
         return false;
-
+    
     dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
     
     if (!GetCommState(_handle, &dcbSerialParams))

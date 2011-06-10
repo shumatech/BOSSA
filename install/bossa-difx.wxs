@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:difx='http://schemas.microsoft.com/wix/DifxAppExtension'>
+  
+  <?define Manufacturer="ShumaTech"?>
+  <?define Product="BOSSA"?>
+  <?define Version="1.0"?>
+
+  <Product Id="C5352B58-A1BE-4B09-9CC3-0491608ACAD6"
+           Name="$(var.Product) $(var.Version)"
+           Language="1033"
+           Version="$(var.Version)"
+           Manufacturer="$(var.Manufacturer)"
+           UpgradeCode="E7A78D6F-FA43-43D0-9849-F6904647EE17">
+    
+    <Package Id="*"
+             InstallerVersion="200"
+             Compressed="yes"
+             InstallScope="perMachine" />
+
+    <Media Id="1"
+           Cabinet="bossa.cab"
+           EmbedCab="yes" />
+
+    <Directory Id="TARGETDIR"
+               Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLDIR"
+                   Name="$(var.Product)">
+          <Component Id='Application'
+                     Guid='697831FC-1E64-4AB7-8922-11B18455A780'
+                     Win64='no'>
+            <File Id='bossa.exe'
+                  Name='bossa.exe'
+                  DiskId='1'
+                  Source='bin\bossa.exe' />
+            <File Id='bossac.exe'
+                  Name='bossac.exe'
+                  DiskId='1'
+                  Source='bin\bossac.exe' />
+          </Component>
+          <Component Id='Driver'
+                     Guid='6AF3DCD2-76E2-434B-B341-BC8826F2483E'
+                     Win64='no'>
+            <File Id='bossa.inf'
+                  Name='bossa.inf'
+                  DiskId='1'
+                  Source='install\bossa.inf' />
+            <difx:Driver Legacy='yes'
+                         ForceInstall='yes'
+                         PlugAndPlayPrompt='no'
+                         AddRemovePrograms='no' />
+          </Component>
+        </Directory>
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ProgramsFolder" Name="$(var.Product)"/>
+      </Directory>
+    </Directory>
+
+    <DirectoryRef Id="ProgramsFolder">
+      <Component Id="Shortcut"
+                 Guid="5F1E6D18-D77F-4BF0-9C7E-58B023A31BDC">
+        <Shortcut Id="Uninstall"
+                  Name="Uninstall"
+                  Description="Uninstalls $(var.Product)"
+                  Target="[System64Folder]msiexec.exe"
+                  Arguments="/x [ProductCode]"/>
+        <Shortcut Id="StartMenuShortcut"
+                  Name="BOSSA"
+                  Description="Flash Programmer for Atmel SAM Devices"
+                  Target="[INSTALLDIR]bossa.exe"
+                  WorkingDirectory="INSTALLDIR"/>
+        <RemoveFolder Id="ProgramsFolder"
+                      On="uninstall"/>
+        <RegistryValue Root="HKMU"
+                       Key="Software\$(var.Manufacturer)\$(var.Product)"
+                       Name="installed"
+                       Type="integer"
+                       Value="1"
+                       KeyPath="yes"/>
+      </Component>
+    </DirectoryRef>
+
+    <Feature Id="ProductFeature"
+             Title="$(var.Product)"
+             Level="1">
+      <ComponentRef Id="Application" />
+      <ComponentRef Id="Driver" />
+      <ComponentRef Id="Shortcut" />
+    </Feature>
+    
+    <MajorUpgrade DowngradeErrorMessage="A later version of $(var.Product) is already installed. Setup will now exit."/>
+
+    <Property Id="WIXUI_INSTALLDIR"
+              Value="INSTALLDIR" />
+
+    <WixVariable Id="WixUIBannerBmp"
+                 Value="install\banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp"
+                 Value="install\dialog.bmp" />
+    <WixVariable Id="WixUILicenseRtf"
+                 Value="install\license.rtf" />
+
+    <UIRef Id="WixUI_InstallDir"/>
+    <UIRef Id="WixUI_ErrorProgressText" />
+
+  </Product>
+</Wix>

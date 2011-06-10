@@ -1,7 +1,10 @@
+.DEFAULT_GOAL := all
+
 # 
 # Version
 #
-VERSION=0.1.0b
+VERSION=1.0
+
 #
 # Source files
 #
@@ -12,26 +15,54 @@ BOSSA_PNGS=BossaLogo.png BossaIcon.png ShumaTechLogo.png
 BOSSAC_SRCS=bossac.cpp CmdOpts.cpp
 
 #
-# Windows sources
+# Build directories
+#
+BINDIR=bin
+OBJDIR=obj
+SRCDIR=src
+RESDIR=res
+
+#
+# Determine OS
 #
 OS:=$(shell uname -s)
+
+#
+# Windows rules
+#
 ifeq ($(OS),MINGW32_NT-6.1)
 EXE=.exe
 COMMON_SRCS+=WinSerialPort.cpp WinPortFactory.cpp
 COMMON_LDFLAGS=-Wl,--enable-auto-import
 COMMON_LIBS=-lsetupapi
 BOSSA_RC=BossaRes.rc
-endif
-ifeq ($(OS),Linux)
-COMMON_SRCS+=PosixSerialPort.cpp LinuxPortFactory.cpp
+INSTALLDIR=install
+WIXDIR="C:\Program Files (x86)\Windows Installer XML v3.5\bin"
+
+$(OBJDIR)\\bossa-$(VERSION).wixobj: $(INSTALLDIR)\\bossa.wxs
+	$(WIXDIR)\\candle.exe -arch x86 -out $@ -ext $(WIXDIR)\\WixUIExtension.dll -ext $(WIXDIR)\\WixDifxAppExtension.dll $<
+
+$(OBJDIR)\\bossa64-$(VERSION).wixobj: $(INSTALLDIR)\\bossa.wxs
+	$(WIXDIR)\\candle.exe -arch x64 -out $@ -ext $(WIXDIR)\\WixUIExtension.dll -ext $(WIXDIR)\\WixDifxAppExtension.dll $<
+
+$(BINDIR)\\bossa-$(VERSION).msi: $(OBJDIR)\\bossa-$(VERSION).wixobj $(BINDIR)/bossa$(EXE) $(BINDIR)/bossac$(EXE)
+	$(WIXDIR)\\light.exe -cultures:null -out $@ -pdbout $(OBJDIR)\\bossa.wixpdb -sice:ICE57 -ext $(WIXDIR)\\WixUIExtension.dll -ext $(WIXDIR)\\WixDifxAppExtension.dll $(WIXDIR)\\difxapp_x86.wixlib $<
+
+$(BINDIR)\\bossa64-$(VERSION).msi: $(OBJDIR)\\bossa64-$(VERSION).wixobj $(BINDIR)/bossa$(EXE) $(BINDIR)/bossac$(EXE)
+	$(WIXDIR)\\light.exe -cultures:null -out $@ -pdbout $(OBJDIR)\\bossa64.wixpdb -sice:ICE57 -ext $(WIXDIR)\\WixUIExtension.dll -ext $(WIXDIR)\\WixDifxAppExtension.dll $(WIXDIR)\\difxapp_x64.wixlib $<
+
+install32: $(BINDIR)\\bossa-$(VERSION).msi
+install64: $(BINDIR)\\bossa64-$(VERSION).msi
+install: install32 install64
+
 endif
 
 #
-# Build directories
+# Linux rules
 #
-OBJDIR=obj
-SRCDIR=src
-RESDIR=res
+ifeq ($(OS),Linux)
+COMMON_SRCS+=PosixSerialPort.cpp LinuxPortFactory.cpp
+endif
 
 #
 # Object files
@@ -87,8 +118,7 @@ BOSSAC_LIBS=$(COMMON_LIBS)
 #
 # Main targets
 #
-all: bossa bossac
-release: all bossa-release bossac-release
+all: $(OBJDIR) $(BINDIR) $(BINDIR)/bossa$(EXE) $(BINDIR)/bossac$(EXE)
 
 #
 # Common rules
@@ -162,29 +192,25 @@ $(BINDIR):
 #
 # Target rules
 #
-bossa: $(OBJDIR) $(BINDIR) $(foreach png,$(BOSSA_PNGS),$(SRCDIR)/$(png:%.png=%.cpp)) $(BOSSA_OBJS)
+$(BINDIR)/bossa$(EXE): $(foreach png,$(BOSSA_PNGS),$(SRCDIR)/$(png:%.png=%.cpp)) $(BOSSA_OBJS)
 	@echo LD $@
 	$(Q)$(CXX) $(BOSSA_LDFLAGS) -o $@ $(BOSSA_OBJS) $(BOSSA_LIBS)
+	@echo STRIP $@
+	$(Q)strip $@
+	@echo UPX $@
+	$(Q)upx $@
 
-bossa-release: bossa
-	@echo STRIP $^
-	$(Q)strip $^$(EXE)
-	@echo UPX $^
-	$(Q)upx $^$(EXE)
-
-bossac: $(OBJDIR) $(BINDIR) $(BOSSAC_OBJS) 
+$(BINDIR)/bossac$(EXE): $(BOSSAC_OBJS) 
 	@echo LD $@
 	$(Q)$(CXX) $(BOSSAC_LDFLAGS) -o $@ $(BOSSAC_OBJS) $(BOSSAC_LIBS)
-
-bossac-release: bossac
-	@echo STRIP $^
-	$(Q)strip $^$(EXE)
-	@echo UPX $^
-	$(Q)upx $^$(EXE)
+	@echo STRIP $@
+	$(Q)strip $@
+	@echo UPX $@
+	$(Q)upx $@
 
 clean:
 	@echo CLEAN
-	$(Q)rm -rf bossa$(EXE) bossac$(EXE) $(OBJDIR)
+	$(Q)rm -rf $(BINDIR) $(OBJDIR)
 
 #
 # Include dependencies

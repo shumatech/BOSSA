@@ -467,6 +467,8 @@ autoScan(Samba& samba, PortFactory& portFactory, string& port)
          port != portFactory.end();
          port = portFactory.next())
     {
+        if (config.debug)
+            printf("Trying to connect on %s\n", port.c_str());
         if (samba.connect(portFactory.create(port)))
             return true;
     }
