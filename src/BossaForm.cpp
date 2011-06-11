@@ -215,8 +215,11 @@ ProgressDialog::ProgressDialog( wxWindow* parent, wxWindowID id, const wxString&
 	
 	_progressBoxSizer->Add( 0, 0, 1, wxEXPAND, 5 );
 	
-	_cancelButton = new wxButton( this, wxID_ANY, wxT("Cancel"), wxDefaultPosition, wxDefaultSize, 0 );
-	_progressBoxSizer->Add( _cancelButton, 0, wxALIGN_CENTER|wxALL, 5 );
+	_sdbSizer = new wxStdDialogButtonSizer();
+	_sdbSizerCancel = new wxButton( this, wxID_CANCEL );
+	_sdbSizer->AddButton( _sdbSizerCancel );
+	_sdbSizer->Realize();
+	_progressBoxSizer->Add( _sdbSizer, 0, wxALIGN_CENTER|wxALL, 5 );
 	
 	
 	_progressBoxSizer->Add( 0, 0, 1, wxEXPAND, 5 );

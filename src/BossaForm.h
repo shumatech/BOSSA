@@ -93,7 +93,8 @@ class ProgressDialog : public wxDialog
 		wxStaticText* _infoStaticText;
 		wxGauge* _statusGauge;
 		
-		wxButton* _cancelButton;
+		wxStdDialogButtonSizer* _sdbSizer;
+		wxButton* _sdbSizerCancel;
 		
 	
 	public:
