@@ -204,26 +204,19 @@ ProgressDialog::ProgressDialog( wxWindow* parent, wxWindowID id, const wxString&
 	
 	_progressBoxSizer->Add( 0, 0, 1, wxEXPAND, 5 );
 	
-	wxBoxSizer* _infoBoxSizer;
-	_infoBoxSizer = new wxBoxSizer( wxHORIZONTAL );
-	
 	_infoStaticText = new wxStaticText( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
 	_infoStaticText->Wrap( -1 );
-	_infoBoxSizer->Add( _infoStaticText, 1, wxALIGN_BOTTOM|wxALL, 5 );
+	_progressBoxSizer->Add( _infoStaticText, 0, wxALIGN_CENTER|wxALL|wxEXPAND, 5 );
 	
-	_progressBoxSizer->Add( _infoBoxSizer, 1, wxEXPAND, 5 );
+	_statusGauge = new wxGauge( this, wxID_ANY, 100, wxDefaultPosition, wxDefaultSize, wxGA_HORIZONTAL );
+	_statusGauge->SetValue( 0 ); 
+	_progressBoxSizer->Add( _statusGauge, 0, wxALL|wxEXPAND, 5 );
 	
 	
 	_progressBoxSizer->Add( 0, 0, 1, wxEXPAND, 5 );
 	
-	wxBoxSizer* _statusBoxSizer;
-	_statusBoxSizer = new wxBoxSizer( wxHORIZONTAL );
-	
-	_statusGauge = new wxGauge( this, wxID_ANY, 100, wxDefaultPosition, wxDefaultSize, wxGA_HORIZONTAL );
-	_statusGauge->SetValue( 0 ); 
-	_statusBoxSizer->Add( _statusGauge, 1, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
-	
-	_progressBoxSizer->Add( _statusBoxSizer, 1, wxEXPAND, 5 );
+	_cancelButton = new wxButton( this, wxID_ANY, wxT("Cancel"), wxDefaultPosition, wxDefaultSize, 0 );
+	_progressBoxSizer->Add( _cancelButton, 0, wxALIGN_CENTER|wxALL, 5 );
 	
 	
 	_progressBoxSizer->Add( 0, 0, 1, wxEXPAND, 5 );
@@ -316,17 +309,14 @@ InfoDialog::InfoDialog( wxWindow* parent, wxWindowID id, const wxString& title, 
 	_deviceBoxSizer->Add( _deviceStaticText, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
 	_deviceTextCtrl = new wxTextCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY );
-	_deviceBoxSizer->Add( _deviceTextCtrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
-	
-	
-	_deviceBoxSizer->Add( 0, 0, 1, wxEXPAND, 5 );
+	_deviceBoxSizer->Add( _deviceTextCtrl, 1, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
 	_chipIdStaticText = new wxStaticText( this, wxID_ANY, wxT("Chip ID:"), wxDefaultPosition, wxDefaultSize, 0 );
 	_chipIdStaticText->Wrap( -1 );
 	_deviceBoxSizer->Add( _chipIdStaticText, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
 	_chipIdTextCtrl = new wxTextCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY );
-	_deviceBoxSizer->Add( _chipIdTextCtrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+	_deviceBoxSizer->Add( _chipIdTextCtrl, 1, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
 	_topBoxSizer->Add( _deviceBoxSizer, 0, wxALL|wxEXPAND, 5 );
 	

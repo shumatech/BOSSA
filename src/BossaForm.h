@@ -91,13 +91,14 @@ class ProgressDialog : public wxDialog
 	protected:
 		
 		wxStaticText* _infoStaticText;
-		
 		wxGauge* _statusGauge;
+		
+		wxButton* _cancelButton;
 		
 	
 	public:
 		
-		ProgressDialog( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Progress"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 300,100 ), long style = wxCAPTION ); 
+		ProgressDialog( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Progress"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 300,150 ), long style = wxCAPTION ); 
 		~ProgressDialog();
 	
 };
@@ -141,7 +142,6 @@ class InfoDialog : public wxDialog
 	protected:
 		wxStaticText* _deviceStaticText;
 		wxTextCtrl* _deviceTextCtrl;
-		
 		wxStaticText* _chipIdStaticText;
 		wxTextCtrl* _chipIdTextCtrl;
 		wxStaticText* _versionStaticText;
