@@ -17,6 +17,9 @@ using namespace std;
 #define CAN         0x18
 #define START       'C'
 
+#define TIMEOUT_QUICK	100
+#define TIMEOUT_NORMAL	1000
+
 #define min(a, b)   ((a) < (b) ? (a) : (b))
 
 Samba::Samba() : _debug(false), _isUsb(false)
@@ -33,7 +36,7 @@ Samba::init()
     uint8_t cmd[3];
     uint32_t cid;
     
-    _port->timeout(50);
+    _port->timeout(TIMEOUT_QUICK);
     
     if (!_isUsb)
     {
@@ -67,7 +70,7 @@ Samba::init()
         return false;
     }
 
-    _port->timeout(1000);
+    _port->timeout(TIMEOUT_NORMAL);
     
     if (_debug)
         printf("chipId=%#08x\n", cid);
@@ -456,24 +459,29 @@ Samba::go(uint32_t addr)
 std::string
 Samba::version()
 {
-    uint8_t cmd[32];
+    uint8_t cmd[33];
     char* str;
     int size;
-    
+    int pos;
+
     cmd[0] = 'V';
     cmd[1] = '#';
     _port->write(cmd, 2);
     
-    size = _port->read(cmd, sizeof(cmd));
+    _port->timeout(TIMEOUT_QUICK);
+    size = _port->read(cmd, sizeof(cmd) - 1);
+    _port->timeout(TIMEOUT_NORMAL);
     if (size <= 0)
         throw SambaError();
     
     str = (char*) cmd;
-    size = strlen(str);
-    
-    while (size > 0 && isspace(str[size - 1]))
-        str[--size] = '\0';
-    
+    for (pos = 0; pos < size; pos++)
+    {
+        if (!isprint(str[pos]))
+            break;
+    }
+    str[pos] = '\0';
+
     std::string ver(str);
     
     if (_debug)
