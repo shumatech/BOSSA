@@ -8,15 +8,15 @@
 
 BossaBitmaps::BossaBitmaps()
 {
-    wxImage::AddHandler(new wxPNGHandler);
+    wxImage::AddHandler(new wxBMPHandler);
 }
 
 void
 BossaBitmaps::init()
 {
-    _bossaLogo = GetBitmapFromMemory(BossaLogo_png, sizeof(BossaLogo_png));
-    _bossaIcon = GetBitmapFromMemory(BossaIcon_png, sizeof(BossaIcon_png));
-    _shumaTechLogo = GetBitmapFromMemory(ShumaTechLogo_png, sizeof(ShumaTechLogo_png));
+    _bossaLogo = GetBitmapFromMemory(BossaLogo_bmp, sizeof(BossaLogo_bmp));
+    _bossaIcon = GetBitmapFromMemory(BossaIcon_bmp, sizeof(BossaIcon_bmp));
+    _shumaTechLogo = GetBitmapFromMemory(ShumaTechLogo_bmp, sizeof(ShumaTechLogo_bmp));
 }
 
 wxBitmap

@@ -11,9 +11,10 @@
 #include <string>
 
 PosixSerialPort::PosixSerialPort(const std::string& name) :
-    SerialPort("/dev/" + name), _devfd(-1), _isUsb(false), _timeout(0)
+    SerialPort(name), _devfd(-1), _isUsb(false), _timeout(0)
 {
-    if (name.find("USB") != std::string::npos)
+    if (name.find("USB") != std::string::npos ||
+        name.find("ACM") != std::string::npos)
         _isUsb = true;
 }
 
@@ -31,8 +32,10 @@ PosixSerialPort::open(int baud,
 {
     struct termios options;
     speed_t speed;
+    std::string dev("/dev/");
 
-    _devfd = ::open(_name.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
+    dev += _name;
+    _devfd = ::open(dev.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
     if (_devfd == -1)
         return false;
    
@@ -185,7 +188,7 @@ PosixSerialPort::read(uint8_t* buffer, int len)
         tv.tv_usec = _timeout * 1000;
        
         retval = select(_devfd + 1, &fds, NULL, NULL, &tv);
-        
+	
         if (retval < 0)
             return -1;
         else if (retval == 0)

@@ -21,6 +21,8 @@
 
 #include "BossaForm.h"
 
+DECLARE_EVENT_TYPE(wxEVT_PROGRESS_CANCEL, wxID_ANY)
+
 class BossaProgress : public ProgressDialog
 {
 public:
@@ -28,6 +30,11 @@ public:
     
     void SetValue(int pos);
     void SetLabel(const wxString& label);
+    
+private:
+    wxEvtHandler* _parent;
+    
+    void OnCancel(wxCommandEvent& event);
 };
 
 #endif // _BOSSAPROGRESS_H

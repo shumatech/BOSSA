@@ -60,6 +60,8 @@ private:
     void OnThreadSuccess(wxCommandEvent& event);
     void OnThreadWarning(wxCommandEvent& event);
     void OnThreadError(wxCommandEvent& event);
+
+    void OnProgressCancel(wxCommandEvent& event);
 };
 
 #endif // _BOSSAWINDOW_H

@@ -51,7 +51,7 @@ public:
     const char* what() const throw() { return "File operation exceeds flash size"; }
 };
 
-BossaThread::BossaThread(wxEvtHandler* parent) : wxThread(), _parent(parent)
+BossaThread::BossaThread(wxEvtHandler* parent) : wxThread(), _parent(parent), _stopped(false)
 {
 }
 
@@ -141,6 +141,13 @@ WriteThread::Entry()
 
         while ((fbytes = fread(buffer, 1, pageSize, infile)) > 0)
         {
+            if (_stopped)
+            {
+                fclose(infile);
+                Warning(wxT("Write stopped"));
+                return 0;
+            }
+            
             if (pageNum % 10 == 0 || pageNum == numPages - 1)
             {
                 uint32_t percent = (pageNum + 1) * 100 / numPages;
@@ -220,6 +227,13 @@ VerifyThread::Entry()
         
         while ((fbytes = fread(bufferA, 1, pageSize, infile)) > 0)
         {
+            if (_stopped)
+            {
+                fclose(infile);
+                Warning(wxT("Verify stopped"));
+                return 0;
+            }
+            
             if (pageNum % 10 == 0 || pageNum == numPages - 1)
             {
                 uint32_t percent = (pageNum + 1) * 100 / numPages;
@@ -305,6 +319,13 @@ ReadThread::Entry()
         
         for (pageNum = 0; pageNum < numPages; pageNum++)
         {
+            if (_stopped)
+            {
+                fclose(outfile);
+                Warning(wxT("Read stopped"));
+                return 0;
+            }
+            
             if (pageNum % 10 == 0 || pageNum == numPages - 1)
             {
                 uint32_t percent = (pageNum + 1) * 100 / numPages;

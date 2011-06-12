@@ -11,7 +11,7 @@ VERSION=1.0
 COMMON_SRCS=Samba.cpp Flash.cpp EfcFlash.cpp EefcFlash.cpp FlashFactory.cpp Applet.cpp WordCopyApplet.cpp
 APPLET_SRCS=WordCopyArm.asm
 BOSSA_SRCS=BossaForm.cpp BossaWindow.cpp BossaAbout.cpp BossaApp.cpp BossaBitmaps.cpp BossaInfo.cpp BossaThread.cpp BossaProgress.cpp
-BOSSA_PNGS=BossaLogo.png BossaIcon.png ShumaTechLogo.png
+BOSSA_BMPS=BossaLogo.bmp BossaIcon.bmp ShumaTechLogo.bmp
 BOSSAC_SRCS=bossac.cpp CmdOpts.cpp
 
 #
@@ -33,7 +33,7 @@ OS:=$(shell uname -s)
 ifeq ($(OS),MINGW32_NT-6.1)
 EXE=.exe
 COMMON_SRCS+=WinSerialPort.cpp WinPortFactory.cpp
-COMMON_LDFLAGS=-Wl,--enable-auto-import
+COMMON_LDFLAGS=-Wl,--enable-auto-import -static-libstdc++ -static-libgcc
 COMMON_LIBS=-lsetupapi
 BOSSA_RC=BossaRes.rc
 INSTALLDIR=install
@@ -103,7 +103,7 @@ BOSSAC_CXXFLAGS=$(COMMON_CXXFLAGS)
 #
 # LD Flags
 #
-COMMON_LDFLAGS+=-g -static-libstdc++ -static-libgcc
+COMMON_LDFLAGS+=-g
 BOSSA_LDFLAGS=$(COMMON_LDFLAGS)
 BOSSAC_LDFLAGS=$(COMMON_LDFLAGS)
 
@@ -112,7 +112,7 @@ BOSSAC_LDFLAGS=$(COMMON_LDFLAGS)
 #
 COMMON_LIBS+=
 WX_LIBS:=$(shell wx-config --libs)
-BOSSA_LIBS=$(COMMON_LIBS) $(WX_LIBS)
+BOSSA_LIBS=-Wl,--as-needed $(COMMON_LIBS) $(WX_LIBS)
 BOSSAC_LIBS=$(COMMON_LIBS)
 
 #
@@ -156,9 +156,11 @@ $(foreach src,$(BOSSA_SRCS),$(eval $(call bossa_obj,$(src))))
 #
 # Resource rules
 #
+ifeq ($(OS),MINGW32_NT-6.1)
 $(OBJDIR)/$(BOSSA_RC:%.rc=%.o): $(RESDIR)/$(BOSSA_RC)
 	@echo RC $<
 	$(Q)`wx-config --rescomp` -o $@ $<
+endif
 
 #
 # BOSSAC rules
@@ -171,14 +173,14 @@ endef
 $(foreach src,$(BOSSAC_SRCS),$(eval $(call bossac_obj,$(src))))
 
 #
-# PNG rules
+# BMP rules
 #
-define bossa_png
-$(SRCDIR)/$(1:%.png=%.cpp): $(RESDIR)/$(1)
+define bossa_bmp
+$(SRCDIR)/$(1:%.bmp=%.cpp): $(RESDIR)/$(1)
 	@echo BIN2C $$<
 	$(Q)bin2c $$< $$@
 endef
-$(foreach png,$(BOSSA_PNGS),$(eval $(call bossa_png,$(png))))
+$(foreach bmp,$(BOSSA_BMPS),$(eval $(call bossa_bmp,$(bmp))))
 
 #
 # Directory rules
@@ -192,21 +194,33 @@ $(BINDIR):
 #
 # Target rules
 #
-$(BINDIR)/bossa$(EXE): $(foreach png,$(BOSSA_PNGS),$(SRCDIR)/$(png:%.png=%.cpp)) $(BOSSA_OBJS)
+$(BINDIR)/bossa$(EXE): $(foreach bmp,$(BOSSA_BMPS),$(SRCDIR)/$(bmp:%.bmp=%.cpp)) $(BOSSA_OBJS)
 	@echo LD $@
 	$(Q)$(CXX) $(BOSSA_LDFLAGS) -o $@ $(BOSSA_OBJS) $(BOSSA_LIBS)
-	@echo STRIP $@
-	$(Q)strip $@
-	@echo UPX $@
-	$(Q)upx $@
 
 $(BINDIR)/bossac$(EXE): $(BOSSAC_OBJS) 
 	@echo LD $@
 	$(Q)$(CXX) $(BOSSAC_LDFLAGS) -o $@ $(BOSSAC_OBJS) $(BOSSAC_LIBS)
-	@echo STRIP $@
-	$(Q)strip $@
-	@echo UPX $@
-	$(Q)upx $@
+
+pack-bossa: $(BINDIR)/bossa$(EXE)
+	@echo UPX $^
+	$(Q)upx $^
+
+pack-bossac: $(BINDIR)/bossac$(EXE)
+	@echo UPX $^
+	$(Q)upx $^
+
+pack: pack-bossa pack-bossac
+
+strip-bossa: $(BINDIR)/bossa$(EXE)
+	@echo STRIP $^
+	$(Q)strip $^
+
+strip-bossac: $(BINDIR)/bossac$(EXE)
+	@echo STRIP $^
+	$(Q)strip $^
+
+strip: strip-bossa strip-bossac
 
 clean:
 	@echo CLEAN

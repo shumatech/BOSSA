@@ -31,9 +31,13 @@ class BossaThread : public wxThread
 public:
     BossaThread(wxEvtHandler* parent);
 
+    void stop() { _stopped = true; }
+    
 protected:
     wxEvtHandler* _parent;
 
+    bool _stopped;
+    
     void Progress(const wxString& message, int pos);
     void Success(const wxString& message = "");
     void Warning(const wxString& message);

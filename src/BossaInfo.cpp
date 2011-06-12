@@ -26,14 +26,14 @@ BossaInfo::BossaInfo(wxWindow* parent) : InfoDialog(parent)
     Samba& samba = wxGetApp().samba;
     Flash::Ptr& flash = wxGetApp().flash;
 
-    _deviceTextCtrl->SetLabel(flash->name().c_str());
-    _chipIdTextCtrl->SetLabel(wxString::Format(wxT("%08x"), samba.chipId()));
-    _versionTextCtrl->SetLabel(samba.version().c_str());
+    _deviceTextCtrl->SetValue(flash->name().c_str());
+    _chipIdTextCtrl->SetValue(wxString::Format(wxT("%08x"), samba.chipId()));
+    _versionTextCtrl->SetValue(samba.version().c_str());
 
-    _pagesTextCtrl->SetLabel(wxString::Format(wxT("%d"), flash->numPages()));
-    _pageSizeTextCtrl->SetLabel(wxString::Format(wxT("%d bytes"), flash->pageSize()));
-    _totalSizeTextCtrl->SetLabel(wxString::Format(wxT("%d KB"),flash->numPages() * flash->pageSize() / 1024));
-    _planesTextCtrl->SetLabel(wxString::Format(wxT("%d"),flash->numPlanes()));
+    _pagesTextCtrl->SetValue(wxString::Format(wxT("%d"), flash->numPages()));
+    _pageSizeTextCtrl->SetValue(wxString::Format(wxT("%d bytes"), flash->pageSize()));
+    _totalSizeTextCtrl->SetValue(wxString::Format(wxT("%d KB"),flash->numPages() * flash->pageSize() / 1024));
+    _planesTextCtrl->SetValue(wxString::Format(wxT("%d"),flash->numPlanes()));
 
     _bootCheckBox->Enable(false);
     _securityCheckBox->Enable(false);

@@ -66,7 +66,7 @@ BossaWindow::BossaWindow() : MainFrame(NULL)
     _exitButton->Connect(wxEVT_COMMAND_BUTTON_CLICKED,
                          wxCommandEventHandler(BossaWindow::OnExit),
                          NULL, this);
-                         
+
     Connect(wxEVT_THREAD_PROGRESS,
             wxCommandEventHandler(BossaWindow::OnThreadProgress),
             NULL, this);
@@ -81,6 +81,10 @@ BossaWindow::BossaWindow() : MainFrame(NULL)
 
     Connect(wxEVT_THREAD_ERROR,
             wxCommandEventHandler(BossaWindow::OnThreadError),
+            NULL, this);
+
+    Connect(wxEVT_PROGRESS_CANCEL,
+            wxCommandEventHandler(BossaWindow::OnProgressCancel),
             NULL, this);
 
     RefreshSerial();
@@ -504,4 +508,10 @@ BossaWindow::OnThreadError(wxCommandEvent& event)
     wxString message = event.GetString();
     Error(message);
     _progress->EndModal(0);
+}
+
+void
+BossaWindow::OnProgressCancel(wxCommandEvent& event)
+{
+    _thread->stop();
 }

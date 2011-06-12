@@ -66,6 +66,8 @@ Samba::init()
     {
         return false;
     }
+
+    _port->timeout(1000);
     
     if (_debug)
         printf("chipId=%#08x\n", cid);
@@ -119,12 +121,20 @@ Samba::connect(SerialPort::Ptr port)
     // Try to connect at a high speed if USB
     _isUsb = _port->isUsb();
     if (_isUsb && _port->open(921600) && init())
+    {
+        if (_debug)
+            printf("Connected at 921600 baud\n");
         return true;
+    }
     _isUsb = false;
 
     // Try the serial port at slower speed
     if (_port->open(115200) && init())
+    {
+        if (_debug)
+            printf("Connected at 115200 baud\n");
         return true;
+    }
     
     disconnect();
     return false;

@@ -46,6 +46,8 @@ LinuxPortFactory::next()
     {
         if (strncmp("ttyUSB", entry->d_name, sizeof("ttyUSB") - 1) == 0)
             return std::string(entry->d_name);
+        else if (strncmp("ttyACM", entry->d_name, sizeof("ttyACM") - 1) == 0)
+            return std::string(entry->d_name);
         else if (strncmp("ttyS", entry->d_name, sizeof("ttyS") - 1) == 0)
             return std::string(entry->d_name);
     }
