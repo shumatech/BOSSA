@@ -65,7 +65,7 @@
             <property name="resize">Resizable</property>
             <property name="row"></property>
             <property name="show">1</property>
-            <property name="size">500,400</property>
+            <property name="size">550,400</property>
             <property name="style">wxCAPTION|wxCLOSE_BOX|wxICONIZE|wxMINIMIZE|wxMINIMIZE_BOX|wxSYSTEM_MENU</property>
             <property name="subclass"></property>
             <property name="title">BOSSA</property>
@@ -108,7 +108,7 @@
             <event name="OnSetFocus"></event>
             <event name="OnSize"></event>
             <event name="OnUpdateUI"></event>
-            <object class="wxBoxSizer" expanded="1">
+            <object class="wxBoxSizer" expanded="0">
                 <property name="minimum_size"></property>
                 <property name="name">_topBoxSizer</property>
                 <property name="orient">wxVERTICAL</property>
