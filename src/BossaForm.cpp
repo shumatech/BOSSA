@@ -56,7 +56,7 @@ MainFrame::MainFrame( wxWindow* parent, wxWindowID id, const wxString& title, co
 	
 	_portBoxSizer->Add( _autoScanButton, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
-	_topBoxSizer->Add( _portBoxSizer, 1, wxALL|wxEXPAND, 5 );
+	_topBoxSizer->Add( _portBoxSizer, 3, wxALL|wxEXPAND, 5 );
 	
 	wxStaticBoxSizer* _fileBoxSizer;
 	_fileBoxSizer = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, wxT("File") ), wxHORIZONTAL );
@@ -66,7 +66,7 @@ MainFrame::MainFrame( wxWindow* parent, wxWindowID id, const wxString& title, co
 	
 	_fileBoxSizer->Add( _filePicker, 1, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
-	_topBoxSizer->Add( _fileBoxSizer, 1, wxALL|wxEXPAND, 5 );
+	_topBoxSizer->Add( _fileBoxSizer, 3, wxALL|wxEXPAND, 5 );
 	
 	wxBoxSizer* _optionsBoxSizer;
 	_optionsBoxSizer = new wxBoxSizer( wxHORIZONTAL );
@@ -81,35 +81,35 @@ MainFrame::MainFrame( wxWindow* parent, wxWindowID id, const wxString& title, co
 	_eraseCheckBox->SetValue(true); 
 	_eraseCheckBox->SetToolTip( wxT("Erase entire flash before writing (recommended)") );
 	
-	_writeGridSizer->Add( _eraseCheckBox, 0, wxALL, 5 );
+	_writeGridSizer->Add( _eraseCheckBox, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
 	_bodCheckBox = new wxCheckBox( this, wxID_ANY, wxT("Brownout detect"), wxDefaultPosition, wxDefaultSize, 0 );
 	_bodCheckBox->SetToolTip( wxT("Enable the brownout detection circuitry") );
 	
-	_writeGridSizer->Add( _bodCheckBox, 0, wxALL, 5 );
+	_writeGridSizer->Add( _bodCheckBox, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
 	_lockCheckBox = new wxCheckBox( this, wxID_ANY, wxT("Lock"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockCheckBox->SetToolTip( wxT("Lock access to the flash") );
 	
-	_writeGridSizer->Add( _lockCheckBox, 0, wxALL, 5 );
+	_writeGridSizer->Add( _lockCheckBox, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
 	_bootCheckBox = new wxCheckBox( this, wxID_ANY, wxT("Boot to flash"), wxDefaultPosition, wxDefaultSize, 0 );
 	_bootCheckBox->SetValue(true); 
 	_bootCheckBox->SetToolTip( wxT("Boot processor to flash instead of SAM-BA (if supported)") );
 	
-	_writeGridSizer->Add( _bootCheckBox, 0, wxALL, 5 );
+	_writeGridSizer->Add( _bootCheckBox, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
 	_borCheckBox = new wxCheckBox( this, wxID_ANY, wxT("Brownout reset"), wxDefaultPosition, wxDefaultSize, 0 );
 	_borCheckBox->SetToolTip( wxT("Enable processor reset on brownout detect") );
 	
-	_writeGridSizer->Add( _borCheckBox, 0, wxALL, 5 );
+	_writeGridSizer->Add( _borCheckBox, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
 	_securityCheckBox = new wxCheckBox( this, wxID_ANY, wxT("Security"), wxDefaultPosition, wxDefaultSize, 0 );
 	_securityCheckBox->SetToolTip( wxT("Set the security bit") );
 	
-	_writeGridSizer->Add( _securityCheckBox, 0, wxALL, 5 );
+	_writeGridSizer->Add( _securityCheckBox, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
-	_writeBoxSizer->Add( _writeGridSizer, 3, wxEXPAND, 5 );
+	_writeBoxSizer->Add( _writeGridSizer, 1, wxEXPAND, 5 );
 	
 	_optionsBoxSizer->Add( _writeBoxSizer, 1, wxALL|wxEXPAND, 5 );
 	
@@ -132,7 +132,7 @@ MainFrame::MainFrame( wxWindow* parent, wxWindowID id, const wxString& title, co
 	
 	_optionsBoxSizer->Add( _readBoxSizer, 0, wxALL|wxEXPAND, 5 );
 	
-	_topBoxSizer->Add( _optionsBoxSizer, 1, wxEXPAND, 5 );
+	_topBoxSizer->Add( _optionsBoxSizer, 4, wxEXPAND, 5 );
 	
 	wxBoxSizer* _buttonBoxSizer;
 	_buttonBoxSizer = new wxBoxSizer( wxHORIZONTAL );
