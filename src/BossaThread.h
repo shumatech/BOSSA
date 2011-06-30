@@ -39,7 +39,7 @@ protected:
     bool _stopped;
     
     void Progress(const wxString& message, int pos);
-    void Success(const wxString& message = "");
+    void Success(const wxString& message);
     void Warning(const wxString& message);
     void Error(const wxString& message);
 };

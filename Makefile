@@ -3,7 +3,7 @@
 # 
 # Version
 #
-VERSION=1.0
+VERSION=1.1
 
 #
 # Source files
@@ -21,6 +21,7 @@ BINDIR=bin
 OBJDIR=obj
 SRCDIR=src
 RESDIR=res
+INSTALLDIR=install
 
 #
 # Determine OS
@@ -34,9 +35,8 @@ ifeq ($(OS),MINGW32_NT-6.1)
 EXE=.exe
 COMMON_SRCS+=WinSerialPort.cpp WinPortFactory.cpp
 COMMON_LDFLAGS=-Wl,--enable-auto-import -static-libstdc++ -static-libgcc
-COMMON_LIBS=-lsetupapi
+COMMON_LIBS=-Wl,--as-needed -lsetupapi
 BOSSA_RC=BossaRes.rc
-INSTALLDIR=install
 WIXDIR="C:\Program Files (x86)\Windows Installer XML v3.5\bin"
 
 $(OBJDIR)\\bossa-$(VERSION).wixobj: $(INSTALLDIR)\\bossa.wxs
@@ -53,6 +53,7 @@ $(BINDIR)\\bossa64-$(VERSION).msi: $(OBJDIR)\\bossa64-$(VERSION).wixobj $(BINDIR
 
 install32: $(BINDIR)\\bossa-$(VERSION).msi
 install64: $(BINDIR)\\bossa64-$(VERSION).msi
+.PHONY: install
 install: install32 install64
 
 endif
@@ -62,6 +63,41 @@ endif
 #
 ifeq ($(OS),Linux)
 COMMON_SRCS+=PosixSerialPort.cpp LinuxPortFactory.cpp
+COMMON_LIBS=-Wl,--as-needed
+endif
+
+#
+# OS X rules
+#
+ifeq ($(OS),Darwin)
+COMMON_SRCS+=PosixSerialPort.cpp OSXPortFactory.cpp
+COMMON_CXXFLAGS=-arch i386
+COMMON_LDFLAGS=-arch i386
+APP=BOSSA.app
+DMG=bossa-$(VERSION).dmg
+VOLUME=BOSSA
+BACKGROUND=$(INSTALLDIR)/background.png
+.PHONY: install
+app: $(BINDIR)/bossa$(EXE)
+	mkdir -p $(BINDIR)/$(APP)/Contents/MacOS
+	mkdir -p $(BINDIR)/$(APP)/Contents/Resources
+	cp -f $(INSTALLDIR)/Info.plist $(BINDIR)/$(APP)/Contents
+	echo -n "APPL????" > $(BINDIR)/$(APP)/Contents/PkgInfo
+	ln -f $(BINDIR)/bossa $(BINDIR)/$(APP)/Contents/MacOS/bossa
+	cp -f $(RESDIR)/BossaIcon.icns $(BINDIR)/$(APP)/Contents/Resources
+install: app $(BINDIR)/bossac$(EXE)
+	hdiutil create -ov -megabytes 5 -fs HFS+ -volname $(VOLUME) $(BINDIR)/$(DMG)
+	hdiutil attach -noautoopen $(BINDIR)/$(DMG)
+	cp -R $(BINDIR)/$(APP) /Volumes/$(VOLUME)/
+	cp $(BINDIR)/bossac$(EXE) /Volumes/$(VOLUME)/
+	ln -s /Applications /Volumes/$(VOLUME)/Applications
+	ln -s /usr/bin /Volumes/$(VOLUME)/bin
+	mkdir /Volumes/$(VOLUME)/.background
+	cp $(BACKGROUND) /Volumes/$(VOLUME)/.background
+	osascript < $(INSTALLDIR)/dmgwin.osa 
+	hdiutil detach /Volumes/$(VOLUME)/
+	hdiutil convert -format UDBZ -o $(BINDIR)/tmp$(DMG) $(BINDIR)/$(DMG)
+	mv -f $(BINDIR)/tmp$(DMG) $(BINDIR)/$(DMG)
 endif
 
 #
@@ -112,13 +148,13 @@ BOSSAC_LDFLAGS=$(COMMON_LDFLAGS)
 #
 COMMON_LIBS+=
 WX_LIBS:=$(shell wx-config --libs)
-BOSSA_LIBS=-Wl,--as-needed $(COMMON_LIBS) $(WX_LIBS)
+BOSSA_LIBS=$(COMMON_LIBS) $(WX_LIBS)
 BOSSAC_LIBS=$(COMMON_LIBS)
 
 #
 # Main targets
 #
-all: $(OBJDIR) $(BINDIR) $(BINDIR)/bossa$(EXE) $(BINDIR)/bossac$(EXE)
+all: $(BINDIR)/bossa$(EXE) $(BINDIR)/bossac$(EXE)
 
 #
 # Common rules
@@ -134,11 +170,13 @@ $(foreach src,$(COMMON_SRCS),$(eval $(call common_obj,$(src))))
 # Applet rules
 #
 define applet_obj
-$(OBJDIR)/$(1:%.asm=%.o): $(SRCDIR)/$(1)
+$(SRCDIR)/$(1:%.asm=%.cpp): $(SRCDIR)/$(1)
 	@echo APPLET $(1:%.asm=%)
 	$$(Q)$$(ARMAS) -o $$(@:%.o=%.obj) $$<
 	$$(Q)$$(ARMOBJCOPY) -O binary $$(@:%.o=%.obj) $$(@:%.o=%.bin)
 	$$(Q)appletgen $(1:%.asm=%) $(SRCDIR) $(OBJDIR)
+$(OBJDIR)/$(1:%.asm=%.o): $(SRCDIR)/$(1:%.asm=%.cpp)
+	@echo CPP $$<
 	$$(Q)$$(CXX) $$(COMMON_CXXFLAGS) -c -o $$(@) $$(<:%.asm=%.cpp)
 endef
 $(foreach src,$(APPLET_SRCS),$(eval $(call applet_obj,$(src))))
@@ -194,11 +232,13 @@ $(BINDIR):
 #
 # Target rules
 #
-$(BINDIR)/bossa$(EXE): $(foreach bmp,$(BOSSA_BMPS),$(SRCDIR)/$(bmp:%.bmp=%.cpp)) $(BOSSA_OBJS)
+$(BOSSA_OBJS): | $(OBJDIR)
+$(BINDIR)/bossa$(EXE): $(foreach bmp,$(BOSSA_BMPS),$(SRCDIR)/$(bmp:%.bmp=%.cpp)) $(BOSSA_OBJS) | $(BINDIR)
 	@echo LD $@
 	$(Q)$(CXX) $(BOSSA_LDFLAGS) -o $@ $(BOSSA_OBJS) $(BOSSA_LIBS)
 
-$(BINDIR)/bossac$(EXE): $(BOSSAC_OBJS) 
+$(BOSSAC_OBJS): | $(OBJDIR)
+$(BINDIR)/bossac$(EXE): $(BOSSAC_OBJS) | $(BINDIR)
 	@echo LD $@
 	$(Q)$(CXX) $(BOSSAC_LDFLAGS) -o $@ $(BOSSAC_OBJS) $(BOSSAC_LIBS)
 

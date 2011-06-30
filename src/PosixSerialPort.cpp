@@ -10,12 +10,16 @@
 
 #include <string>
 
-PosixSerialPort::PosixSerialPort(const std::string& name) :
-    SerialPort(name), _devfd(-1), _isUsb(false), _timeout(0)
+#ifndef B460800
+#define B460800 460800
+#endif
+#ifndef B921600
+#define B921600 921600
+#endif
+
+PosixSerialPort::PosixSerialPort(const std::string& name, bool isUsb) :
+    SerialPort(name), _devfd(-1), _isUsb(isUsb), _timeout(0)
 {
-    if (name.find("USB") != std::string::npos ||
-        name.find("ACM") != std::string::npos)
-        _isUsb = true;
 }
 
 PosixSerialPort::~PosixSerialPort()
@@ -184,15 +188,19 @@ PosixSerialPort::read(uint8_t* buffer, int len)
         FD_ZERO(&fds);
         FD_SET(_devfd, &fds);
        
-        tv.tv_sec  = 0;
-        tv.tv_usec = _timeout * 1000;
+        tv.tv_sec  = _timeout / 1000;
+        tv.tv_usec = (_timeout % 1000) * 1000;
        
         retval = select(_devfd + 1, &fds, NULL, NULL, &tv);
 	
         if (retval < 0)
+        {
             return -1;
+        }
         else if (retval == 0)
+        {
             return numread;
+        }
         else if (FD_ISSET(_devfd, &fds))
         {
             retval = ::read(_devfd, (uint8_t*) buffer + numread, len - numread);
@@ -235,6 +243,15 @@ PosixSerialPort::put(int c)
     
     byte = c;
     return write(&byte, 1);
+}
+
+void
+PosixSerialPort::flush()
+{
+    // There isn't a reliable way to flush on a file descriptor
+    // so we just wait it out.  One millisecond is the USB poll
+    // interval so that should cover it.
+    usleep(1000);
 }
 
 bool

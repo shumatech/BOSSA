@@ -24,6 +24,9 @@ typedef WinPortFactory PortFactory;
 #elif defined(__linux__)
 #include "LinuxPortFactory.h"
 typedef LinuxPortFactory PortFactory;
+#elif defined(__APPLE__)
+#include "OSXPortFactory.h"
+typedef OSXPortFactory PortFactory;
 #else
 #error "Platform is not supported"
 #endif

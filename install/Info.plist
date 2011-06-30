@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleExecutable</key>
+	<string>bossa</string>
+	<key>CFBundleIconFile</key>
+	<string>BossaIcon.icns</string>
+	<key>CFBundleIdentifier</key>
+	<string>ShumaTech.BOSSA</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>BOSSA</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>1.1</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>10.6</string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
+        <key>CFBundleGetInfoString</key>
+        <string>BOSSA version 1.1, (c) 2011 ShumaTech</string>
+        <key>CFBundleLongVersionString</key>
+        <string>1.1, (c) 2011 ShumaTech</string>
+        <key>NSHumanReadableCopyright</key>
+        <string>Copyright 20011 ShumaTech</string>
+        <key>LSRequiresCarbon</key>
+        <true/>
+</dict>
+</plist>
+

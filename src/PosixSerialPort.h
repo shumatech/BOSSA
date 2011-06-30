@@ -6,7 +6,7 @@
 class PosixSerialPort : public SerialPort
 {
 public:
-    PosixSerialPort(const std::string& name);
+    PosixSerialPort(const std::string& name, bool isUsb);
     virtual ~PosixSerialPort();
     
     bool open(int baud = 115200,
@@ -14,14 +14,16 @@ public:
               SerialPort::Parity parity = SerialPort::ParityNone,
               SerialPort::StopBit stop = SerialPort::StopBitOne);
     void close();
-    void flush();
+
     bool isUsb() { return _isUsb; };
 
-    bool timeout(int millisecs);
     int read(uint8_t* data, int size);
     int write(const uint8_t* data, int size);
     int get();
     int put(int c);
+
+    bool timeout(int millisecs);
+    void flush();
 
 private:
     int _devfd;

@@ -169,7 +169,7 @@ BossaWindow::Connected()
     
     _statusBar->SetStatusText(wxT("Connected"), 0);
     _statusBar->SetStatusText(wxString::Format(wxT("Device: %s"), flash.name().c_str()), 1);
-    _portComboBox->SetStringSelection(port.name());
+    _portComboBox->SetStringSelection(port.name().c_str());
     _bootCheckBox->Enable(flash.canBootFlash());
     _bodCheckBox->Enable(flash.canBod());
     _borCheckBox->Enable(flash.canBor());

@@ -157,7 +157,7 @@ Samba::writeByte(uint32_t addr, uint8_t value)
     
     if (_debug)
         printf("%s(addr=%#x,value=%#x)\n", __FUNCTION__, addr, value);
-        
+
     snprintf((char*) cmd, sizeof(cmd), "O%08X,%02X#", addr, value);
     if (_port->write(cmd, sizeof(cmd) - 1) != sizeof(cmd) -  1)
         throw SambaError();
@@ -168,7 +168,7 @@ Samba::readByte(uint32_t addr)
 {
     uint8_t cmd[13];
     uint8_t value;
-    
+
     snprintf((char*) cmd, sizeof(cmd), "o%08X,4#", addr);
     if (_port->write(cmd, sizeof(cmd) - 1) != sizeof(cmd) - 1)
         throw SambaError();
@@ -179,7 +179,7 @@ Samba::readByte(uint32_t addr)
     
     if (_debug)
         printf("%s(addr=%#x)=%#x\n", __FUNCTION__, addr, value);
-        
+ 
     return value;
 }
 
@@ -201,7 +201,7 @@ Samba::readWord(uint32_t addr)
 {
     uint8_t cmd[13];
     uint32_t value;
-    
+
     snprintf((char*) cmd, sizeof(cmd), "w%08X,4#", addr);
     if (_port->write(cmd, sizeof(cmd) - 1) != sizeof(cmd) - 1)
         throw SambaError();
@@ -403,8 +403,8 @@ Samba::read(uint32_t addr, uint8_t* buffer, int size)
     
     if (_debug)
         printf("%s(addr=%#x,size=%#x)\n", __FUNCTION__, addr, size);
-    
-    // SAM-BA seems to have a bug reading powers of 2 over 32 bytes
+   
+    // The SAM firmware has a bug reading powers of 2 over 32 bytes
     // via USB.  If that is the case here, then read the first byte
     // with a readByte and then read one less than the requested size.
     if (_isUsb && size > 32 && !(size & (size - 1)))
@@ -432,15 +432,26 @@ Samba::write(uint32_t addr, const uint8_t* buffer, int size)
     
     if (_debug)
         printf("%s(addr=%#x,size=%#x)\n", __FUNCTION__, addr, size);
-        
+
     snprintf((char*) cmd, sizeof(cmd), "S%08X,%08X#", addr, size);
     if (_port->write(cmd, sizeof(cmd) - 1) != sizeof(cmd) - 1)
         throw SambaError();
 
+    // The SAM firmware has a bug that if the command and binary data
+    // are received in the same USB data packet, then the firmware
+    // gets confused.  Even though the writes are sperated in the code,
+    // USB drivers often do write combining which can put them together
+    // in the same USB data packet.  To avoid this, we call the serial
+    // port object's flush method before writing the data.
     if (_isUsb)
+    {
+        _port->flush();
         writeBinary(buffer, size);
+    }
     else
+    {
         writeXmodem(buffer, size);
+    }
 }
 
 void
@@ -450,10 +461,18 @@ Samba::go(uint32_t addr)
     
     if (_debug)
         printf("%s(addr=%#x)\n", __FUNCTION__, addr);
-        
+
+    _writeLast = true;
+
     snprintf((char*) cmd, sizeof(cmd), "G%08X#", addr);
     if (_port->write(cmd, sizeof(cmd) - 1) != sizeof(cmd) - 1)
         throw SambaError();
+
+    // The SAM firmware can get confused if another command is
+    // received in the same USB data packet as the go command
+    // so we flush after writing the command over USB.
+    if (_isUsb)
+        _port->flush();
 }
 
 std::string
@@ -463,6 +482,8 @@ Samba::version()
     char* str;
     int size;
     int pos;
+
+    _writeLast = false;
 
     cmd[0] = 'V';
     cmd[1] = '#';
