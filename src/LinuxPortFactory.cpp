@@ -20,7 +20,13 @@ LinuxPortFactory::~LinuxPortFactory()
 SerialPort::Ptr
 LinuxPortFactory::create(const std::string& name)
 {
-    return SerialPort::Ptr(new PosixSerialPort(name));
+    bool isUsb = false;
+
+    if (name.find("ttyUSB") != std::string::npos ||
+        name.find("ttyACM") != std::string::npos)
+        isUsb = true;
+
+    return SerialPort::Ptr(new PosixSerialPort(name, isUsb));
 }
 
 std::string
