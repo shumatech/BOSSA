@@ -4,9 +4,9 @@
   
   <?define Manufacturer="ShumaTech"?>
   <?define Product="BOSSA"?>
-  <?define Version="1.0"?>
+  <?define Version="1.1"?>
 
-  <Product Id="C5352B58-A1BE-4B09-9CC3-0491608ACAD6"
+  <Product Id="*"
            Name="$(var.Product) $(var.Version)"
            Language="1033"
            Version="$(var.Version)"

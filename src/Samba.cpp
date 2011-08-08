@@ -462,8 +462,6 @@ Samba::go(uint32_t addr)
     if (_debug)
         printf("%s(addr=%#x)\n", __FUNCTION__, addr);
 
-    _writeLast = true;
-
     snprintf((char*) cmd, sizeof(cmd), "G%08X#", addr);
     if (_port->write(cmd, sizeof(cmd) - 1) != sizeof(cmd) - 1)
         throw SambaError();
@@ -482,8 +480,6 @@ Samba::version()
     char* str;
     int size;
     int pos;
-
-    _writeLast = false;
 
     cmd[0] = 'V';
     cmd[1] = '#';
@@ -517,13 +513,15 @@ Samba::chipId()
     uint32_t vector;
     uint32_t cid;
     
+    // Read the ARM reset vector
     vector = readWord(0x0);
-    if (vector == 0xea000013)
+    
+    // If the vector is a ARM7TDMI branch, then assume Atmel SAM7 registers
+    if ((vector & 0xff000000) == 0xea000000)
         cid = readWord(0xfffff240);
-    else if (vector == 0x20001000)
-        cid = readWord(0x400e0740);
+    // Else use the Atmel SAM3 registers
     else
-        cid = 0;
+        cid = readWord(0x400e0740);
     
     return cid;
 }

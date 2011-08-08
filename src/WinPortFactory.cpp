@@ -19,6 +19,8 @@
 #include "WinPortFactory.h"
 #include "WinSerialPort.h"
 
+#define USB_DEVICE_NAME "\\Device\\USB"
+
 WinPortFactory::WinPortFactory() :
     _devInfo(INVALID_HANDLE_VALUE), _cfgMgr(NULL), _devNode(NULL), _devNum(0)
 {
@@ -32,7 +34,18 @@ WinPortFactory::~WinPortFactory()
 SerialPort::Ptr
 WinPortFactory::create(const std::string& name)
 {
-    return SerialPort::Ptr(new WinSerialPort(name));
+    bool isUsb = false;
+    char szNtDeviceName[MAX_PATH];
+    
+    if (QueryDosDevice(name.c_str(), szNtDeviceName, MAX_PATH))
+    {
+        if (strncmp(szNtDeviceName, USB_DEVICE_NAME, sizeof(USB_DEVICE_NAME) - 1) == 0)
+        {
+            isUsb = true;
+        }
+    }
+
+    return SerialPort::Ptr(new WinSerialPort(name, isUsb));
 }
 
 void

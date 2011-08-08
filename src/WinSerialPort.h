@@ -9,7 +9,7 @@
 class WinSerialPort : public SerialPort
 {
 public:
-    WinSerialPort(const std::string& name);
+    WinSerialPort(const std::string& name, bool isUsb);
     virtual ~WinSerialPort();
     
     bool open(int baud = 115200,
@@ -17,13 +17,16 @@ public:
               SerialPort::Parity parity = SerialPort::ParityNone,
               SerialPort::StopBit stop = SerialPort::StopBitOne);
     void close();
+    
     bool isUsb() { return _isUsb; };
 
-    bool timeout(int millisecs);
     int read(uint8_t* data, int size);
     int write(const uint8_t* data, int size);
     int get();
     int put(int c);
+    
+    bool timeout(int millisecs);
+    void flush();
 
 private:
     HANDLE _handle;

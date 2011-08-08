@@ -5,19 +5,9 @@
 #include <limits.h>
 #include <stdio.h>
 
-#define USB_DEVICE_NAME "\\Device\\USB"
-
-WinSerialPort::WinSerialPort(const std::string& name) :
-    SerialPort(name), _handle(INVALID_HANDLE_VALUE), _isUsb(false)
+WinSerialPort::WinSerialPort(const std::string& name, bool isUsb) :
+    SerialPort(name), _handle(INVALID_HANDLE_VALUE), _isUsb(isUsb)
 {
-    char szNtDeviceName[MAX_PATH];
-    if (QueryDosDevice(_name.c_str(), szNtDeviceName, MAX_PATH))
-    {
-        if (strncmp(szNtDeviceName, USB_DEVICE_NAME, sizeof(USB_DEVICE_NAME) - 1) == 0)
-        {
-            _isUsb = true;
-        }
-    }
 }
 
 WinSerialPort::~WinSerialPort()
@@ -226,4 +216,10 @@ WinSerialPort::put(int c)
         return -1;
         
     return val;
+}
+
+void
+WinSerialPort::flush()
+{
+    Sleep(1);
 }
