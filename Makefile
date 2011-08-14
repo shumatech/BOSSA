@@ -45,16 +45,16 @@ $(OBJDIR)\\bossa-$(VERSION).wixobj: $(INSTALLDIR)\\bossa.wxs
 $(OBJDIR)\\bossa64-$(VERSION).wixobj: $(INSTALLDIR)\\bossa.wxs
 	$(WIXDIR)\\candle.exe -arch x64 -out $@ -ext $(WIXDIR)\\WixUIExtension.dll -ext $(WIXDIR)\\WixDifxAppExtension.dll $<
 
-$(BINDIR)\\bossa-$(VERSION).msi: $(OBJDIR)\\bossa-$(VERSION).wixobj $(BINDIR)/bossa$(EXE) $(BINDIR)/bossac$(EXE)
+$(BINDIR)\\bossa-$(VERSION).msi: $(OBJDIR)\\bossa-$(VERSION).wixobj
 	$(WIXDIR)\\light.exe -cultures:null -out $@ -pdbout $(OBJDIR)\\bossa.wixpdb -sice:ICE57 -ext $(WIXDIR)\\WixUIExtension.dll -ext $(WIXDIR)\\WixDifxAppExtension.dll $(WIXDIR)\\difxapp_x86.wixlib $<
 
-$(BINDIR)\\bossa64-$(VERSION).msi: $(OBJDIR)\\bossa64-$(VERSION).wixobj $(BINDIR)/bossa$(EXE) $(BINDIR)/bossac$(EXE)
+$(BINDIR)\\bossa64-$(VERSION).msi: $(OBJDIR)\\bossa64-$(VERSION).wixobj
 	$(WIXDIR)\\light.exe -cultures:null -out $@ -pdbout $(OBJDIR)\\bossa64.wixpdb -sice:ICE57 -ext $(WIXDIR)\\WixUIExtension.dll -ext $(WIXDIR)\\WixDifxAppExtension.dll $(WIXDIR)\\difxapp_x64.wixlib $<
 
 install32: $(BINDIR)\\bossa-$(VERSION).msi
 install64: $(BINDIR)\\bossa64-$(VERSION).msi
 .PHONY: install
-install: install32 install64
+install: pack install32 install64
 
 endif
 
@@ -64,6 +64,11 @@ endif
 ifeq ($(OS),Linux)
 COMMON_SRCS+=PosixSerialPort.cpp LinuxPortFactory.cpp
 COMMON_LIBS=-Wl,--as-needed
+
+MACHINE:=$(shell uname -m)
+
+install: pack
+	tar cvzf $(BINDIR)/bossa-$(MACHINE)-$(VERSION).tgz -C $(BINDIR) bossa$(EXE) bossac$(EXE)
 endif
 
 #
@@ -78,14 +83,14 @@ DMG=bossa-$(VERSION).dmg
 VOLUME=BOSSA
 BACKGROUND=$(INSTALLDIR)/background.png
 .PHONY: install
-app: $(BINDIR)/bossa$(EXE)
+app:
 	mkdir -p $(BINDIR)/$(APP)/Contents/MacOS
 	mkdir -p $(BINDIR)/$(APP)/Contents/Resources
 	cp -f $(INSTALLDIR)/Info.plist $(BINDIR)/$(APP)/Contents
 	echo -n "APPL????" > $(BINDIR)/$(APP)/Contents/PkgInfo
 	ln -f $(BINDIR)/bossa $(BINDIR)/$(APP)/Contents/MacOS/bossa
 	cp -f $(RESDIR)/BossaIcon.icns $(BINDIR)/$(APP)/Contents/Resources
-install: app $(BINDIR)/bossac$(EXE)
+install: pack app
 	hdiutil create -ov -megabytes 5 -fs HFS+ -volname $(VOLUME) $(BINDIR)/$(DMG)
 	hdiutil attach -noautoopen $(BINDIR)/$(DMG)
 	cp -R $(BINDIR)/$(APP) /Volumes/$(VOLUME)/
@@ -250,7 +255,7 @@ pack-bossac: $(BINDIR)/bossac$(EXE)
 	@echo UPX $^
 	$(Q)upx $^
 
-pack: pack-bossa pack-bossac
+pack: strip pack-bossa pack-bossac
 
 strip-bossa: $(BINDIR)/bossa$(EXE)
 	@echo STRIP $^
