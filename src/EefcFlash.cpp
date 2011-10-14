@@ -80,6 +80,11 @@ EefcFlash::eraseAll()
 {
     waitFSR();
     writeFCR0(EEFC_FCMD_EA, 0);
+    if (_planes == 2)
+    {
+        waitFSR();
+        writeFCR1(EEFC_FCMD_EA, 0);
+    }
 }
 
 void
@@ -233,6 +238,7 @@ EefcFlash::writePage(uint32_t page)
     if (page >= _pages)
         throw FlashPageError();
         
+    _wordCopy.setDstAddr(_addr + page * _size);
     _wordCopy.setSrcAddr(_onBufferA ? _pageBufferA : _pageBufferB);
     _onBufferA = !_onBufferA;
     waitFSR();
@@ -249,8 +255,14 @@ EefcFlash::readPage(uint32_t page, uint8_t* data)
     if (page >= _pages)
         throw FlashPageError();
         
+    // The SAM3 firmware has a bug where it returns all zeros for reads 
+    // directly from the flash so instead, we copy the flash page to
+    // SRAM and read it from there.
+    _wordCopy.setDstAddr(_onBufferA ? _pageBufferA : _pageBufferB);
+    _wordCopy.setSrcAddr(_addr + page * _size);
     waitFSR();
-    _samba.read(_addr + page * _size, data, _size);
+    _wordCopy.runv();
+    _samba.read(_onBufferA ? _pageBufferA : _pageBufferB, data, _size);
 }
 
 void
