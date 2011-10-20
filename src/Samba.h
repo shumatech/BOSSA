@@ -60,7 +60,7 @@ public:
     void setDebug(bool debug) { _debug = debug; }
     
     const SerialPort& getSerialPort() { return *_port; }
-    
+
 private:
     bool _debug;
     bool _isUsb;

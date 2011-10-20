@@ -3,16 +3,17 @@
 # 
 # Version
 #
-VERSION=1.1
+VERSION=1.2
 
 #
 # Source files
 #
-COMMON_SRCS=Samba.cpp Flash.cpp EfcFlash.cpp EefcFlash.cpp FlashFactory.cpp Applet.cpp WordCopyApplet.cpp
+COMMON_SRCS=Samba.cpp Flash.cpp EfcFlash.cpp EefcFlash.cpp FlashFactory.cpp Applet.cpp WordCopyApplet.cpp Flasher.cpp
 APPLET_SRCS=WordCopyArm.asm
 BOSSA_SRCS=BossaForm.cpp BossaWindow.cpp BossaAbout.cpp BossaApp.cpp BossaBitmaps.cpp BossaInfo.cpp BossaThread.cpp BossaProgress.cpp
 BOSSA_BMPS=BossaLogo.bmp BossaIcon.bmp ShumaTechLogo.bmp
 BOSSAC_SRCS=bossac.cpp CmdOpts.cpp
+BOSSASH_SRCS=bossash.cpp Shell.cpp Command.cpp arm-dis/arm-dis.cpp arm-dis/floatformat.cpp
 
 #
 # Build directories
@@ -34,16 +35,16 @@ OS:=$(shell uname -s)
 ifeq ($(OS),MINGW32_NT-6.1)
 EXE=.exe
 COMMON_SRCS+=WinSerialPort.cpp WinPortFactory.cpp
-COMMON_LDFLAGS=-Wl,--enable-auto-import -static-libstdc++ -static-libgcc
-COMMON_LIBS=-Wl,--as-needed -lsetupapi
+COMMON_LDFLAGS=-Wl,--enable-auto-import -static -static-libstdc++ -static-libgcc
+COMMON_LIBS=-Wl,--as-needed -lsetupapi -ltermcap
 BOSSA_RC=BossaRes.rc
 WIXDIR="C:\Program Files (x86)\Windows Installer XML v3.5\bin"
 
 $(OBJDIR)\\bossa-$(VERSION).wixobj: $(INSTALLDIR)\\bossa.wxs
-	$(WIXDIR)\\candle.exe -arch x86 -out $@ -ext $(WIXDIR)\\WixUIExtension.dll -ext $(WIXDIR)\\WixDifxAppExtension.dll $<
+	$(WIXDIR)\\candle.exe -dVersion=$(VERSION) -arch x86 -out $@ -ext $(WIXDIR)\\WixUIExtension.dll -ext $(WIXDIR)\\WixDifxAppExtension.dll $<
 
 $(OBJDIR)\\bossa64-$(VERSION).wixobj: $(INSTALLDIR)\\bossa.wxs
-	$(WIXDIR)\\candle.exe -arch x64 -out $@ -ext $(WIXDIR)\\WixUIExtension.dll -ext $(WIXDIR)\\WixDifxAppExtension.dll $<
+	$(WIXDIR)\\candle.exe -dVersion=$(VERSION) -arch x64 -out $@ -ext $(WIXDIR)\\WixUIExtension.dll -ext $(WIXDIR)\\WixDifxAppExtension.dll $<
 
 $(BINDIR)\\bossa-$(VERSION).msi: $(OBJDIR)\\bossa-$(VERSION).wixobj
 	$(WIXDIR)\\light.exe -cultures:null -out $@ -pdbout $(OBJDIR)\\bossa.wixpdb -sice:ICE57 -ext $(WIXDIR)\\WixUIExtension.dll -ext $(WIXDIR)\\WixDifxAppExtension.dll $(WIXDIR)\\difxapp_x86.wixlib $<
@@ -68,7 +69,7 @@ COMMON_LIBS=-Wl,--as-needed
 MACHINE:=$(shell uname -m)
 
 install: pack
-	tar cvzf $(BINDIR)/bossa-$(MACHINE)-$(VERSION).tgz -C $(BINDIR) bossa$(EXE) bossac$(EXE)
+	tar cvzf $(BINDIR)/bossa-$(MACHINE)-$(VERSION).tgz -C $(BINDIR) bossa$(EXE) bossac$(EXE) bossash$(EXE)
 endif
 
 #
@@ -95,6 +96,7 @@ install: pack app
 	hdiutil attach -noautoopen $(BINDIR)/$(DMG)
 	cp -R $(BINDIR)/$(APP) /Volumes/$(VOLUME)/
 	cp $(BINDIR)/bossac$(EXE) /Volumes/$(VOLUME)/
+	cp $(BINDIR)/bossash$(EXE) /Volumes/$(VOLUME)/
 	ln -s /Applications /Volumes/$(VOLUME)/Applications
 	ln -s /usr/bin /Volumes/$(VOLUME)/bin
 	mkdir /Volumes/$(VOLUME)/.background
@@ -115,6 +117,7 @@ ifdef BOSSA_RC
 BOSSA_OBJS+=$(OBJDIR)/$(BOSSA_RC:%.rc=%.o)
 endif
 BOSSAC_OBJS=$(APPLET_OBJS) $(COMMON_OBJS) $(foreach src,$(BOSSAC_SRCS),$(OBJDIR)/$(src:%.cpp=%.o))
+BOSSASH_OBJS=$(APPLET_OBJS) $(COMMON_OBJS) $(foreach src,$(BOSSASH_SRCS),$(OBJDIR)/$(src:%.cpp=%.o))
 
 #
 # Dependencies
@@ -123,6 +126,7 @@ DEPENDS=$(COMMON_SRCS:%.cpp=$(OBJDIR)/%.d)
 DEPENDS+=$(APPLET_SRCS:%.asm=$(OBJDIR)/%.d) 
 DEPENDS+=$(BOSSA_SRCS:%.cpp=$(OBJDIR)/%.d) 
 DEPENDS+=$(BOSSAC_SRCS:%.cpp=$(OBJDIR)/%.d) 
+DEPENDS+=$(BOSSASH_SRCS:%.cpp=$(OBJDIR)/%.d) 
 
 #
 # Tools
@@ -136,10 +140,11 @@ ARMOBJCOPY=$(ARM)objcopy
 #
 # CXX Flags
 #
-COMMON_CXXFLAGS+=-Wall -Werror -MT $@ -MD -MP -MF $(@:%.o=%.d) -DVERSION=\"$(VERSION)\" -g
+COMMON_CXXFLAGS+=-Wall -Werror -MT $@ -MD -MP -MF $(@:%.o=%.d) -DVERSION=\"$(VERSION)\" -g -O2
 WX_CXXFLAGS:=$(shell wx-config --cxxflags) -DWX_PRECOMP -Wno-ctor-dtor-privacy -O2 -fno-strict-aliasing
 BOSSA_CXXFLAGS=$(COMMON_CXXFLAGS) $(WX_CXXFLAGS) 
 BOSSAC_CXXFLAGS=$(COMMON_CXXFLAGS)
+BOSSASH_CXXFLAGS=$(COMMON_CXXFLAGS) -Isrc/arm-dis
 
 #
 # LD Flags
@@ -147,6 +152,7 @@ BOSSAC_CXXFLAGS=$(COMMON_CXXFLAGS)
 COMMON_LDFLAGS+=-g
 BOSSA_LDFLAGS=$(COMMON_LDFLAGS)
 BOSSAC_LDFLAGS=$(COMMON_LDFLAGS)
+BOSSASH_LDFLAGS=$(COMMON_LDFLAGS)
 
 #
 # Libs
@@ -155,11 +161,12 @@ COMMON_LIBS+=
 WX_LIBS:=$(shell wx-config --libs)
 BOSSA_LIBS=$(COMMON_LIBS) $(WX_LIBS)
 BOSSAC_LIBS=$(COMMON_LIBS)
+BOSSASH_LIBS=-lreadline $(COMMON_LIBS)
 
 #
 # Main targets
 #
-all: $(BINDIR)/bossa$(EXE) $(BINDIR)/bossac$(EXE)
+all: $(BINDIR)/bossa$(EXE) $(BINDIR)/bossac$(EXE) $(BINDIR)/bossash$(EXE)
 
 #
 # Common rules
@@ -216,6 +223,16 @@ endef
 $(foreach src,$(BOSSAC_SRCS),$(eval $(call bossac_obj,$(src))))
 
 #
+# BOSSASH rules
+#
+define bossash_obj
+$(OBJDIR)/$(1:%.cpp=%.o): $(SRCDIR)/$(1)
+	@echo CPP $$<
+	$$(Q)$$(CXX) $$(BOSSASH_CXXFLAGS) -c -o $$@ $$<
+endef
+$(foreach src,$(BOSSASH_SRCS),$(eval $(call bossash_obj,$(src))))
+
+#
 # BMP rules
 #
 define bossa_bmp
@@ -229,6 +246,9 @@ $(foreach bmp,$(BOSSA_BMPS),$(eval $(call bossa_bmp,$(bmp))))
 # Directory rules
 #
 $(OBJDIR):
+	@mkdir $@
+    
+$(OBJDIR)/arm-dis:
 	@mkdir $@
     
 $(BINDIR):
@@ -247,6 +267,11 @@ $(BINDIR)/bossac$(EXE): $(BOSSAC_OBJS) | $(BINDIR)
 	@echo LD $@
 	$(Q)$(CXX) $(BOSSAC_LDFLAGS) -o $@ $(BOSSAC_OBJS) $(BOSSAC_LIBS)
 
+$(BOSSASH_OBJS): | $(OBJDIR) $(OBJDIR)/arm-dis
+$(BINDIR)/bossash$(EXE): $(BOSSASH_OBJS) | $(BINDIR)
+	@echo LD $@
+	$(Q)$(CXX) $(BOSSASH_LDFLAGS) -o $@ $(BOSSASH_OBJS) $(BOSSASH_LIBS)
+
 pack-bossa: $(BINDIR)/bossa$(EXE)
 	@echo UPX $^
 	$(Q)upx $^
@@ -255,7 +280,11 @@ pack-bossac: $(BINDIR)/bossac$(EXE)
 	@echo UPX $^
 	$(Q)upx $^
 
-pack: strip pack-bossa pack-bossac
+pack-bossash: $(BINDIR)/bossash$(EXE)
+	@echo UPX $^
+	$(Q)upx $^
+
+pack: strip pack-bossa pack-bossac pack-bossash
 
 strip-bossa: $(BINDIR)/bossa$(EXE)
 	@echo STRIP $^
@@ -265,7 +294,11 @@ strip-bossac: $(BINDIR)/bossac$(EXE)
 	@echo STRIP $^
 	$(Q)strip $^
 
-strip: strip-bossa strip-bossac
+strip-bossash: $(BINDIR)/bossash$(EXE)
+	@echo STRIP $^
+	$(Q)strip $^
+
+strip: strip-bossa strip-bossac strip-bossash
 
 clean:
 	@echo CLEAN

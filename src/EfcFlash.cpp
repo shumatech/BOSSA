@@ -210,7 +210,8 @@ EfcFlash::writePage(uint32_t page)
 {
     if (page >= _pages)
         throw FlashPageError();
-        
+
+    _wordCopy.setDstAddr(_addr + page * _size);
     _wordCopy.setSrcAddr(_onBufferA ? _pageBufferA : _pageBufferB);
     _onBufferA = !_onBufferA;
     waitFSR();

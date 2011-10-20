@@ -210,7 +210,7 @@ PosixSerialPort::read(uint8_t* buffer, int len)
         tv.tv_usec = (_timeout % 1000) * 1000;
        
         retval = select(_devfd + 1, &fds, NULL, NULL, &tv);
-	
+
         if (retval < 0)
         {
             return -1;

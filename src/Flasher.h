@@ -16,24 +16,40 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef _WORDCOPYAPPLET_H
-#define _WORDCOPYAPPLET_H
+#ifndef _FLASHER_H
+#define _FLASHER_H
 
-#include "Applet.h"
-#include "WordCopyArm.h"
+#include <string>
+#include <exception>
 
-class WordCopyApplet : public Applet
+#include "Flash.h"
+#include "Samba.h"
+#include "FileError.h"
+
+class FileSizeError : public FileError
 {
 public:
-    WordCopyApplet(Samba& samba, uint32_t addr);
-    virtual ~WordCopyApplet();
-
-    void setDstAddr(uint32_t dstAddr);
-    void setSrcAddr(uint32_t srcAddr);
-    void setWords(uint32_t words);
-
-private:
-    static WordCopyArm applet;
+    FileSizeError() : FileError() {};
+    virtual const char* what() const throw() { return "file operation exceeds flash size"; }
 };
 
-#endif // _WORDCOPYAPPLET_H
+class Flasher
+{
+public:
+    Flasher(Flash::Ptr& flash) : _flash(flash) {}
+    virtual ~Flasher() {}
+
+    void erase();
+    void write(const char* filename);
+    bool verify(const char* filename);
+    void read(const char* filename, long fsize);
+    void lock(std::string& regionArg, bool enable);
+    void info(Samba& samba);
+
+private:
+    void progressBar(int num, int div);
+
+    Flash::Ptr& _flash;
+};
+
+#endif // _FLASHER_H

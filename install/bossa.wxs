@@ -4,7 +4,6 @@
   
   <?define Manufacturer="ShumaTech"?>
   <?define Product="BOSSA"?>
-  <?define Version="1.1"?>
 
   <Product Id="*"
            Name="$(var.Product) $(var.Version)"

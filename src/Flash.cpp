@@ -36,7 +36,6 @@ Flash::Flash(Samba& samba,
     assert((pages & (pages - 1)) == 0);
     assert((lockRegions & (lockRegions - 1)) == 0);
     
-    _wordCopy.setDstAddr(addr);
     _wordCopy.setWords(size / sizeof(uint32_t));
     _wordCopy.setStack(stack);
     

@@ -16,24 +16,33 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef _WORDCOPYAPPLET_H
-#define _WORDCOPYAPPLET_H
+#ifndef _Shell_H
+#define _Shell_H
 
-#include "Applet.h"
-#include "WordCopyArm.h"
+#include <string>
+#include <list>
 
-class WordCopyApplet : public Applet
+
+class Command;
+
+class Shell
 {
 public:
-    WordCopyApplet(Samba& samba, uint32_t addr);
-    virtual ~WordCopyApplet();
+    virtual ~Shell();
+    Shell();
 
-    void setDstAddr(uint32_t dstAddr);
-    void setSrcAddr(uint32_t srcAddr);
-    void setWords(uint32_t words);
+    void invoke(char* argv[], int argc);
+    void help();
+    void usage(const char* name);
+    void add(Command* command);
+    Command* find(const char* name);
+
+    bool& exitFlag() { return _exitFlag; }
 
 private:
-    static WordCopyArm applet;
+    typedef std::list<Command*> CommandList;
+    CommandList _commandList;
+    bool _exitFlag;
 };
 
-#endif // _WORDCOPYAPPLET_H
+#endif // _Shell_H

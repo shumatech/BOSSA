@@ -16,24 +16,44 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef _WORDCOPYAPPLET_H
-#define _WORDCOPYAPPLET_H
+#ifndef _FILEERROR_H
+#define _FILEERROR_H
 
-#include "Applet.h"
-#include "WordCopyArm.h"
+#include <exception>
+#include <errno.h>
 
-class WordCopyApplet : public Applet
+#include "Flash.h"
+#include "Samba.h"
+
+class FileError : public std::exception
 {
 public:
-    WordCopyApplet(Samba& samba, uint32_t addr);
-    virtual ~WordCopyApplet();
-
-    void setDstAddr(uint32_t dstAddr);
-    void setSrcAddr(uint32_t srcAddr);
-    void setWords(uint32_t words);
-
-private:
-    static WordCopyArm applet;
+    FileError() : std::exception() {}
 };
 
-#endif // _WORDCOPYAPPLET_H
+class FileOpenError : public FileError
+{
+public:
+    FileOpenError(int errnum) : FileError(), _errnum(errnum) {};
+    const char* what() const throw() { return strerror(_errnum); }
+private:
+    int _errnum;
+};
+
+class FileIoError : public FileError
+{
+public:
+    FileIoError(int errnum) : FileError(), _errnum(errnum) {};
+    const char* what() const throw() { return strerror(_errnum); }
+private:
+    int _errnum;
+};
+
+class FileShortError : public FileError
+{
+public:
+    FileShortError() : FileError() {};
+    const char* what() const throw() { return "short write"; }
+};
+
+#endif // _FILEERROR_H

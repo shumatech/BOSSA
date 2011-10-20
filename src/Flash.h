@@ -70,6 +70,7 @@ public:
     
     const std::string& name() { return _name; }
     
+    virtual uint32_t address() { return _addr; }
     virtual uint32_t pageSize() { return _size; }
     virtual uint32_t numPages() { return _pages; }
     virtual uint32_t numPlanes() { return _planes; }
