@@ -39,7 +39,7 @@ BossaInfo::BossaInfo(wxWindow* parent) : InfoDialog(parent)
     _securityCheckBox->Enable(false);
     _bodCheckBox->Enable(false);
     _borCheckBox->Enable(false);
-    
+
     _bootCheckBox->SetValue(flash->getBootFlash());
     _securityCheckBox->SetValue(flash->getSecurity());
     _bodCheckBox->SetValue(flash->getBod());
@@ -56,7 +56,7 @@ BossaInfo::BossaInfo(wxWindow* parent) : InfoDialog(parent)
         _lockCheckBox24, _lockCheckBox25, _lockCheckBox26, _lockCheckBox27,
         _lockCheckBox28, _lockCheckBox29, _lockCheckBox30, _lockCheckBox31,
     };
-    
+
     for (uint32_t i = 0; i < sizeof(lockCheckBox) / sizeof(lockCheckBox[0]); i++)
     {
         if (i >= lockRegions)
@@ -69,6 +69,6 @@ BossaInfo::BossaInfo(wxWindow* parent) : InfoDialog(parent)
             lockCheckBox[i]->SetValue(flash->getLockRegion(i));
         }
     }
-    
+
     GetSizer()->Fit(this);
 }

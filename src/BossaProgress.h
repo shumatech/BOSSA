@@ -27,13 +27,13 @@ class BossaProgress : public ProgressDialog
 {
 public:
     BossaProgress(wxWindow* parent);
-    
+
     void SetValue(int pos);
     void SetLabel(const wxString& label);
-    
+
 private:
     wxEvtHandler* _parent;
-    
+
     void OnCancel(wxCommandEvent& event);
 };
 

@@ -24,7 +24,7 @@
 BossaAbout::BossaAbout(wxWindow* parent) : AboutDialog(parent)
 {
     BossaApp& app = wxGetApp();
-    
+
     _bossaBitmap->SetBitmap(app.bitmaps.getBossaLogo());
     _shumatechBitmap->SetBitmap(app.bitmaps.getShumaTechLogo());
     _versionStaticText->SetLabel(wxString::Format(wxT("Version: %s"), VERSION));

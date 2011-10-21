@@ -39,7 +39,7 @@ printLastError()
 {
     char buffer[100];
     DWORD dw = GetLastError();
-    
+
     if (FormatMessage(
         FORMAT_MESSAGE_FROM_SYSTEM |
         FORMAT_MESSAGE_IGNORE_INSERTS,
@@ -63,10 +63,10 @@ bool
 WinSerialPort::open(int baud, int data, SerialPort::Parity parity, SerialPort::StopBit stop)
 {
     DCB dcbSerialParams;
-    
+
     if (_handle != INVALID_HANDLE_VALUE)
         return false;
-    
+
     std::string device = "\\\\.\\" + _name;
     _handle = CreateFile(device.c_str(),
                          GENERIC_READ | GENERIC_WRITE,
@@ -78,9 +78,9 @@ WinSerialPort::open(int baud, int data, SerialPort::Parity parity, SerialPort::S
 
     if (_handle == INVALID_HANDLE_VALUE)
         return false;
-    
+
     dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
-    
+
     if (!GetCommState(_handle, &dcbSerialParams))
     {
         CloseHandle(_handle);
@@ -90,7 +90,7 @@ WinSerialPort::open(int baud, int data, SerialPort::Parity parity, SerialPort::S
     dcbSerialParams.BaudRate = baud;
 
     dcbSerialParams.ByteSize = data;
-    
+
     switch (parity)
     {
     case ParityNone:
@@ -106,7 +106,7 @@ WinSerialPort::open(int baud, int data, SerialPort::Parity parity, SerialPort::S
         CloseHandle(_handle);
         return false;
     }
-    
+
     switch (stop)
     {
     case StopBitOne:
@@ -122,15 +122,15 @@ WinSerialPort::open(int baud, int data, SerialPort::Parity parity, SerialPort::S
         CloseHandle(_handle);
         return false;
     }
-    
+
     if (!SetCommState(_handle, &dcbSerialParams))
     {
         CloseHandle(_handle);
         return false;
     }
-    
+
     timeout(INT_MAX);
-    
+
     return true;
 }
 
@@ -149,17 +149,17 @@ WinSerialPort::timeout(int millisecs)
 
     if (_handle == INVALID_HANDLE_VALUE)
         return false;
-    
+
     timeouts.ReadIntervalTimeout = MAXDWORD;
     timeouts.ReadTotalTimeoutConstant = millisecs;
     timeouts.ReadTotalTimeoutMultiplier = 0;
 
     timeouts.WriteTotalTimeoutConstant = MAXDWORD;
     timeouts.WriteTotalTimeoutMultiplier = 0;
-    
+
     if (!SetCommTimeouts(_handle, &timeouts))
         return false;
-        
+
     return true;
 }
 
@@ -168,7 +168,7 @@ WinSerialPort::read(uint8_t* data, int size)
 {
     DWORD bytes;
     int total = 0;
-    
+
     if (_handle == INVALID_HANDLE_VALUE)
         return -1;
 
@@ -182,7 +182,7 @@ WinSerialPort::read(uint8_t* data, int size)
         data += bytes;
         total += bytes;
     }
-    
+
     return total;
 }
 
@@ -190,13 +190,13 @@ int
 WinSerialPort::write(const uint8_t* data, int size)
 {
     DWORD bytes;
-    
+
     if (_handle == INVALID_HANDLE_VALUE)
         return -1;
 
     if (!WriteFile(_handle, data, size, &bytes, NULL))
         return -1;
-    
+
     return bytes;
 }
 
@@ -205,16 +205,16 @@ WinSerialPort::get()
 {
     uint8_t val;
     DWORD bytes;
-    
+
     if (_handle == INVALID_HANDLE_VALUE)
         return -1;
 
     if (!ReadFile(_handle, &val, 1, &bytes, NULL))
         return -1;
-    
+
     if (bytes != 1)
         return -1;
-        
+
     return val;
 }
 
@@ -223,16 +223,16 @@ WinSerialPort::put(int c)
 {
     uint8_t val = c;
     DWORD bytes;
-    
+
     if (_handle == INVALID_HANDLE_VALUE)
         return -1;
 
     if (!WriteFile(_handle, &val, 1, &bytes, NULL))
         return -1;
-    
+
     if (bytes != 1)
         return -1;
-        
+
     return val;
 }
 

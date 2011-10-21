@@ -36,7 +36,7 @@ WinPortFactory::create(const std::string& name)
 {
     bool isUsb = false;
     char szNtDeviceName[MAX_PATH];
-    
+
     if (QueryDosDevice(name.c_str(), szNtDeviceName, MAX_PATH))
     {
         if (strncmp(szNtDeviceName, USB_DEVICE_NAME, sizeof(USB_DEVICE_NAME) - 1) == 0)
@@ -53,7 +53,7 @@ WinPortFactory::cleanup()
 {
     _devNum = 0;
     _devNode = NULL;
-    
+
     if (_cfgMgr == NULL)
     {
         FreeLibrary(_cfgMgr);
@@ -81,7 +81,7 @@ WinPortFactory::begin()
 
     if (_devInfo != INVALID_HANDLE_VALUE)
         cleanup();
-        
+
     SetupDiClassGuidsFromNameA("Ports", 0, 0, &size);
     if (size < 1)
         return error();
@@ -104,7 +104,7 @@ WinPortFactory::begin()
     _devNode = (CM_Open_DevNode_Key) GetProcAddress(_cfgMgr, "CM_Open_DevNode_Key");
     if (!_devNode)
         return error();
-    
+
     return next();
 }
 
@@ -138,10 +138,10 @@ WinPortFactory::next()
                       1,
                       &devKey,
                       0);
-                            
+
         if (rc != ERROR_SUCCESS)
             return error();
-            
+
         len = sizeof(devName);
         rc = RegQueryValueEx(devKey,
                              "portname",
@@ -155,7 +155,7 @@ WinPortFactory::next()
             return error();
 
         _devNum++;
-        
+
         if (strncmp("COM", (char*) devName, 3) == 0)
             break;
     }

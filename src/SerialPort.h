@@ -28,14 +28,14 @@ class SerialPort
 public:
     SerialPort(const std::string& name) : _name(name) {}
     virtual ~SerialPort() {}
-    
+
     enum Parity
     {
         ParityNone,
         ParityOdd,
         ParityEven,
     };
-    
+
     enum StopBit
     {
         StopBitOne,
@@ -48,9 +48,9 @@ public:
                       Parity parity = ParityNone,
                       StopBit stop = StopBitOne) = 0;
     virtual void close() = 0;
-    
+
     virtual bool isUsb() = 0;
-    
+
     virtual int read(uint8_t* data, int size) = 0;
     virtual int write(const uint8_t* data, int size) = 0;
     virtual int get() = 0;
@@ -60,9 +60,9 @@ public:
     virtual void flush() = 0;
 
     virtual std::string name() const { return _name; }
-    
+
     typedef std::auto_ptr<SerialPort> Ptr;
-    
+
 protected:
     std::string _name;
 };

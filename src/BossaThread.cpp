@@ -125,7 +125,7 @@ WriteThread::Entry()
         {
             flash.eraseAuto(true);
         }
-        
+
         infile = fopen(_filename.mb_str(), "rb");
         if (!infile)
             throw FileOpenError();
@@ -134,7 +134,7 @@ WriteThread::Entry()
             (fsize = ftell(infile)) < 0)
             throw FileIoError();
         rewind(infile);
-        
+
         numPages = (fsize + pageSize - 1) / pageSize;
         if (numPages > flash.numPages())
             throw FileSizeError();
@@ -147,17 +147,17 @@ WriteThread::Entry()
                 Warning(wxT("Write stopped"));
                 return 0;
             }
-            
+
             if (pageNum % 10 == 0 || pageNum == numPages - 1)
             {
                 uint32_t percent = (pageNum + 1) * 100 / numPages;
                 Progress(wxString::Format(wxT("Writing page %d (%d%%)"), pageNum, percent),
                          percent);
             }
-                
+
             flash.loadBuffer(buffer);
             flash.writePage(pageNum);
-            
+
             pageNum++;
             if (pageNum == numPages)
                 break;
@@ -166,7 +166,7 @@ WriteThread::Entry()
         }
         if (fbytes <= 0)
             throw FileIoError();
-        
+
         flash.setBootFlash(_bootFlash);
         flash.setBod(_bod);
         flash.setBor(_bor);
@@ -174,7 +174,7 @@ WriteThread::Entry()
             flash.lockAll();
         if (_security)
             flash.setSecurity();
-        
+
         fclose(infile);
     }
     catch(exception& e)
@@ -184,7 +184,7 @@ WriteThread::Entry()
         Error(e.what());
         return 0;
     }
-    
+
     Success("Write completed successfully");
     return 0;
 }
@@ -209,7 +209,7 @@ VerifyThread::Entry()
     uint32_t totalErrors = 0;
     long fsize;
     size_t fbytes;
-    
+
     try
     {
         infile = fopen(_filename.mb_str(), "rb");
@@ -220,11 +220,11 @@ VerifyThread::Entry()
             (fsize = ftell(infile)) < 0)
             throw FileIoError();
         rewind(infile);
-        
+
         numPages = (fsize + pageSize - 1) / pageSize;
         if (numPages > flash.numPages())
             throw FileSizeError();
-        
+
         while ((fbytes = fread(bufferA, 1, pageSize, infile)) > 0)
         {
             if (_stopped)
@@ -233,16 +233,16 @@ VerifyThread::Entry()
                 Warning(wxT("Verify stopped"));
                 return 0;
             }
-            
+
             if (pageNum % 10 == 0 || pageNum == numPages - 1)
             {
                 uint32_t percent = (pageNum + 1) * 100 / numPages;
                 Progress(wxString::Format(wxT("Verifying page %d (%d%%)"), pageNum, percent),
                          percent);
             }
-            
+
             flash.readPage(pageNum, bufferB);
-            
+
             byteErrors = 0;
             for (uint32_t i = 0; i < fbytes; i++)
             {
@@ -254,7 +254,7 @@ VerifyThread::Entry()
                 pageErrors++;
                 totalErrors += byteErrors;
             }
-            
+
             pageNum++;
             if (pageNum == numPages)
                 break;
@@ -263,7 +263,7 @@ VerifyThread::Entry()
         }
         if (fbytes <= 0)
             throw FileIoError();
-        
+
         fclose(infile);
     }
     catch(exception& e)
@@ -273,7 +273,7 @@ VerifyThread::Entry()
         Error(e.what());
         return 0;
     }
-    
+
     if (byteErrors != 0)
     {
         Warning(wxString::Format(
@@ -283,9 +283,9 @@ VerifyThread::Entry()
             pageErrors, totalErrors));
         return 0;
     }
-    
+
     Success("Verify successful\n");
-    
+
     return 0;
 }
 
@@ -306,7 +306,7 @@ ReadThread::Entry()
 
     if (_size == 0)
         _size = pageSize * flash.numPages();
-    
+
     outfile = fopen(_filename, "wb");
     if (!outfile)
         throw FileOpenError();
@@ -316,7 +316,7 @@ ReadThread::Entry()
         numPages = (_size + pageSize - 1) / pageSize;
         if (numPages > flash.numPages())
             throw FileSizeError();
-        
+
         for (pageNum = 0; pageNum < numPages; pageNum++)
         {
             if (_stopped)
@@ -325,16 +325,16 @@ ReadThread::Entry()
                 Warning(wxT("Read stopped"));
                 return 0;
             }
-            
+
             if (pageNum % 10 == 0 || pageNum == numPages - 1)
             {
                 uint32_t percent = (pageNum + 1) * 100 / numPages;
                 Progress(wxString::Format(wxT("Reading page %d (%d%%)"), pageNum, percent),
                          percent);
             }
-                
+
             flash.readPage(pageNum, buffer);
-            
+
             if (pageNum == numPages - 1 && _size % pageSize > 0)
                 pageSize = _size % pageSize;
             if (fwrite(buffer, 1, pageSize, outfile) != pageSize)
@@ -349,7 +349,7 @@ ReadThread::Entry()
         Error(e.what());
         return 0;
     }
-    
+
     Success("Read completed successfully");
     return 0;
 }

@@ -32,12 +32,12 @@ public:
     BossaThread(wxEvtHandler* parent);
 
     void stop() { _stopped = true; }
-    
+
 protected:
     wxEvtHandler* _parent;
 
     bool _stopped;
-    
+
     void Progress(const wxString& message, int pos);
     void Success(const wxString& message);
     void Warning(const wxString& message);
@@ -56,7 +56,7 @@ public:
                 bool lock,
                 bool security);
     wxThread::ExitCode Entry();
-    
+
 private:
     wxString _filename;
     bool _eraseAll;
@@ -73,7 +73,7 @@ public:
     VerifyThread(wxEvtHandler* parent,
                  const wxString& filename);
     wxThread::ExitCode Entry();
-    
+
 private:
     wxString _filename;
 };
@@ -85,7 +85,7 @@ public:
                const wxString& filename,
                size_t size);
     wxThread::ExitCode Entry();
-    
+
 private:
     wxString _filename;
     size_t _size;

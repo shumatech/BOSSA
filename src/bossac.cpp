@@ -74,7 +74,7 @@ BossaConfig::BossaConfig()
     security = false;
     info = false;
     help = false;
-    
+
     readArg = 0;
     bootArg = 1;
     bodArg = 1;
@@ -255,7 +255,7 @@ main(int argc, char* argv[])
 
         if (config.debug)
             samba.setDebug(true);
-        
+
         if (config.port)
         {
             if (!samba.connect(portFactory.create(config.portArg)))
@@ -275,7 +275,7 @@ main(int argc, char* argv[])
             }
             printf("Device found on %s\n", port.c_str());
         }
-        
+
         uint32_t chipId = samba.chipId();
         Flash::Ptr flash = flashFactory.create(samba, chipId);
         if (flash.get() == NULL)
@@ -288,7 +288,7 @@ main(int argc, char* argv[])
 
         if (config.unlock)
             flasher.lock(config.unlockArg, false);
-            
+
         if (config.erase)
             flasher.erase();
 
@@ -307,7 +307,7 @@ main(int argc, char* argv[])
             printf("Set boot flash %s\n", config.bootArg ? "true" : "false");
             flash->setBootFlash(config.bootArg);
         }
-        
+
         if (config.bod)
         {
             printf("Set brownout detect %s\n", config.bodArg ? "true" : "false");
@@ -325,7 +325,7 @@ main(int argc, char* argv[])
             printf("Set security\n");
             flash->setSecurity();
         }
-        
+
         if (config.lock)
             flasher.lock(config.lockArg, true);
 
@@ -342,7 +342,7 @@ main(int argc, char* argv[])
         fprintf(stderr, "\nUnhandled exception\n");
         return 1;
     }
-    
+
     return 0;
 }
 

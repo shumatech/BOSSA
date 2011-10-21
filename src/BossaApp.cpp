@@ -29,7 +29,7 @@ BossaApp::OnInit()
     _window = new BossaWindow();
     _window->Show(true);
     SetTopWindow(_window);
-    
+
     return true;
 }
 

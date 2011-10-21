@@ -32,13 +32,13 @@ class OSXPortFactory
 public:
     OSXPortFactory();
     virtual ~OSXPortFactory();
-    
+
     virtual std::string begin();
     virtual std::string end();
     virtual std::string next();
-    
+
     virtual SerialPort::Ptr create(const std::string& name);
-    
+
 private:
     std::string _empty;
     DIR* _dir;

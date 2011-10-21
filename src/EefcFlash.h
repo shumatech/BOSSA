@@ -39,7 +39,7 @@ public:
               uint32_t stack,
               bool canBrownout);
     virtual ~EefcFlash();
-    
+
     void eraseAll();
     void eraseAuto(bool enable);
 
@@ -49,7 +49,7 @@ public:
 
     bool getSecurity();
     void setSecurity();
-    
+
     bool getBod();
     void setBod(bool enable);
     bool canBod() { return _canBrownout; }
@@ -64,12 +64,12 @@ public:
 
     void writePage(uint32_t page);
     void readPage(uint32_t page, uint8_t* data);
-    
+
 private:
     uint32_t _regs;
     bool _canBrownout;
     bool _eraseAuto;
-    
+
     void waitFSR();
     void writeFCR0(uint8_t cmd, uint32_t arg);
     void writeFCR1(uint8_t cmd, uint32_t arg);

@@ -35,15 +35,15 @@ Flash::Flash(Samba& samba,
     assert((size & (size - 1)) == 0);
     assert((pages & (pages - 1)) == 0);
     assert((lockRegions & (lockRegions - 1)) == 0);
-    
+
     _wordCopy.setWords(size / sizeof(uint32_t));
     _wordCopy.setStack(stack);
-    
+
     _onBufferA = true;
     _pageBufferA = _user + _wordCopy.size();
     _pageBufferB = _pageBufferA + size;
 }
-    
+
 void
 Flash::lockAll()
 {

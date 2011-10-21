@@ -34,12 +34,12 @@ public:
 private:
     BossaThread* _thread;
     BossaProgress* _progress;
-    
+
     void RefreshSerial();
     void CreateFlash();
     void Connected();
     void Disconnected();
-    
+
     void Error(const wxString& message);
     void Warning(const wxString& message);
     void Info(const wxString& message);
@@ -49,13 +49,13 @@ private:
     void OnRefresh(wxCommandEvent& event);
     void OnSerial(wxCommandEvent& event);
     void OnAutoScan(wxCommandEvent& event);
-    
+
     void OnWrite(wxCommandEvent& event);
     void OnVerify(wxCommandEvent& event);
     void OnRead(wxCommandEvent& event);
     void OnInfo(wxCommandEvent& event);
     void OnExit(wxCommandEvent& event);
-    
+
     void OnThreadProgress(wxCommandEvent& event);
     void OnThreadSuccess(wxCommandEvent& event);
     void OnThreadWarning(wxCommandEvent& event);

@@ -24,10 +24,10 @@ class DriverBase
 public:
     DriverBase() {}
     virtual ~DriverBase() {}
-    
+
     virtual bool isInstalled() = 0;
     virtual bool install() = 0;
-    
+
     virtual bool isUpdated() = 0;
     virtual bool update() = 0;
 };

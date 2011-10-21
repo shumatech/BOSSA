@@ -57,7 +57,7 @@ EfcFlash::EfcFlash(Samba& samba,
     assert(planes == 1 || planes == 2);
     assert(pages <= planes * 1024);
     assert(lockRegions <= 32);
-    
+
     eraseAuto(true);
 }
 
@@ -88,7 +88,7 @@ EfcFlash::eraseAuto(bool enable)
         fmr &= ~(1 << 7);
     else
         fmr |= (1 << 7);
-    
+
     _samba.writeWord(EFC0_FMR, fmr);
     if (_planes == 2)
     {
@@ -115,7 +115,7 @@ EfcFlash::getLockRegion(uint32_t region)
 {
     if (region >= _lockRegions)
         throw FlashRegionError();
-    
+
     if (_planes == 2 && region >= _lockRegions / 2)
         return (readFSR1() & (1 << (16 + region - _lockRegions / 2)));
     else
@@ -126,7 +126,7 @@ void
 EfcFlash::setLockRegion(uint32_t region, bool enable)
 {
     uint32_t page;
-    
+
     if (region >= _lockRegions)
         throw FlashRegionError();
 
@@ -200,7 +200,7 @@ EfcFlash::setBootFlash(bool enable)
 {
     if (!_canBootFlash)
         return;
-    
+
     waitFSR();
     writeFCR0(enable ? EFC_FCMD_SGPB : EFC_FCMD_CGPB, 2);
 }
@@ -227,7 +227,7 @@ EfcFlash::readPage(uint32_t page, uint8_t* data)
 {
     if (page >= _pages)
         throw FlashPageError();
-        
+
     waitFSR();
     _samba.read(_addr + page * _size, data, _size);
 }
@@ -238,13 +238,13 @@ EfcFlash::waitFSR()
     uint32_t tries = 0;
     uint32_t fsr0;
     uint32_t fsr1 = 0x1;
-    
+
     while (++tries <= 500)
     {
         fsr0 = readFSR0();
         if (fsr0 & (1 << 2))
             throw FlashLockError();
-        
+
         if (_planes == 2)
         {
             fsr1 = readFSR1();

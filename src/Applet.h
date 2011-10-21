@@ -37,9 +37,9 @@ public:
 
     virtual uint32_t size() { return _size; }
     virtual uint32_t addr() { return _addr; }
-    
+
     virtual void setStack(uint32_t stack);
-    
+
     virtual void run();
     virtual void runv();
 

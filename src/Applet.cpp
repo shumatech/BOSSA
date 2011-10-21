@@ -48,7 +48,7 @@ Applet::runv()
 {
     // Add one to the start address for Thumb mode
     _samba.writeWord(_reset, _start + 1);
-    
+
     // The stack is the first reset vector
     _samba.go(_stack);
 }

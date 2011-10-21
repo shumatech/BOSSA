@@ -60,7 +60,7 @@ PosixSerialPort::open(int baud,
     _devfd = ::open(dev.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
     if (_devfd == -1)
         return false;
-   
+
     if (tcgetattr(_devfd, &options) == -1)
     {
         close();
@@ -103,7 +103,7 @@ PosixSerialPort::open(int baud,
         close();
         return false;
     }
-   
+
     options.c_cflag |= (CLOCAL | CREAD);
 
     switch (data)
@@ -120,7 +120,7 @@ PosixSerialPort::open(int baud,
             close();
             return false;
     }
-        
+
     switch (parity)
     {
         case SerialPort::ParityNone:
@@ -155,7 +155,7 @@ PosixSerialPort::open(int baud,
         close();
         return false;
     }
-    
+
     // No hardware flow control
     options.c_cflag &= ~CRTSCTS;
 
@@ -178,7 +178,7 @@ PosixSerialPort::open(int baud,
         close();
         return false;
     }
-    
+
     return true;
 }
 
@@ -205,10 +205,10 @@ PosixSerialPort::read(uint8_t* buffer, int len)
     {
         FD_ZERO(&fds);
         FD_SET(_devfd, &fds);
-       
+
         tv.tv_sec  = _timeout / 1000;
         tv.tv_usec = (_timeout % 1000) * 1000;
-       
+
         retval = select(_devfd + 1, &fds, NULL, NULL, &tv);
 
         if (retval < 0)
@@ -227,7 +227,7 @@ PosixSerialPort::read(uint8_t* buffer, int len)
             numread += retval;
         }
     }
-    
+
     return numread;
 }
 
@@ -244,13 +244,13 @@ int
 PosixSerialPort::get()
 {
     uint8_t byte;
-    
+
     if (_devfd == -1)
         return -1;
 
     if (read(&byte, 1) != 1)
         return -1;
-    
+
     return byte;
 }
 
@@ -258,7 +258,7 @@ int
 PosixSerialPort::put(int c)
 {
     uint8_t byte;
-    
+
     byte = c;
     return write(&byte, 1);
 }

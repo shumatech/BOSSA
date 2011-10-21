@@ -28,11 +28,11 @@ class PortFactoryBase
 public:
     PortFactoryBase() {}
     virtual ~PortFactoryBase() {}
-    
+
     virtual std::string begin() = 0;
     virtual std::string end() = 0;
     virtual std::string next() = 0;
-    
+
     virtual SerialPort::Ptr create(const std::string& name) = 0;
 };
 

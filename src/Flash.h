@@ -67,9 +67,9 @@ public:
           uint32_t user,
           uint32_t stack);
     virtual ~Flash() {}
-    
+
     const std::string& name() { return _name; }
-    
+
     virtual uint32_t address() { return _addr; }
     virtual uint32_t pageSize() { return _size; }
     virtual uint32_t numPages() { return _pages; }
@@ -87,7 +87,7 @@ public:
 
     virtual bool getSecurity() = 0;
     virtual void setSecurity() = 0;
-    
+
     virtual bool getBod() = 0;
     virtual void setBod(bool enable) = 0;
     virtual bool canBod() = 0;
@@ -103,9 +103,9 @@ public:
     virtual void loadBuffer(const uint8_t* data);
     virtual void writePage(uint32_t page) = 0;
     virtual void readPage(uint32_t page, uint8_t* data) = 0;
-    
+
     typedef std::auto_ptr<Flash> Ptr;
-    
+
 protected:
     Samba& _samba;
     std::string _name;

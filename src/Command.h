@@ -40,7 +40,7 @@ public:
 
     static void setShell(Shell* shell) { _shell = shell; }
     static void disconnect();
-    
+
     bool operator < (const Command& rhs);
 
 protected:

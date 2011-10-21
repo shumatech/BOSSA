@@ -64,7 +64,7 @@ EefcFlash::EefcFlash(Samba& samba,
     assert(planes == 1 || planes == 2);
     assert(pages <= 1024);
     assert(lockRegions <= 32);
-    
+
     // SAM3 Errata (FWS must be 6)
     _samba.writeWord(EEFC0_FMR, 0x6 << 8);
     if (planes == 2)
@@ -108,7 +108,7 @@ EefcFlash::isLocked()
         if (readFRR1())
             return true;
     }
-    
+
     return false;
 }
 
@@ -117,7 +117,7 @@ EefcFlash::getLockRegion(uint32_t region)
 {
     if (region >= _lockRegions)
         throw FlashRegionError();
-    
+
     waitFSR();
     if (_planes == 2 && region >= _lockRegions / 2)
     {
@@ -133,7 +133,7 @@ EefcFlash::getLockRegion(uint32_t region)
         if (readFRR0() & (1 << region))
             return true;
     }
-    
+
     return false;
 }
 
@@ -141,7 +141,7 @@ void
 EefcFlash::setLockRegion(uint32_t region, bool enable)
 {
     uint32_t page;
-    
+
     if (region >= _lockRegions)
         throw FlashRegionError();
 
@@ -183,7 +183,7 @@ EefcFlash::getBod()
 {
     if (!_canBrownout)
         return false;
-        
+
     waitFSR();
     writeFCR0(EEFC_FCMD_GGPB, 0);
     waitFSR();
@@ -195,7 +195,7 @@ EefcFlash::setBod(bool enable)
 {
     if (!_canBrownout)
         return;
-        
+
     waitFSR();
     writeFCR0(enable ? EEFC_FCMD_SGPB : EEFC_FCMD_CGPB, 1);
 }
@@ -205,7 +205,7 @@ EefcFlash::getBor()
 {
     if (!_canBrownout)
         return false;
-        
+
     waitFSR();
     writeFCR0(EEFC_FCMD_GGPB, 0);
     waitFSR();
@@ -217,7 +217,7 @@ EefcFlash::setBor(bool enable)
 {
     if (!_canBrownout)
         return;
-        
+
     waitFSR();
     writeFCR0(enable ? EEFC_FCMD_SGPB : EEFC_FCMD_CGPB, 2);
 }
@@ -243,7 +243,7 @@ EefcFlash::writePage(uint32_t page)
 {
     if (page >= _pages)
         throw FlashPageError();
-        
+
     _wordCopy.setDstAddr(_addr + page * _size);
     _wordCopy.setSrcAddr(_onBufferA ? _pageBufferA : _pageBufferB);
     _onBufferA = !_onBufferA;
@@ -260,8 +260,8 @@ EefcFlash::readPage(uint32_t page, uint8_t* data)
 {
     if (page >= _pages)
         throw FlashPageError();
-        
-    // The SAM3 firmware has a bug where it returns all zeros for reads 
+
+    // The SAM3 firmware has a bug where it returns all zeros for reads
     // directly from the flash so instead, we copy the flash page to
     // SRAM and read it from there.
     _wordCopy.setDstAddr(_onBufferA ? _pageBufferA : _pageBufferB);
@@ -277,13 +277,13 @@ EefcFlash::waitFSR()
     uint32_t tries = 0;
     uint32_t fsr0;
     uint32_t fsr1 = 0x1;
-    
+
     while (++tries <= 500)
     {
         fsr0 = _samba.readWord(EEFC0_FSR);
         if (fsr0 & (1 << 2))
             throw FlashLockError();
-        
+
         if (_planes == 2)
         {
             fsr1 = _samba.readWord(EEFC1_FSR);

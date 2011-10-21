@@ -41,7 +41,7 @@ Flasher::progressBar(int num, int div)
         bars--;
     }
     while (bars-- > 0)
-    { 
+    {
         putchar(' ');
     }
     printf("] %d%% (%d/%d pages)", num * 100 / div, num, div);
@@ -197,7 +197,7 @@ Flasher::read(const char* filename, long fsize)
     uint32_t pageNum = 0;
     uint32_t numPages;
     size_t fbytes;
-    
+
     if (fsize == 0)
         fsize = pageSize * _flash->numPages();
 

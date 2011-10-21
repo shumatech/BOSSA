@@ -33,7 +33,7 @@ Flash::Ptr
 FlashFactory::create(Samba& samba, uint32_t chipId)
 {
     Flash* flash;
-    
+
     switch (chipId & 0x7fffffe0)
     {
     //
@@ -169,7 +169,7 @@ FlashFactory::create(Samba& samba, uint32_t chipId)
         flash = NULL;
         break;
     }
-    
+
     return Flash::Ptr(flash);
 }
 

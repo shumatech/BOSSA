@@ -53,14 +53,14 @@ Samba::init()
 {
     uint8_t cmd[3];
     uint32_t cid;
-    
+
     _port->timeout(TIMEOUT_QUICK);
-    
+
     if (!_isUsb)
     {
         if (_debug)
             printf("Send auto-baud\n");
-            
+
         // RS-232 auto-baud sequence
         _port->put(0x80);
         _port->get();
@@ -69,7 +69,7 @@ Samba::init()
         _port->put('#');
         _port->read(cmd, 3);
     }
-    
+
     // Set binary mode
     if (_debug)
         printf("Set binary mode\n");
@@ -77,7 +77,7 @@ Samba::init()
     cmd[1] = '#';
     _port->write(cmd, 2);
     _port->read(cmd, 2);
-    
+
     // Read the chip ID
     try
     {
@@ -89,13 +89,13 @@ Samba::init()
     }
 
     _port->timeout(TIMEOUT_NORMAL);
-    
+
     if (_debug)
         printf("chipId=%#08x\n", cid);
-    
+
     uint8_t eproc = (cid >> 5) & 0x7;
     uint8_t arch = (cid >> 20) & 0xff;
-    
+
     // Check for ARM7TDMI processor
     if (eproc == 2)
     {
@@ -130,7 +130,7 @@ Samba::init()
         if (_debug)
             printf("Unsupported processor\n");
     }
-    
+
     return false;
 }
 
@@ -138,7 +138,7 @@ bool
 Samba::connect(SerialPort::Ptr port)
 {
     _port = port;
-    
+
     // Try to connect at a high speed if USB
     _isUsb = _port->isUsb();
     if (_isUsb && _port->open(921600) && init())
@@ -156,7 +156,7 @@ Samba::connect(SerialPort::Ptr port)
             printf("Connected at 115200 baud\n");
         return true;
     }
-    
+
     disconnect();
     return false;
 }
@@ -172,7 +172,7 @@ void
 Samba::writeByte(uint32_t addr, uint8_t value)
 {
     uint8_t cmd[13];
-    
+
     if (_debug)
         printf("%s(addr=%#x,value=%#x)\n", __FUNCTION__, addr, value);
 
@@ -192,12 +192,12 @@ Samba::readByte(uint32_t addr)
         throw SambaError();
     if (_port->read(cmd, sizeof(uint8_t)) != sizeof(uint8_t))
         throw SambaError();
-    
+
     value = cmd[0];
-    
+
     if (_debug)
         printf("%s(addr=%#x)=%#x\n", __FUNCTION__, addr, value);
- 
+
     return value;
 }
 
@@ -205,10 +205,10 @@ void
 Samba::writeWord(uint32_t addr, uint32_t value)
 {
     uint8_t cmd[20];
-    
+
     if (_debug)
         printf("%s(addr=%#x,value=%#x)\n", __FUNCTION__, addr, value);
-    
+
     snprintf((char*) cmd, sizeof(cmd), "W%08X,%08X#", addr, value);
     if (_port->write(cmd, sizeof(cmd) - 1) != sizeof(cmd) - 1)
         throw SambaError();
@@ -225,9 +225,9 @@ Samba::readWord(uint32_t addr)
         throw SambaError();
     if (_port->read(cmd, sizeof(uint32_t)) != sizeof(uint32_t))
         throw SambaError();
-    
+
     value = (cmd[3] << 24 | cmd[2] << 16 | cmd[1] << 8 | cmd[0] << 0);
-    
+
     if (_debug)
         printf("%s(addr=%#x)=%#x\n", __FUNCTION__, addr, value);
 
@@ -272,7 +272,7 @@ Samba::crc16Calc(const uint8_t *data, int len)
         0x6e17,0x7e36,0x4e55,0x5e74,0x2e93,0x3eb2,0x0ed1,0x1ef0
     };
     uint16_t crc16 = 0;
-    
+
     while (len-- > 0)
         crc16 = (crc16 << 8) ^ crc16Table[((crc16 >> 8) ^ *(uint8_t*) data++) & 0xff];
     return crc16;
@@ -282,7 +282,7 @@ bool
 Samba::crc16Check(const uint8_t *blk)
 {
     uint16_t crc16;
-    
+
     crc16 = blk[BLK_SIZE + 3] << 8 | blk[BLK_SIZE + 4];
     return (crc16Calc(&blk[3], BLK_SIZE) == crc16);
 }
@@ -291,7 +291,7 @@ void
 Samba::crc16Add(uint8_t *blk)
 {
     uint16_t crc16;
-    
+
     crc16 = crc16Calc(&blk[3], BLK_SIZE);
     blk[BLK_SIZE + 3] = (crc16 >> 8) & 0xff;
     blk[BLK_SIZE + 4] = crc16 & 0xff;
@@ -304,7 +304,7 @@ Samba::readXmodem(uint8_t* buffer, int size)
     uint32_t blkNum = 1;
     int retries;
     int bytes;
-    
+
     while (size > 0)
     {
         for (retries = 0; retries < MAX_RETRIES; retries++)
@@ -318,21 +318,21 @@ Samba::readXmodem(uint8_t* buffer, int size)
                 blk[1] == (blkNum & 0xff) &&
                 crc16Check(blk))
                 break;
-            
+
             if (blkNum != 1)
                 _port->put(NAK);
         }
         if (retries == MAX_RETRIES)
             throw SambaError();
-            
+
         _port->put(ACK);
-        
+
         memcpy(buffer, &blk[3], min(size, BLK_SIZE));
         buffer += BLK_SIZE;
         size -= BLK_SIZE;
         blkNum++;
     }
-    
+
     for (retries = 0; retries < MAX_RETRIES; retries++)
     {
         if (_port->get() == EOT)
@@ -353,7 +353,7 @@ Samba::writeXmodem(const uint8_t* buffer, int size)
     uint32_t blkNum = 1;
     int retries;
     int bytes;
-    
+
     for (retries = 0; retries < MAX_RETRIES; retries++)
     {
         if (_port->get() == START)
@@ -361,7 +361,7 @@ Samba::writeXmodem(const uint8_t* buffer, int size)
     }
     if (retries == MAX_RETRIES)
         throw SambaError();
-    
+
     while (size > 0)
     {
         blk[0] = SOH;
@@ -371,7 +371,7 @@ Samba::writeXmodem(const uint8_t* buffer, int size)
         if (size < BLK_SIZE)
             memset(&blk[3] + size, 0, BLK_SIZE - size);
         crc16Add(blk);
-        
+
         for (retries = 0; retries < MAX_RETRIES; retries++)
         {
             bytes = _port->write(blk, sizeof(blk));
@@ -381,15 +381,15 @@ Samba::writeXmodem(const uint8_t* buffer, int size)
             if (_port->get() == ACK)
                 break;
         }
-        
+
         if (retries == MAX_RETRIES)
             throw SambaError();
-        
+
         buffer += BLK_SIZE;
         size -= BLK_SIZE;
         blkNum++;
     }
-    
+
     for (retries = 0; retries < MAX_RETRIES; retries++)
     {
         _port->put(EOT);
@@ -418,10 +418,10 @@ void
 Samba::read(uint32_t addr, uint8_t* buffer, int size)
 {
     uint8_t cmd[20];
-    
+
     if (_debug)
         printf("%s(addr=%#x,size=%#x)\n", __FUNCTION__, addr, size);
-   
+
     // The SAM firmware has a bug reading powers of 2 over 32 bytes
     // via USB.  If that is the case here, then read the first byte
     // with a readByte and then read one less than the requested size.
@@ -447,7 +447,7 @@ void
 Samba::write(uint32_t addr, const uint8_t* buffer, int size)
 {
     uint8_t cmd[20];
-    
+
     if (_debug)
         printf("%s(addr=%#x,size=%#x)\n", __FUNCTION__, addr, size);
 
@@ -476,7 +476,7 @@ void
 Samba::go(uint32_t addr)
 {
     uint8_t cmd[11];
-    
+
     if (_debug)
         printf("%s(addr=%#x)\n", __FUNCTION__, addr);
 
@@ -502,13 +502,13 @@ Samba::version()
     cmd[0] = 'V';
     cmd[1] = '#';
     _port->write(cmd, 2);
-    
+
     _port->timeout(TIMEOUT_QUICK);
     size = _port->read(cmd, sizeof(cmd) - 1);
     _port->timeout(TIMEOUT_NORMAL);
     if (size <= 0)
         throw SambaError();
-    
+
     str = (char*) cmd;
     for (pos = 0; pos < size; pos++)
     {
@@ -518,10 +518,10 @@ Samba::version()
     str[pos] = '\0';
 
     std::string ver(str);
-    
+
     if (_debug)
         printf("%s()=%s\n", __FUNCTION__, ver.c_str());
-    
+
     return ver;
 }
 
@@ -530,16 +530,16 @@ Samba::chipId()
 {
     uint32_t vector;
     uint32_t cid;
-    
+
     // Read the ARM reset vector
     vector = readWord(0x0);
-    
+
     // If the vector is a ARM7TDMI branch, then assume Atmel SAM7 registers
     if ((vector & 0xff000000) == 0xea000000)
         cid = readWord(0xfffff240);
     // Else use the Atmel SAM3 registers
     else
         cid = readWord(0x400e0740);
-    
+
     return cid;
 }

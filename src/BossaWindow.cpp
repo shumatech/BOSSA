@@ -30,39 +30,39 @@ using namespace std;
 BossaWindow::BossaWindow() : MainFrame(NULL)
 {
     _bossaBitmap->SetBitmap(wxGetApp().bitmaps.getBossaLogo());
-    
+
     _aboutButton->Connect(wxEVT_COMMAND_BUTTON_CLICKED,
                           wxCommandEventHandler(BossaWindow::OnAbout),
                           NULL, this);
-                          
+
     _refreshButton->Connect(wxEVT_COMMAND_BUTTON_CLICKED,
                             wxCommandEventHandler(BossaWindow::OnRefresh),
                             NULL, this);
-                          
+
     _portComboBox->Connect(wxEVT_COMMAND_COMBOBOX_SELECTED,
                            wxCommandEventHandler(BossaWindow::OnSerial),
                            NULL, this);
-                          
+
     _autoScanButton->Connect(wxEVT_COMMAND_BUTTON_CLICKED,
                              wxCommandEventHandler(BossaWindow::OnAutoScan),
                              NULL, this);
-                           
+
     _writeButton->Connect(wxEVT_COMMAND_BUTTON_CLICKED,
                           wxCommandEventHandler(BossaWindow::OnWrite),
                           NULL, this);
-                             
+
     _verifyButton->Connect(wxEVT_COMMAND_BUTTON_CLICKED,
                            wxCommandEventHandler(BossaWindow::OnVerify),
                            NULL, this);
-                             
+
     _readButton->Connect(wxEVT_COMMAND_BUTTON_CLICKED,
                          wxCommandEventHandler(BossaWindow::OnRead),
                          NULL, this);
-                             
+
     _infoButton->Connect(wxEVT_COMMAND_BUTTON_CLICKED,
                          wxCommandEventHandler(BossaWindow::OnInfo),
                          NULL, this);
-                             
+
     _exitButton->Connect(wxEVT_COMMAND_BUTTON_CLICKED,
                          wxCommandEventHandler(BossaWindow::OnExit),
                          NULL, this);
@@ -74,7 +74,7 @@ BossaWindow::BossaWindow() : MainFrame(NULL)
     Connect(wxEVT_THREAD_SUCCESS,
             wxCommandEventHandler(BossaWindow::OnThreadSuccess),
             NULL, this);
-            
+
     Connect(wxEVT_THREAD_WARNING,
             wxCommandEventHandler(BossaWindow::OnThreadWarning),
             NULL, this);
@@ -89,7 +89,7 @@ BossaWindow::BossaWindow() : MainFrame(NULL)
 
     RefreshSerial();
     Disconnected();
-    
+
     wxString port;
     wxConfig& config = wxGetApp().config;
     if (config.Read("Port", &port))
@@ -111,18 +111,18 @@ BossaWindow::BossaWindow() : MainFrame(NULL)
     {
         _filePicker->SetPath(file);
     }
-    
+
     wxIcon icon;
     icon.CopyFromBitmap(wxGetApp().bitmaps.getBossaIcon());
     SetIcon(icon);
-    
+
     Iconize(false);
 }
 
 BossaWindow::~BossaWindow()
 {
     wxConfig& config = wxGetApp().config;
-    
+
     config.Write("Port", _portComboBox->GetStringSelection());
     config.Write("File", _filePicker->GetPath());
 }
@@ -133,7 +133,7 @@ BossaWindow::RefreshSerial()
     string port;
     wxString selection = _portComboBox->GetStringSelection();
     PortFactory& portFactory = wxGetApp().portFactory;
-    
+
     _portComboBox->Clear();
     for (port = portFactory.begin();
          port != portFactory.end();
@@ -141,7 +141,7 @@ BossaWindow::RefreshSerial()
     {
         _portComboBox->Append(port.c_str());
     }
-    
+
     if (!_portComboBox->SetStringSelection(selection))
         Disconnected();
 }
@@ -166,7 +166,7 @@ BossaWindow::Connected()
     Flash& flash = *wxGetApp().flash;
     Samba& samba = wxGetApp().samba;
     const SerialPort& port = samba.getSerialPort();
-    
+
     _statusBar->SetStatusText(wxT("Connected"), 0);
     _statusBar->SetStatusText(wxString::Format(wxT("Device: %s"), flash.name().c_str()), 1);
     _portComboBox->SetStringSelection(port.name().c_str());
@@ -241,7 +241,7 @@ BossaWindow::Question(const wxString& message)
     );
     int resp = dialog->ShowModal();
     dialog->Destroy();
-    
+
     return (resp == wxID_YES);
 }
 
@@ -252,7 +252,7 @@ BossaWindow::CreateFlash()
     Flash::Ptr& flash = wxGetApp().flash;
     FlashFactory flashFactory;
     uint32_t chipId;
-    
+
     try
     {
         chipId = samba.chipId();
@@ -263,7 +263,7 @@ BossaWindow::CreateFlash()
         Error(wxString(e.what()));
         return;
     }
-    
+
     flash = flashFactory.create(samba, chipId);
     if (flash.get() == NULL)
     {
@@ -271,7 +271,7 @@ BossaWindow::CreateFlash()
         Error(wxString::Format(wxT("Chip ID 0x%08x is not supported"), chipId));
         return;
     }
-    
+
     _statusBar->SetStatusText(wxString::Format(wxT("Device: %s"), flash->name().c_str()), 1);
     Connected();
 }
@@ -301,7 +301,7 @@ BossaWindow::OnAutoScan(wxCommandEvent& event)
     Samba& samba = wxGetApp().samba;
 
     RefreshSerial();
-    
+
     for (port = portFactory.begin();
          port != portFactory.end();
          port = portFactory.next())
@@ -321,26 +321,26 @@ void
 BossaWindow::OnWrite(wxCommandEvent& event)
 {
     Flash& flash = *wxGetApp().flash;
-    
+
     if (_filePicker->GetPath().IsEmpty())
     {
         Error(wxT("You must specify a file first"));
         return;
     }
-    
+
     if (access(_filePicker->GetPath().mb_str(), F_OK))
     {
         Error(wxT("File does not exist"));
         return;
     }
-    
+
     try
     {
         if (flash.isLocked())
         {
             if (!Question(wxT("The flash is currently locked. Do you want to unlock it and proceed with the write?")))
                 return;
-            
+
             flash.unlockAll();
         }
     }
@@ -349,7 +349,7 @@ BossaWindow::OnWrite(wxCommandEvent& event)
         Error(e.what());
         return;
     }
-    
+
     _progress = new BossaProgress(this);
     _thread = new WriteThread(
         this,
@@ -361,14 +361,14 @@ BossaWindow::OnWrite(wxCommandEvent& event)
         _lockCheckBox->GetValue(),
         _securityCheckBox->GetValue()
     );
-    
+
     if (_thread->Create() != wxTHREAD_NO_ERROR ||
         _thread->Run() != wxTHREAD_NO_ERROR)
     {
         Error(wxT("Unable to start worker thread"));
         return;
     }
-    
+
     _progress->ShowModal();
     _progress->Destroy();
 }
@@ -381,26 +381,26 @@ BossaWindow::OnVerify(wxCommandEvent& event)
         Error(wxT("You must specify a file first"));
         return;
     }
-    
+
     if (access(_filePicker->GetPath().mb_str(), F_OK))
     {
         Error(wxT("File does not exist"));
         return;
     }
-    
+
     _progress = new BossaProgress(this);
     _thread = new VerifyThread(
         this,
         _filePicker->GetPath()
     );
-    
+
     if (_thread->Create() != wxTHREAD_NO_ERROR ||
         _thread->Run() != wxTHREAD_NO_ERROR)
     {
         Error(wxT("Unable to start worker thread"));
         return;
     }
-    
+
     _progress->ShowModal();
     _progress->Destroy();
 }
@@ -415,13 +415,13 @@ BossaWindow::OnRead(wxCommandEvent& event)
         Error(wxT("You must specify a file first"));
         return;
     }
-    
+
     if (!access(_filePicker->GetPath().mb_str(), F_OK))
     {
         if (!Question(wxT("File already exists. Do you want to replace it?")))
             return;
     }
-    
+
     if (_sizeTextCtrl->GetValue().IsEmpty())
     {
         size = 0;
@@ -435,21 +435,21 @@ BossaWindow::OnRead(wxCommandEvent& event)
             return;
         }
     }
-    
+
     _progress = new BossaProgress(this);
     _thread = new ReadThread(
         this,
         _filePicker->GetPath(),
         size
     );
-    
+
     if (_thread->Create() != wxTHREAD_NO_ERROR ||
         _thread->Run() != wxTHREAD_NO_ERROR)
     {
         Error(wxT("Unable to start worker thread"));
         return;
     }
-    
+
     _progress->ShowModal();
     _progress->Destroy();
 }
@@ -467,7 +467,7 @@ BossaWindow::OnInfo(wxCommandEvent& event)
         Error(wxString(e.what()));
         return;
     }
-    
+
     info->ShowModal();
     info->Destroy();
 }

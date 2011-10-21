@@ -102,7 +102,7 @@ Command::connected()
 {
     if (!_connected)
     {
-        printf("No device connected.  Use \"port\" or \"scan\" first.\n");
+        printf("No device connected.  Use \"connect\" or \"scan\" first.\n");
         return false;
     }
     return true;
@@ -211,7 +211,7 @@ Command::operator < (const Command& rhs)
 CommandConnect::CommandConnect() :
     Command("connect",
             "Connect to device over serial port.",
-            "port [SERIAL]\n"
+            "connect [SERIAL]\n"
             "  SERIAL -- host-specific serial port")
 {}
 
@@ -516,7 +516,7 @@ CommandMrf::invoke(char* argv[], int argc)
     FILE* infile;
     uint8_t buf[1024];
     ssize_t fbytes;
-    
+
     if (!argNum(argc, 4) ||
         !argUint32(argv[1], &addr) ||
         !argUint32(argv[2], &count) ||
@@ -546,7 +546,7 @@ CommandMrf::invoke(char* argv[], int argc)
         fclose(infile);
         throw;
     }
-    
+
     fclose(infile);
 }
 
@@ -651,11 +651,11 @@ CommandMwf::invoke(char* argv[], int argc)
         !argUint32(argv[1], &addr) ||
         !connected())
         return;
-    
+
     infile = fopen(argv[2], "rb");
     if (!infile)
         throw FileOpenError(errno);
-    
+
     try
     {
         if (fseek(infile, 0, SEEK_END) != 0 ||
@@ -663,7 +663,7 @@ CommandMwf::invoke(char* argv[], int argc)
             throw FileIoError(errno);
 
         rewind(infile);
-            
+
         for (fpos = 0; fpos < fsize; fpos += fbytes)
         {
             fbytes = fread(buf, 1, min((size_t)fsize, sizeof(buf)), infile);
@@ -750,7 +750,7 @@ CommandPio::invoke(char* argv[], int argc)
     uint32_t addr = 0;
     size_t len;
     char port;
-    
+
     if (!argNum(argc, 3) ||
         !connected())
         return;
@@ -761,23 +761,23 @@ CommandPio::invoke(char* argv[], int argc)
         error("Invalid PIO line name");
         return;
     }
-    
+
     if (!argUint32(&argv[1][2], &line))
         return;
-        
+
     if (line >= 32)
     {
         error("Invalid PIO line number");
         return;
     }
-    
+
     line = (1 << line);
     port = tolower(argv[1][1]);
-    
+
     chipId = _samba.chipId();
     eproc = (chipId >> 5) & 0x7;
     arch = (chipId >> 20) & 0xff;
-    
+
     // Check for Cortex-M3 register set
     if (eproc == 3)
     {
@@ -810,13 +810,13 @@ CommandPio::invoke(char* argv[], int argc)
             case 'c': addr = 0xfffff800; break;
         }
     }
-    
+
     if (addr == 0)
     {
         printf("Invalid PIO line name\n");
         return;
     }
-    
+
     static const uint32_t PIO_PER = 0x0;
     static const uint32_t PIO_PSR = 0x8;
     static const uint32_t PIO_OER = 0x10;
@@ -827,7 +827,7 @@ CommandPio::invoke(char* argv[], int argc)
     static const uint32_t PIO_ODSR = 0x38;
     static const uint32_t PIO_PDSR = 0x3c;
     static const uint32_t PIO_ABSR = 0x70;
-    
+
     len = strlen(argv[2]);
     if (strncasecmp(argv[2], "detail", len) == 0)
     {

@@ -32,16 +32,16 @@ class BossaApp : public wxApp
 {
 public:
     BossaApp();
-    
+
     PortFactory portFactory;
     Samba samba;
     BossaBitmaps bitmaps;
     Flash::Ptr flash;
     wxConfig config;
-    
+
 private:
     bool OnInit();
-    
+
     BossaWindow* _window;
 };
 

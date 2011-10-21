@@ -29,7 +29,7 @@ class FlashFactory
 public:
     FlashFactory();
     virtual ~FlashFactory();
-    
+
     Flash::Ptr create(Samba& samba, uint32_t chipId);
 };
 

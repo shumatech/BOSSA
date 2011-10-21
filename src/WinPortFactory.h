@@ -30,21 +30,21 @@ class WinPortFactory : public PortFactoryBase
 public:
     WinPortFactory();
     virtual ~WinPortFactory();
-    
+
     std::string begin();
     std::string end();
     std::string next();
-    
+
     SerialPort::Ptr create(const std::string& name);
-    
+
 private:
     typedef DWORD WINAPI (*CM_Open_DevNode_Key)(DWORD, DWORD, DWORD, DWORD, ::PHKEY, DWORD);
-    
+
     HDEVINFO _devInfo;
     HINSTANCE _cfgMgr;
     CM_Open_DevNode_Key _devNode;
     int _devNum;
-    
+
     void cleanup();
     std::string error();
 };

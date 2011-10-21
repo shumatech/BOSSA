@@ -26,7 +26,7 @@ class PosixSerialPort : public SerialPort
 public:
     PosixSerialPort(const std::string& name, bool isUsb);
     virtual ~PosixSerialPort();
-    
+
     bool open(int baud = 115200,
               int data = 8,
               SerialPort::Parity parity = SerialPort::ParityNone,
