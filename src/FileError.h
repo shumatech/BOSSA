@@ -21,6 +21,7 @@
 
 #include <exception>
 #include <errno.h>
+#include <string.h>
 
 #include "Flash.h"
 #include "Samba.h"
