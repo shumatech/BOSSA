@@ -91,7 +91,7 @@ app:
 	echo -n "APPL????" > $(BINDIR)/$(APP)/Contents/PkgInfo
 	ln -f $(BINDIR)/bossa $(BINDIR)/$(APP)/Contents/MacOS/bossa
 	cp -f $(RESDIR)/BossaIcon.icns $(BINDIR)/$(APP)/Contents/Resources
-install: pack app
+install: strip app
 	hdiutil create -ov -megabytes 5 -fs HFS+ -volname $(VOLUME) $(BINDIR)/$(DMG)
 	hdiutil attach -noautoopen $(BINDIR)/$(DMG)
 	cp -R $(BINDIR)/$(APP) /Volumes/$(VOLUME)/

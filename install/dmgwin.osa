@@ -7,13 +7,14 @@ tell application "Finder"
         set the bounds of container window to {400, 100, 893, 412}
         set theViewOptions to the icon view options of container window
         set arrangement of theViewOptions to not arranged
-        set icon size of theViewOptions to 96
+        set icon size of theViewOptions to 64
         set text size of theViewOptions to 16
         set background picture of theViewOptions to file ".background:background.png"
-        set position of item "BOSSA" of container window to {220, 60}
-        set position of item "bossac" of container window to {220, 220}
-        set position of item "Applications" of container window to {420, 60}
-        set position of item "bin" of container window to {420, 220}
+        set position of item "BOSSA" of container window to {220, 40}
+        set position of item "bossac" of container window to {220, 150}
+        set position of item "bossash" of container window to {220, 250}
+        set position of item "Applications" of container window to {420, 40}
+        set position of item "bin" of container window to {420, 200}
         update without registering applications
         delay 2
     end tell

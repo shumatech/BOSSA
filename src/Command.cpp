@@ -425,10 +425,12 @@ CommandHistory::invoke(char* argv[], int argc)
     if (!argNum(argc, 1))
         return;
 
-    HIST_ENTRY **the_list = history_list ();
-    if (the_list)
-    for (int i = 0; the_list[i]; i++)
-        printf ("  %d  %s\n", i + history_base, the_list[i]->line);
+    for (int i = 0; i < history_length; i++)
+    {
+        HIST_ENTRY *entry = history_get(i);
+        if (entry)
+            printf ("  %d  %s\n", i + history_base, entry->line);
+    }
 }
 
 CommandInfo::CommandInfo() :
@@ -536,7 +538,7 @@ CommandMrf::invoke(char* argv[], int argc)
             fbytes = fwrite(buf, 1, fbytes, infile);
             if (fbytes < 0)
                 throw FileIoError(errno);
-            if (fbytes != min(count, sizeof(buf)))
+            if ((size_t) fbytes != min(count, sizeof(buf)))
                 throw FileShortError();
             count -= fbytes;
         }
