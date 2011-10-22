@@ -55,7 +55,7 @@ $(BINDIR)\\bossa64-$(VERSION).msi: $(OBJDIR)\\bossa64-$(VERSION).wixobj
 install32: $(BINDIR)\\bossa-$(VERSION).msi
 install64: $(BINDIR)\\bossa64-$(VERSION).msi
 .PHONY: install
-install: pack install32 install64
+install: strip install32 install64
 
 endif
 
@@ -68,7 +68,7 @@ COMMON_LIBS=-Wl,--as-needed
 
 MACHINE:=$(shell uname -m)
 
-install: pack
+install: strip
 	tar cvzf $(BINDIR)/bossa-$(MACHINE)-$(VERSION).tgz -C $(BINDIR) bossa$(EXE) bossac$(EXE) bossash$(EXE)
 endif
 
@@ -271,20 +271,6 @@ $(BOSSASH_OBJS): | $(OBJDIR) $(OBJDIR)/arm-dis
 $(BINDIR)/bossash$(EXE): $(BOSSASH_OBJS) | $(BINDIR)
 	@echo LD $@
 	$(Q)$(CXX) $(BOSSASH_LDFLAGS) -o $@ $(BOSSASH_OBJS) $(BOSSASH_LIBS)
-
-pack-bossa: $(BINDIR)/bossa$(EXE)
-	@echo UPX $^
-	$(Q)upx $^
-
-pack-bossac: $(BINDIR)/bossac$(EXE)
-	@echo UPX $^
-	$(Q)upx $^
-
-pack-bossash: $(BINDIR)/bossash$(EXE)
-	@echo UPX $^
-	$(Q)upx $^
-
-pack: strip pack-bossa pack-bossac pack-bossash
 
 strip-bossa: $(BINDIR)/bossa$(EXE)
 	@echo STRIP $^
