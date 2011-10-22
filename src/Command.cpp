@@ -80,19 +80,47 @@ Command::argRange(int argc, int min, int max)
 }
 
 bool
-Command::argUint32(const char* arg, uint32_t* addr)
+Command::argUint32(const char* arg, uint32_t* value)
 {
-    long long value;
+    long long ll;
     char *end;
 
     errno = 0;
-    value = strtoll(arg, &end, 0);
+    ll = strtoll(arg, &end, 0);
     if (errno != 0 || *end != '\0')
         return error("Invalid number \"%s\"", arg);
-    if (value < 0 || value > UINT32_MAX)
+    if (ll < 0 || ll > UINT32_MAX)
         return error("Number \"%s\" is out of range", arg);
 
-    *addr = value;
+    *value = ll;
+
+    return true;
+}
+
+bool
+Command::argBool(const char* arg, bool* value)
+{
+    int len = strlen(arg);
+    if (strncasecmp(arg, "true", len) == 0)
+        *value = true;
+    else if (strncasecmp(arg, "false", len) == 0)
+        *value = false;
+    else
+        return error("Invalid boolean \"%s\"", arg);
+
+    return true;
+}
+
+bool
+Command::argState(const char* arg, bool* value)
+{
+    int len = strlen(arg);
+    if (strncasecmp(arg, "enable", len) == 0)
+        *value = true;
+    else if (strncasecmp(arg, "disable", len) == 0)
+        *value = false;
+    else
+        return error("Invalid state \"%s\"", arg);
 
     return true;
 }
@@ -178,7 +206,7 @@ Command::hexdump(uint32_t addr, uint8_t *buf, size_t count)
 }
 
 const char*
-Command::binstr(uint32_t value, int bits)
+Command::binstr(uint32_t value, int bits, char low, char high)
 {
     static char buf[36];
     char *str = buf;
@@ -187,7 +215,7 @@ Command::binstr(uint32_t value, int bits)
 
     for (int bitnum = bits - 1; bitnum >= 0; bitnum--)
     {
-        *str++ = (value & (1 << bitnum)) ? '1' : '0';
+        *str++ = (value & (1 << bitnum)) ? high : low;
         if (bitnum % 8 == 0)
             *str++ = ' ';
     }
@@ -219,22 +247,11 @@ void
 CommandBod::invoke(char* argv[], int argc)
 {
     bool value;
-    int len;
     
     if (!argNum(argc, 2) ||
+        !argBool(argv[1], &value) ||
         !flashable())
         return;
-
-    len = strlen(argv[1]);
-    if (strncasecmp(argv[1], "true", len) == 0)
-        value = true;
-    else if (strncasecmp(argv[1], "false", len) == 0)
-        value = false;
-    else
-    {
-        error("Invalid boolean \"%s\"\n", argv[2]);
-        return;
-    }
 
     if (!_flash->canBod())
     {
@@ -243,6 +260,7 @@ CommandBod::invoke(char* argv[], int argc)
     }
 
     _flash->setBod(value);
+    printf("BOD flag set to %s\n", value ? "true" : "false");
 }
 
 CommandBootf::CommandBootf() :
@@ -256,24 +274,14 @@ void
 CommandBootf::invoke(char* argv[], int argc)
 {
     bool value;
-    int len;
     
     if (!argNum(argc, 2) ||
+        !argBool(argv[1], &value) ||
         !flashable())
         return;
 
-    len = strlen(argv[1]);
-    if (strncasecmp(argv[1], "true", len) == 0)
-        value = true;
-    else if (strncasecmp(argv[1], "false", len) == 0)
-        value = false;
-    else
-    {
-        error("Invalid boolean \"%s\"\n", argv[2]);
-        return;
-    }
-
     _flash->setBootFlash(value);
+    printf("Boot to flash flag set to %s\n", value ? "true" : "false");
 }
 
 CommandBor::CommandBor() :
@@ -287,22 +295,11 @@ void
 CommandBor::invoke(char* argv[], int argc)
 {
     bool value;
-    int len;
     
     if (!argNum(argc, 2) ||
+        !argBool(argv[1], &value) ||
         !flashable())
         return;
-
-    len = strlen(argv[1]);
-    if (strncasecmp(argv[1], "true", len) == 0)
-        value = true;
-    else if (strncasecmp(argv[1], "false", len) == 0)
-        value = false;
-    else
-    {
-        error("Invalid boolean \"%s\"\n", argv[2]);
-        return;
-    }
 
     if (!_flash->canBor())
     {
@@ -311,6 +308,7 @@ CommandBor::invoke(char* argv[], int argc)
     }
 
     _flash->setBor(value);
+    printf("BOR flag set to %s\n", value ? "true" : "false");
 }
 
 CommandConnect::CommandConnect() :
@@ -342,7 +340,7 @@ CommandDebug::CommandDebug() :
     Command("debug",
             "Change the debug state.",
             "debug [STATE]\n"
-            "  STATE - either \"off\" or \"on\"")
+            "  STATE - either \"disable\" or \"enable\"")
 {}
 
 void
@@ -350,18 +348,9 @@ CommandDebug::invoke(char* argv[], int argc)
 {
     bool state;
 
-    if (!argNum(argc, 2))
+    if (!argNum(argc, 2) ||
+        !argState(argv[1], &state))
         return;
-
-    if (strcasecmp(argv[1], "off") == 0)
-        state = false;
-    else if (strcasecmp(argv[1], "on") == 0)
-        state = true;
-    else
-    {
-        error("Invalid debug state - must be \"off\" or \"on\"");
-        return;
-    }
 
     _samba.setDebug(state);
 }
@@ -461,6 +450,7 @@ CommandErase::invoke(char* argv[], int argc)
         return;
 
     _flasher.erase();
+    printf("Flash is erased\n");
 }
 
 CommandExit::CommandExit() :
@@ -495,6 +485,7 @@ CommandGo::invoke(char* argv[], int argc)
         !connected())
         return;
 
+    printf("Executing code at %#x\n", addr);
     _samba.go(addr);
 }
 
@@ -574,6 +565,7 @@ CommandLock::invoke(char* argv[], int argc)
         bits += argv[argn];
 
     _flasher.lock(bits, true);
+    printf("Locked regions %s", bits.c_str());
 }
 
 CommandMrb::CommandMrb() :
@@ -838,12 +830,19 @@ CommandPio::CommandPio() :
             "Parallel input/output operations.",
             "pio [LINE] [OPERATION]\n"
             "  LINE -- PIO line name (i.e. pa28, pc5, etc.)\n"
-            "  OPERATION -- operation to perform on the PIO line.  One of the following:\n"
-            "    detail -- detail about the line\n"
+            "          All lines if only port given (i.e. pa, pc, etc.)\n"
+            "  OPERATION -- operation to perform on the PIO line.\n"
+            "    status -- show the line status\n"
             "    high -- drive the output high\n"
             "    low -- drive the output low\n"
-            "    status -- read the input status\n"
-            "    input -- make the line an input"
+            "    read -- read the input level\n"
+            "    input -- make the line an input\n"
+            "    peripheral [AB] -- set the line to a peripheral\n"
+            "      [AB] -- peripheral \"a\" or \"b\"\n"
+            "    multidrive [STATE] -- set the multi-drive state\n"
+            "      STATE - either \"disable\" or \"enable\"\n"
+            "    pullup [STATE] -- set the pull-up state\n"
+            "      STATE - either \"disable\" or \"enable\""
             )
 {}
 
@@ -858,27 +857,35 @@ CommandPio::invoke(char* argv[], int argc)
     size_t len;
     char port;
 
-    if (!argNum(argc, 3) ||
+    if (!argRange(argc, 3, 4) ||
         !connected())
         return;
 
-    if (strlen(argv[1]) < 3 ||
+    if (strlen(argv[1]) < 2 ||
         tolower(argv[1][0]) != 'p')
     {
         error("Invalid PIO line name");
         return;
     }
 
-    if (!argUint32(&argv[1][2], &line))
-        return;
-
-    if (line >= 32)
+    if (argv[1][2] == '\0')
     {
-        error("Invalid PIO line number");
-        return;
+        line = 0xffffffff;
     }
+    else
+    {
+        if (!argUint32(&argv[1][2], &line))
+            return;
 
-    line = (1 << line);
+        if (line >= 32)
+        {
+            error("Invalid PIO line number");
+            return;
+        }
+
+        line = (1 << line);
+    }
+    
     port = tolower(argv[1][1]);
 
     chipId = _samba.chipId();
@@ -920,11 +927,12 @@ CommandPio::invoke(char* argv[], int argc)
 
     if (addr == 0)
     {
-        printf("Invalid PIO line name\n");
+        printf("Invalid PIO line \"%s\"\n", argv[1]);
         return;
     }
 
     static const uint32_t PIO_PER = 0x0;
+    static const uint32_t PIO_PDR = 0x4;
     static const uint32_t PIO_PSR = 0x8;
     static const uint32_t PIO_OER = 0x10;
     static const uint32_t PIO_ODR = 0x14;
@@ -933,29 +941,65 @@ CommandPio::invoke(char* argv[], int argc)
     static const uint32_t PIO_CODR = 0x34;
     static const uint32_t PIO_ODSR = 0x38;
     static const uint32_t PIO_PDSR = 0x3c;
+    static const uint32_t PIO_MDER = 0x50;
+    static const uint32_t PIO_MDDR = 0x54;
+    static const uint32_t PIO_MDSR = 0x58;
+    static const uint32_t PIO_PUDR = 0x60;
+    static const uint32_t PIO_PUER = 0x64;
+    static const uint32_t PIO_PUSR = 0x68;
     static const uint32_t PIO_ABSR = 0x70;
 
     len = strlen(argv[2]);
-    if (strncasecmp(argv[2], "detail", len) == 0)
+    if (strncasecmp(argv[2], "status", len) == 0)
     {
-        uint32_t data = _samba.readWord(addr + PIO_PSR);
-        printf("PIO Status    : %s\n", (data & line) ? "PIO" : "periph");
-        if (data & line)
+        if (line != 0xffffffff)
         {
-            data = _samba.readWord(addr + PIO_OSR);
-            printf("Output Status : %s\n", (data & line) ? "output" : "input");
-            if (data & line)
-            {
-                data = _samba.readWord(addr + PIO_ODSR);
-                printf("Output Data   : %s\n", (data & line)? "high" : "low");
-            }
-            data = _samba.readWord(addr + PIO_PDSR);
-            printf("Pin Data      : %s\n", (data & line)? "high" : "low");
+            uint32_t reg = _samba.readWord(addr + PIO_PSR);
+            printf("PIO Mode      : %s\n", (reg & line) ? "enable" : "disable");
+            
+            reg = _samba.readWord(addr + PIO_OSR);
+            printf("Direction     : %s\n", (reg & line) ? "output" : "input");
+
+            reg = _samba.readWord(addr + PIO_PDSR);
+            printf("Input Level   : %s\n", (reg & line)? "high" : "low");
+
+            reg = _samba.readWord(addr + PIO_ODSR);
+            printf("Output Level  : %s\n", (reg & line)? "high" : "low");
+            
+            reg = _samba.readWord(addr + PIO_MDSR);
+            printf("Multi-Drive   : %s\n", (reg & line)? "enable" : "disable");
+
+            reg = _samba.readWord(addr + PIO_PUSR);
+            printf("Pull-Up       : %s\n", (reg & line)? "disable" : "enable");
+
+            reg = _samba.readWord(addr + PIO_ABSR);
+            printf("Peripheral    : %s\n", (reg & line) ? "B" : "A");
         }
         else
         {
-            data = _samba.readWord(addr + PIO_ABSR);
-            printf("Periph Select : %s\n", (data & line) ? "A" : "B");
+            printf("                3      2 2      1 1\n");
+            printf("                1      4 3      6 5      8 7      0\n");
+
+            uint32_t reg = _samba.readWord(addr + PIO_PSR);
+            printf("PIO Mode      : %s\n", binstr(reg, 32, 'D', 'E'));
+            
+            reg = _samba.readWord(addr + PIO_OSR);
+            printf("Direction     : %s\n", binstr(reg, 32, 'I', 'O'));
+
+            reg = _samba.readWord(addr + PIO_PDSR);
+            printf("Input Level   : %s\n", binstr(reg, 32, 'L', 'H'));
+
+            reg = _samba.readWord(addr + PIO_ODSR);
+            printf("Output Level  : %s\n", binstr(reg, 32, 'L', 'H'));
+            
+            reg = _samba.readWord(addr + PIO_MDSR);
+            printf("Multi-Drive   : %s\n", binstr(reg, 32, 'D', 'E'));
+            
+            reg = _samba.readWord(addr + PIO_PUSR);
+            printf("Pull-Up       : %s\n", binstr(reg, 32, 'E', 'D'));
+            
+            reg = _samba.readWord(addr + PIO_ABSR);
+            printf("Peripheral    : %s\n", binstr(reg, 32, 'A', 'B'));
         }
     }
     else if (strncasecmp(argv[2], "high", len) == 0)
@@ -963,22 +1007,74 @@ CommandPio::invoke(char* argv[], int argc)
         _samba.writeWord(addr + PIO_SODR, line);
         _samba.writeWord(addr + PIO_OER, line);
         _samba.writeWord(addr + PIO_PER, line);
+        printf("%s is high output\n", argv[1]);
     }
     else if (strncasecmp(argv[2], "low", len) == 0)
     {
         _samba.writeWord(addr + PIO_CODR, line);
         _samba.writeWord(addr + PIO_OER, line);
         _samba.writeWord(addr + PIO_PER, line);
+        printf("%s is low output\n", argv[1]);
     }
-    else if (strncasecmp(argv[2], "status", len) == 0)
+    else if (strncasecmp(argv[2], "read", len) == 0)
     {
-        uint32_t data = _samba.readWord(addr +  PIO_PDSR);
-        printf("%s\n", (data & line) ? "high" : "low");
+        uint32_t reg = _samba.readWord(addr +  PIO_PDSR);
+        printf("%s is %s\n", argv[1], (reg & line) ? "high" : "low");
     }
     else if (strncasecmp(argv[2], "input", len) == 0)
     {
         _samba.writeWord(addr + PIO_ODR, line);
         _samba.writeWord(addr + PIO_PER, line);
+        printf("%s is an input\n", argv[1]);
+    }
+    else if (strncasecmp(argv[2], "peripheral", len) == 0)
+    {
+        uint32_t reg;
+        
+        if (!argNum(argc, 4))
+            return;
+
+        reg = _samba.readWord(addr + PIO_ABSR);
+        if (strcasecmp(argv[3], "a") == 0)
+            reg &= ~line;
+        else if (strcasecmp(argv[3], "b") == 0)
+            reg |= line;
+        else
+        {
+            error("Peripheral must be \"a\" or \"b\"");
+            return;
+        }
+
+        _samba.writeWord(addr + PIO_ABSR, reg);
+        _samba.writeWord(addr + PIO_PDR, line);
+        
+        printf("%s set to peripheral %s\n", argv[1], argv[3]);
+    }
+    else if (strncasecmp(argv[2], "pullup", len) == 0)
+    {
+        bool state;
+        if (!argNum(argc, 4) ||
+            !argState(argv[3], &state))
+            return;
+        
+        if (state)
+            _samba.writeWord(addr + PIO_PUER, line);
+        else
+            _samba.writeWord(addr + PIO_PUDR, line);
+        printf("%s pullup is %s\n", argv[1], argv[3]);
+    }
+    else if (strncasecmp(argv[2], "multidrive", len) == 0)
+    {
+        bool state;
+        if (!argNum(argc, 4) ||
+            !argState(argv[3], &state))
+            return;
+        
+        if (state)
+            _samba.writeWord(addr + PIO_MDER, line);
+        else
+            _samba.writeWord(addr + PIO_MDDR, line);
+        printf("%s multidrive is %s\n", argv[1], argv[3]);
     }
     else
     {
@@ -1027,6 +1123,7 @@ CommandScan::invoke(char* argv[], int argc)
          port != _portFactory.end();
          port = _portFactory.next())
     {
+        printf("Checking port %s...\n", port.c_str());
         if (_samba.connect(_portFactory.create(port)))
         {
             printf("Device found on %s\n", port.c_str());
@@ -1077,7 +1174,8 @@ CommandUnlock::invoke(char* argv[], int argc)
     for (int argn = 1; argn < argc; argn++)
         bits += argv[argn];
 
-    _flasher.lock(bits, true);
+    _flasher.lock(bits, false);
+    printf("Unlocked regions %s", bits.c_str());
 }
 
 CommandVerify::CommandVerify() :

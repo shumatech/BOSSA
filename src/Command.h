@@ -55,13 +55,16 @@ protected:
     bool error(const char* fmt, ...);
     bool argNum(int argc, int num);
     bool argRange(int argc, int min, int max);
-    bool argUint32(const char* arg, uint32_t* addr);
+    bool argUint32(const char* arg, uint32_t* value);
+    bool argBool(const char* arg, bool* value);
+    bool argState(const char* arg, bool* value);
+    
     bool createFlash();
     bool connected();
     bool flashable();
 
     void hexdump(uint32_t addr, uint8_t *buf, size_t count);
-    const char* binstr(uint32_t value, int bits);
+    const char* binstr(uint32_t value, int bits, char low = '0', char high = '1');
 
 private:
     const char* _name;
