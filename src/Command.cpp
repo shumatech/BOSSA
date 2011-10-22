@@ -208,6 +208,111 @@ Command::operator < (const Command& rhs)
     return (strcmp(_name, rhs._name) == -1);
 }
 
+CommandBod::CommandBod() :
+    Command("bod",
+            "Change the brownout detect flag.",
+            "bod [BOOL]\n"
+            "  BOOL -- boolean value either \"true\" or \"false\"")
+{}
+
+void
+CommandBod::invoke(char* argv[], int argc)
+{
+    bool value;
+    int len;
+    
+    if (!argNum(argc, 2) ||
+        !flashable())
+        return;
+
+    len = strlen(argv[1]);
+    if (strncasecmp(argv[1], "true", len) == 0)
+        value = true;
+    else if (strncasecmp(argv[1], "false", len) == 0)
+        value = false;
+    else
+    {
+        error("Invalid boolean \"%s\"\n", argv[2]);
+        return;
+    }
+
+    if (!_flash->canBod())
+    {
+        printf("Unsupported on this flash device\n");
+        return;
+    }
+
+    _flash->setBod(value);
+}
+
+CommandBootf::CommandBootf() :
+    Command("bootf",
+            "Change the boot to flash flag.",
+            "bootf [BOOL]\n"
+            "  BOOL -- boolean value either \"true\" or \"false\"")
+{}
+
+void
+CommandBootf::invoke(char* argv[], int argc)
+{
+    bool value;
+    int len;
+    
+    if (!argNum(argc, 2) ||
+        !flashable())
+        return;
+
+    len = strlen(argv[1]);
+    if (strncasecmp(argv[1], "true", len) == 0)
+        value = true;
+    else if (strncasecmp(argv[1], "false", len) == 0)
+        value = false;
+    else
+    {
+        error("Invalid boolean \"%s\"\n", argv[2]);
+        return;
+    }
+
+    _flash->setBootFlash(value);
+}
+
+CommandBor::CommandBor() :
+    Command("bor",
+            "Change the brownout reset flag.",
+            "bor [BOOL]\n"
+            "  BOOL -- boolean value either \"true\" or \"false\"")
+{}
+
+void
+CommandBor::invoke(char* argv[], int argc)
+{
+    bool value;
+    int len;
+    
+    if (!argNum(argc, 2) ||
+        !flashable())
+        return;
+
+    len = strlen(argv[1]);
+    if (strncasecmp(argv[1], "true", len) == 0)
+        value = true;
+    else if (strncasecmp(argv[1], "false", len) == 0)
+        value = false;
+    else
+    {
+        error("Invalid boolean \"%s\"\n", argv[2]);
+        return;
+    }
+
+    if (!_flash->canBor())
+    {
+        printf("Unsupported on this flash device\n");
+        return;
+    }
+
+    _flash->setBor(value);
+}
+
 CommandConnect::CommandConnect() :
     Command("connect",
             "Connect to device over serial port.",
@@ -424,12 +529,12 @@ CommandHistory::invoke(char* argv[], int argc)
 {
     if (!argNum(argc, 1))
         return;
-
-    for (int i = 0; i < history_length; i++)
+printf("history_base=%d\n", history_base);
+    for (int i = history_base; i < history_base + history_length; i++)
     {
         HIST_ENTRY *entry = history_get(i);
         if (entry)
-            printf ("  %d  %s\n", i + history_base, entry->line);
+            printf ("  %d  %s\n", i, entry->line);
     }
 }
 
@@ -935,6 +1040,22 @@ CommandScan::invoke(char* argv[], int argc)
 
     printf("Auto scan for device failed.\n"
            "Try specifying a serial port with the \"port\" command.\n");
+}
+
+CommandSecurity::CommandSecurity() :
+    Command("security",
+            "Enable the security flag.",
+            "security")
+{}
+
+void
+CommandSecurity::invoke(char* argv[], int argc)
+{
+    if (!argNum(argc, 1) ||
+        !flashable())
+        return;
+
+    _flash->setSecurity();
 }
 
 CommandUnlock::CommandUnlock() :

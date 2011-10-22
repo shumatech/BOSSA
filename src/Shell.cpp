@@ -29,6 +29,9 @@ Shell::Shell() :
 {
     Command::setShell(this);
 
+    add(new CommandBod);
+    add(new CommandBootf);
+    add(new CommandBor);
     add(new CommandConnect);
     add(new CommandDebug);
     add(new CommandDisass);
@@ -49,6 +52,7 @@ Shell::Shell() :
     add(new CommandPio);
     add(new CommandRead);
     add(new CommandScan);
+    add(new CommandSecurity);
     add(new CommandVerify);
     add(new CommandWrite);
 

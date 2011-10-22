@@ -69,6 +69,27 @@ private:
     const char* _usage;
 };
 
+class CommandBod : public Command
+{
+public:
+    CommandBod();
+    virtual void invoke(char* argv[], int argc);
+};
+
+class CommandBootf : public Command
+{
+public:
+    CommandBootf();
+    virtual void invoke(char* argv[], int argc);
+};
+
+class CommandBor : public Command
+{
+public:
+    CommandBor();
+    virtual void invoke(char* argv[], int argc);
+};
+
 class CommandConnect : public Command
 {
 public:
@@ -205,6 +226,13 @@ class CommandScan : public Command
 {
 public:
     CommandScan();
+    virtual void invoke(char* argv[], int argc);
+};
+
+class CommandSecurity : public Command
+{
+public:
+    CommandSecurity();
     virtual void invoke(char* argv[], int argc);
 };
 
