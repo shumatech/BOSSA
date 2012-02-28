@@ -27,11 +27,11 @@
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
         <key>CFBundleGetInfoString</key>
-        <string>BOSSA version 1.1, (c) 2011 ShumaTech</string>
+        <string>BOSSA version 1.1, (c) 2011-2012 ShumaTech</string>
         <key>CFBundleLongVersionString</key>
-        <string>1.1, (c) 2011 ShumaTech</string>
+        <string>1.1, (c) 2011-2012 ShumaTech</string>
         <key>NSHumanReadableCopyright</key>
-        <string>Copyright 20011 ShumaTech</string>
+        <string>Copyright 20011-2012 ShumaTech</string>
         <key>LSRequiresCarbon</key>
         <true/>
 </dict>

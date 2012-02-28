@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BOSSA
 //
-// Copyright (C) 2011 ShumaTech http://www.shumatech.com/
+// Copyright (C) 2011-2012 ShumaTech http://www.shumatech.com/
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
