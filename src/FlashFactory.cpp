@@ -54,10 +54,12 @@ FlashFactory::create(Samba& samba, uint32_t chipId)
     case 0x270b0a40:
         flash = new EfcFlash(samba, "AT91SAM7S512", 0x100000, 2048, 256, 2, 32, 0x202000, 0x210000, false);
         break;
-    case 0x270d0940:
+    case 0x270d0940: // A
+    case 0x270b0940: // B/C
         flash = new EfcFlash(samba, "AT91SAM7S256", 0x100000, 1024, 256, 1, 16, 0x202000, 0x210000, false);
         break;
-    case 0x270c0740:
+    case 0x270c0740: // A
+    case 0x270a0740: // B/C
         flash = new EfcFlash(samba, "AT91SAM7S128", 0x100000, 512, 256, 1, 8, 0x202000, 0x208000, false);
         break;
     case 0x27090540:
