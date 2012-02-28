@@ -65,6 +65,7 @@ endif
 ifeq ($(OS),Linux)
 COMMON_SRCS+=PosixSerialPort.cpp LinuxPortFactory.cpp
 COMMON_LIBS=-Wl,--as-needed
+WX_LIBS+=-lX11
 
 MACHINE:=$(shell uname -m)
 
@@ -158,7 +159,7 @@ BOSSASH_LDFLAGS=$(COMMON_LDFLAGS)
 # Libs
 #
 COMMON_LIBS+=
-WX_LIBS:=$(shell wx-config --libs) -lX11
+WX_LIBS:=$(shell wx-config --libs) $(WX_LIBS)
 BOSSA_LIBS=$(COMMON_LIBS) $(WX_LIBS)
 BOSSAC_LIBS=$(COMMON_LIBS)
 BOSSASH_LIBS=-lreadline $(COMMON_LIBS)
