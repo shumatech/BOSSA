@@ -779,7 +779,7 @@ CommandMwf::invoke(char* argv[], int argc)
         throw;
     }
     fclose(infile);
-    printf("Wrote %zd bytes to address %08x\n", fsize, addr);
+    printf("Wrote %ld bytes to address %08x\n", (long) fsize, addr);
 }
 
 CommandMww::CommandMww() :
