@@ -3,7 +3,7 @@
 # 
 # Version
 #
-VERSION=1.2.1
+VERSION=1.3a
 WXVERSION=2.8
 
 #
@@ -28,12 +28,12 @@ INSTALLDIR=install
 #
 # Determine OS
 #
-OS:=$(shell uname -s)
+OS:=$(shell uname -s | cut -c -7)
 
 #
 # Windows rules
 #
-ifeq ($(OS),MINGW32_NT-6.1)
+ifeq ($(OS),MINGW32)
 EXE=.exe
 COMMON_SRCS+=WinSerialPort.cpp WinPortFactory.cpp
 COMMON_LDFLAGS=-Wl,--enable-auto-import -static -static-libstdc++ -static-libgcc
@@ -208,7 +208,7 @@ $(foreach src,$(BOSSA_SRCS),$(eval $(call bossa_obj,$(src))))
 #
 # Resource rules
 #
-ifeq ($(OS),MINGW32_NT-6.1)
+ifeq ($(OS),MINGW32)
 $(OBJDIR)/$(BOSSA_RC:%.rc=%.o): $(RESDIR)/$(BOSSA_RC)
 	@echo RC $<
 	$(Q)`wx-config --rescomp --version=$(WXVERSION)` -o $@ $<
