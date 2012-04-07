@@ -18,7 +18,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include "BossaApp.h"
 
-BossaApp::BossaApp() : config("Bossa")
+BossaApp::BossaApp() : config(_("Bossa"))
 {
 }
 
