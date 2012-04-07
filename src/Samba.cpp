@@ -538,8 +538,10 @@ Samba::chipId()
     if ((vector & 0xff000000) == 0xea000000)
         cid = readWord(0xfffff240);
     // Else use the Atmel SAM3 registers
-    else
+    else {
         cid = readWord(0x400e0740);
-
+        if (cid == 0)
+            cid = readWord(0x400e0940);
+    }
     return cid;
 }
