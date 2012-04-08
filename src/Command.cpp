@@ -1136,7 +1136,7 @@ CommandScan::invoke(char* argv[], int argc)
     _connected = false;
 
     printf("Auto scan for device failed.\n"
-           "Try specifying a serial port with the \"port\" command.\n");
+           "Try specifying a serial port with the \"connect\" command.\n");
 }
 
 CommandSecurity::CommandSecurity() :
