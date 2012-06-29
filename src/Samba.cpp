@@ -179,6 +179,15 @@ Samba::writeByte(uint32_t addr, uint8_t value)
     snprintf((char*) cmd, sizeof(cmd), "O%08X,%02X#", addr, value);
     if (_port->write(cmd, sizeof(cmd) - 1) != sizeof(cmd) -  1)
         throw SambaError();
+
+    // The SAM firmware has a bug that if the command and binary data
+    // are received in the same USB data packet, then the firmware
+    // gets confused.  Even though the writes are sperated in the code,
+    // USB drivers often do write combining which can put them together
+    // in the same USB data packet.  To avoid this, we call the serial
+    // port object's flush method before writing the data.
+    if (_isUsb)
+        _port->flush();
 }
 
 uint8_t
@@ -212,6 +221,15 @@ Samba::writeWord(uint32_t addr, uint32_t value)
     snprintf((char*) cmd, sizeof(cmd), "W%08X,%08X#", addr, value);
     if (_port->write(cmd, sizeof(cmd) - 1) != sizeof(cmd) - 1)
         throw SambaError();
+
+    // The SAM firmware has a bug that if the command and binary data
+    // are received in the same USB data packet, then the firmware
+    // gets confused.  Even though the writes are sperated in the code,
+    // USB drivers often do write combining which can put them together
+    // in the same USB data packet.  To avoid this, we call the serial
+    // port object's flush method before writing the data.
+    if (_isUsb)
+        _port->flush();
 }
 
 uint32_t
