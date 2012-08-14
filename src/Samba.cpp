@@ -563,3 +563,15 @@ Samba::chipId()
     }
     return cid;
 }
+
+void
+Samba::reset(void)
+{
+    if (chipId() != 0x285e0a60) {
+        printf("Reset not supported for this CPU");
+        return;
+    }
+
+    writeWord(0x400E1A00, 0xA500000D);
+}
+

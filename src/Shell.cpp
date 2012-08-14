@@ -55,6 +55,7 @@ Shell::Shell() :
     add(new CommandSecurity);
     add(new CommandVerify);
     add(new CommandWrite);
+    add(new CommandReset);
 
     _commandList.sort();
 }

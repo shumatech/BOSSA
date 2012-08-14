@@ -260,4 +260,11 @@ public:
     virtual void invoke(char* argv[], int argc);
 };
 
+class CommandReset : public Command
+{
+public:
+    CommandReset();
+    virtual void invoke(char* argv[], int argc);
+};
+
 #endif // _COMMAND_H

@@ -1211,3 +1211,16 @@ CommandWrite::invoke(char* argv[], int argc)
 
     _flasher.write(argv[1]);
 }
+
+CommandReset::CommandReset() :
+    Command("reset",
+            "Reset the CPU.",
+            "reset\n")
+{}
+
+void
+CommandReset::invoke(char* argv[], int argc)
+{
+    _samba.reset();
+}
+

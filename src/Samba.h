@@ -61,6 +61,8 @@ public:
 
     const SerialPort& getSerialPort() { return *_port; }
 
+	void reset(void);
+
 private:
     bool _debug;
     bool _isUsb;

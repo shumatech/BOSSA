@@ -40,6 +40,7 @@ public:
     bool write;
     bool read;
     bool verify;
+    bool reset;
     bool port;
     bool boot;
     bool bor;
@@ -79,6 +80,8 @@ BossaConfig::BossaConfig()
     bootArg = 1;
     bodArg = 1;
     borArg = 1;
+
+    reset = false;
 }
 
 static BossaConfig config;
@@ -162,6 +165,11 @@ static Option opts[] =
       'h', "help", &config.help,
       { ArgNone },
       "display this help text"
+    },
+    {
+      'R', "reset", &config.reset,
+      { ArgNone },
+      "reset CPU (if supported)"
     }
 };
 
@@ -331,6 +339,9 @@ main(int argc, char* argv[])
 
         if (config.info)
             flasher.info(samba);
+
+        if (config.reset)
+            samba.reset();
     }
     catch (exception& e)
     {
