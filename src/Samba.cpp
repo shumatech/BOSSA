@@ -135,7 +135,7 @@ Samba::init()
 }
 
 bool
-Samba::connect(SerialPort::Ptr port)
+Samba::connect(SerialPort::Ptr port, int bps)
 {
     _port = port;
 
@@ -150,10 +150,10 @@ Samba::connect(SerialPort::Ptr port)
     _isUsb = false;
 
     // Try the serial port at slower speed
-    if (_port->open(115200) && init())
+    if (_port->open(bps) && init())
     {
         if (_debug)
-            printf("Connected at 115200 baud\n");
+            printf("Connected at %d baud\n", bps);
         return true;
     }
 
