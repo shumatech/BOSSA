@@ -38,6 +38,7 @@ public:
     virtual std::string next();
 
     virtual SerialPort::Ptr create(const std::string& name);
+    virtual SerialPort::Ptr create(const std::string& name, bool isUsb);
 
 private:
     std::string _empty;

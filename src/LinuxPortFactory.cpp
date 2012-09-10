@@ -44,6 +44,12 @@ LinuxPortFactory::create(const std::string& name)
         name.find("ttyACM") != std::string::npos)
         isUsb = true;
 
+    return create(name, isUsb);
+}
+
+SerialPort::Ptr
+LinuxPortFactory::create(const std::string& name, bool isUsb)
+{
     return SerialPort::Ptr(new PosixSerialPort(name, isUsb));
 }
 

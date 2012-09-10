@@ -45,6 +45,12 @@ WinPortFactory::create(const std::string& name)
         }
     }
 
+    return create(name, isUsb);
+}
+
+SerialPort::Ptr
+WinPortFactory::create(const std::string& name, bool isUsb)
+{
     return SerialPort::Ptr(new WinSerialPort(name, isUsb));
 }
 
