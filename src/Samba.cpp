@@ -572,6 +572,13 @@ Samba::reset(void)
         return;
     }
 
+    printf("CPU reset.\n");
     writeWord(0x400E1A00, 0xA500000D);
+
+    // Some linux users experienced a lock up if the serial
+    // port is closed while the port itself is being destroyed.
+    // This delay is here to give the time to kernel driver to
+    // sort out things before closing the port.
+    usleep(100000);
 }
 

@@ -1214,7 +1214,7 @@ CommandWrite::invoke(char* argv[], int argc)
 
 CommandReset::CommandReset() :
     Command("reset",
-            "Reset the CPU.",
+            "Reset the CPU. (only for supported CPU)",
             "reset\n")
 {}
 
