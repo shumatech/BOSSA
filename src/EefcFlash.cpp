@@ -237,6 +237,7 @@ EefcFlash::setBootFlash(bool enable)
     waitFSR();
     writeFCR0(enable ? EEFC_FCMD_SGPB : EEFC_FCMD_CGPB, (_canBrownout ? 3 : 1));
     waitFSR();
+    usleep(10000);
 }
 
 void
