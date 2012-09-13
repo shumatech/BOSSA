@@ -42,11 +42,13 @@ public:
 
     bool timeout(int millisecs);
     void flush();
+    void setAutoFlush(bool autoflush);
 
 private:
     int _devfd;
     bool _isUsb;
     int _timeout;
+    bool _autoFlush;
 };
 
 #endif // _POSIXSERIALPORT_H
