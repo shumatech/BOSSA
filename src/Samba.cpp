@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <ctype.h>
+#include <unistd.h>
 
 using namespace std;
 
