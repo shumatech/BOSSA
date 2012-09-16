@@ -117,13 +117,6 @@ public:
     virtual void invoke(char* argv[], int argc);
 };
 
-class CommandDisass : public Command
-{
-public:
-    CommandDisass();
-    virtual void invoke(char* argv[], int argc);
-};
-
 class CommandDump : public Command
 {
 public:

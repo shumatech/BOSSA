@@ -37,7 +37,6 @@
 #include <readline/history.h>
 
 #include "Command.h"
-#include "arm-dis.h"
 
 #define min(a, b)   ((a) < (b) ? (a) : (b))
 
@@ -363,48 +362,6 @@ CommandDebug::invoke(char* argv[], int argc)
         return;
 
     _samba.setDebug(state);
-}
-
-CommandDisass::CommandDisass() :
-    Command("disass",
-            "Disassemble ARM code at memory address.",
-            "disass [ADDRESS] [COUNT]\n"
-            "  ADDRESS -- starting memory address, thumb mode if not word aligned\n"
-            "  COUNT -- count of bytes to disassemble")
-{}
-
-void
-CommandDisass::invoke(char* argv[], int argc)
-{
-    uint32_t addr;
-    uint32_t count;
-    uint8_t* buf;
-
-    if (!argNum(argc, 3) ||
-        !argUint32(argv[1], &addr) ||
-        !argUint32(argv[2], &count) ||
-        !connected())
-        return;
-
-    buf = (uint8_t*) malloc(count);
-    if (!buf)
-        return;
-
-    for (uint32_t i = 0; i < count; i++)
-        buf[i] = i;
-
-    try
-    {
-        _samba.read(addr & ~0x1, buf, count);
-    }
-    catch (...)
-    {
-        free(buf);
-        throw;
-    }
-
-    arm_dis_buf(buf, count, addr & ~0x1, addr & 0x3, 1);
-    free(buf);
 }
 
 CommandDump::CommandDump() :

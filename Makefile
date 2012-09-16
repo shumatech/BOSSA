@@ -13,7 +13,7 @@ APPLET_SRCS=WordCopyArm.asm
 BOSSA_SRCS=BossaForm.cpp BossaWindow.cpp BossaAbout.cpp BossaApp.cpp BossaBitmaps.cpp BossaInfo.cpp BossaThread.cpp BossaProgress.cpp
 BOSSA_BMPS=BossaLogo.bmp BossaIcon.bmp ShumaTechLogo.bmp
 BOSSAC_SRCS=bossac.cpp CmdOpts.cpp
-BOSSASH_SRCS=bossash.cpp Shell.cpp Command.cpp arm-dis/arm-dis.cpp arm-dis/floatformat.cpp
+BOSSASH_SRCS=bossash.cpp Shell.cpp Command.cpp
 
 #
 # Build directories
@@ -145,7 +145,7 @@ COMMON_CXXFLAGS+=-Wall -Werror -MT $@ -MD -MP -MF $(@:%.o=%.d) -DVERSION=\"$(VER
 WX_CXXFLAGS:=$(shell wx-config --cxxflags) -DWX_PRECOMP -Wno-ctor-dtor-privacy -O2 -fno-strict-aliasing
 BOSSA_CXXFLAGS=$(COMMON_CXXFLAGS) $(WX_CXXFLAGS) 
 BOSSAC_CXXFLAGS=$(COMMON_CXXFLAGS)
-BOSSASH_CXXFLAGS=$(COMMON_CXXFLAGS) -Isrc/arm-dis
+BOSSASH_CXXFLAGS=$(COMMON_CXXFLAGS)
 
 #
 # LD Flags
@@ -249,9 +249,6 @@ $(foreach bmp,$(BOSSA_BMPS),$(eval $(call bossa_bmp,$(bmp))))
 $(OBJDIR):
 	@mkdir $@
     
-$(OBJDIR)/arm-dis:
-	@mkdir $@
-    
 $(BINDIR):
 	@mkdir $@
 
@@ -268,7 +265,7 @@ $(BINDIR)/bossac$(EXE): $(BOSSAC_OBJS) | $(BINDIR)
 	@echo LD $@
 	$(Q)$(CXX) $(BOSSAC_LDFLAGS) -o $@ $(BOSSAC_OBJS) $(BOSSAC_LIBS)
 
-$(BOSSASH_OBJS): | $(OBJDIR) $(OBJDIR)/arm-dis
+$(BOSSASH_OBJS): | $(OBJDIR)
 $(BINDIR)/bossash$(EXE): $(BOSSASH_OBJS) | $(BINDIR)
 	@echo LD $@
 	$(Q)$(CXX) $(BOSSASH_LDFLAGS) -o $@ $(BOSSASH_OBJS) $(BOSSASH_LIBS)

@@ -44,7 +44,6 @@ Shell::Shell() :
     add(new CommandBor);
     add(new CommandConnect);
     add(new CommandDebug);
-    add(new CommandDisass);
     add(new CommandDump);
     add(new CommandErase);
     add(new CommandExit);
