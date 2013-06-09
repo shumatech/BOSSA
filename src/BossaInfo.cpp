@@ -36,9 +36,9 @@ BossaInfo::BossaInfo(wxWindow* parent) : InfoDialog(parent)
     Samba& samba = wxGetApp().samba;
     Flash::Ptr& flash = wxGetApp().flash;
 
-    _deviceTextCtrl->SetValue(flash->name().c_str());
+    _deviceTextCtrl->SetValue(wxString::FromUTF8(flash->name().c_str()));
     _chipIdTextCtrl->SetValue(wxString::Format(wxT("%08x"), samba.chipId()));
-    _versionTextCtrl->SetValue(samba.version().c_str());
+    _versionTextCtrl->SetValue(wxString::FromUTF8(samba.version().c_str()));
 
     _pagesTextCtrl->SetValue(wxString::Format(wxT("%d"), flash->numPages()));
     _pageSizeTextCtrl->SetValue(wxString::Format(wxT("%d bytes"), flash->pageSize()));

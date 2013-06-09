@@ -49,6 +49,7 @@ CmdOpts::usage(FILE* out)
     char name[40];
     const char* start;
     const char* end;
+    size_t wbytes;
 
     for (optIdx = 0; optIdx < _numOpts; optIdx++)
     {
@@ -72,7 +73,7 @@ CmdOpts::usage(FILE* out)
         start = _opts[optIdx].help;
         while ((end = strchr(start, '\n')))
         {
-            fwrite(start, end - start + 1, 1, out);
+            wbytes = fwrite(start, end - start + 1, 1, out);
             fprintf(out, "%24s", "");
             start = end + 1;
         }

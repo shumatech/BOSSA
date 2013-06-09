@@ -102,14 +102,14 @@ BossaWindow::BossaWindow() : MainFrame(NULL)
 
     wxString port;
     wxConfig& config = wxGetApp().config;
-    if (config.Read("Port", &port))
+    if (config.Read(wxT("Port"), &port))
     {
         if (_portComboBox->FindString(port) >= 0)
         {
             PortFactory& portFactory = wxGetApp().portFactory;
             Samba& samba = wxGetApp().samba;
 
-            if (samba.connect(portFactory.create(port.mb_str())))
+            if (samba.connect(portFactory.create((const char*) port.mb_str())))
             {
                 CreateFlash();
             }
@@ -117,7 +117,7 @@ BossaWindow::BossaWindow() : MainFrame(NULL)
     }
 
     wxString file;
-    if (config.Read("File", &file))
+    if (config.Read(wxT("File"), &file))
     {
         _filePicker->SetPath(file);
     }
@@ -133,8 +133,8 @@ BossaWindow::~BossaWindow()
 {
     wxConfig& config = wxGetApp().config;
 
-    config.Write("Port", _portComboBox->GetStringSelection());
-    config.Write("File", _filePicker->GetPath());
+    config.Write(wxT("Port"), _portComboBox->GetStringSelection());
+    config.Write(wxT("File"), _filePicker->GetPath());
 }
 
 void
@@ -149,7 +149,7 @@ BossaWindow::RefreshSerial()
          port != portFactory.end();
          port = portFactory.next())
     {
-        _portComboBox->Append(port.c_str());
+        _portComboBox->Append(wxString::FromUTF8(port.c_str()));
     }
 
     if (!_portComboBox->SetStringSelection(selection))
@@ -179,7 +179,7 @@ BossaWindow::Connected()
 
     _statusBar->SetStatusText(wxT("Connected"), 0);
     _statusBar->SetStatusText(wxString::Format(wxT("Device: %s"), flash.name().c_str()), 1);
-    _portComboBox->SetStringSelection(port.name().c_str());
+    _portComboBox->SetStringSelection(wxString::FromUTF8(port.name().c_str()));
     _bootCheckBox->Enable(flash.canBootFlash());
     _bodCheckBox->Enable(flash.canBod());
     _borCheckBox->Enable(flash.canBor());
@@ -193,7 +193,7 @@ void
 BossaWindow::Disconnected()
 {
     _statusBar->SetStatusText(wxT("Not connected"), 0);
-    _statusBar->SetStatusText("", 1);
+    _statusBar->SetStatusText(_T(""), 1);
     _portComboBox->SetSelection(wxNOT_FOUND);
     _writeButton->Enable(false);
     _verifyButton->Enable(false);
@@ -207,7 +207,7 @@ BossaWindow::Error(const wxString& message)
     wxMessageDialog* dialog = new wxMessageDialog(
         this,
         message,
-        "Error",
+        _T("Error"),
         wxOK | wxICON_ERROR
     );
     dialog->ShowModal();
@@ -220,7 +220,7 @@ BossaWindow::Warning(const wxString& message)
     wxMessageDialog* dialog = new wxMessageDialog(
         this,
         message,
-        "Warning",
+        _T("Warning"),
         wxOK | wxICON_WARNING
     );
     dialog->ShowModal();
@@ -233,7 +233,7 @@ BossaWindow::Info(const wxString& message)
     wxMessageDialog* dialog = new wxMessageDialog(
         this,
         message,
-        "Info",
+        _T("Info"),
         wxOK | wxICON_INFORMATION
     );
     dialog->ShowModal();
@@ -246,7 +246,7 @@ BossaWindow::Question(const wxString& message)
     wxMessageDialog* dialog = new wxMessageDialog(
         this,
         message,
-        "Question",
+        _T("Question"),
         wxYES_NO | wxICON_QUESTION
     );
     int resp = dialog->ShowModal();
@@ -270,7 +270,7 @@ BossaWindow::CreateFlash()
     catch (exception& e)
     {
         Disconnected();
-        Error(wxString(e.what()));
+        Error(wxString::FromUTF8(e.what()));
         return;
     }
 
@@ -293,10 +293,10 @@ BossaWindow::OnSerial(wxCommandEvent& event)
     Samba& samba = wxGetApp().samba;
 
     wxString port = _portComboBox->GetString(event.GetSelection());
-    if (!samba.connect(portFactory.create(port.mb_str())))
+    if (!samba.connect(portFactory.create((const char*) port.mb_str())))
     {
         Disconnected();
-        Error(wxString::Format(wxT("Could not connect to device on %s"), port.mb_str()));
+        Error(wxString::Format(wxT("Could not connect to device on %s"), (const char*) port.mb_str()));
         return;
     }
 
@@ -356,7 +356,7 @@ BossaWindow::OnWrite(wxCommandEvent& event)
     }
     catch(exception& e)
     {
-        Error(e.what());
+        Error(wxString::FromUTF8(e.what()));
         return;
     }
 
@@ -441,7 +441,7 @@ BossaWindow::OnRead(wxCommandEvent& event)
         size = strtol(_sizeTextCtrl->GetValue().mb_str(), NULL, 0);
         if (size == 0)
         {
-            Error("Read size is invalid");
+            Error(wxT("Read size is invalid"));
             return;
         }
     }
@@ -474,7 +474,7 @@ BossaWindow::OnInfo(wxCommandEvent& event)
     }
     catch (exception& e)
     {
-        Error(wxString(e.what()));
+        Error(wxString::FromUTF8(e.what()));
         return;
     }
 
