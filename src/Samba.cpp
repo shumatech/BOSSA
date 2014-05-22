@@ -86,9 +86,11 @@ Samba::init()
     _port->read(cmd, 2);
 
     // Read the chip ID
+    ChipInfo info;
     try
     {
-        cid = chipId();
+        info = chipInfo();
+        cid = info.chipId;
     }
     catch (SambaError)
     {
@@ -99,6 +101,18 @@ Samba::init()
 
     if (_debug)
         printf("chipId=%#08x\n", cid);
+
+    //Check for M0+ processors.
+    if(info.arch == M0)
+    {
+       int arch = -1;
+       arch = cid >> ((sizeof(int)*8) - 4); //see the 4 bits from MSB
+       if(arch == 1)
+          return true;
+       if(_debug)
+          printf("Unsupported M0+ architecture\n");
+    }
+
 
     uint8_t eproc = (cid >> 5) & 0x7;
     uint8_t arch = (cid >> 20) & 0xff;
@@ -553,22 +567,48 @@ Samba::version()
 uint32_t
 Samba::chipId()
 {
-    uint32_t vector;
+    ChipInfo info = chipInfo();
+    return info.chipId;
+}
+
+ChipInfo
+Samba::chipInfo()
+{
     uint32_t cid;
+    uint32_t vector;
+    ChipInfo info;
 
     // Read the ARM reset vector
     vector = readWord(0x0);
 
     // If the vector is a ARM7TDMI branch, then assume Atmel SAM7 registers
     if ((vector & 0xff000000) == 0xea000000)
-        cid = readWord(0xfffff240);
-    // Else use the Atmel SAM3 registers
-    else {
-        cid = readWord(0x400e0740);
-        if (cid == 0)
-            cid = readWord(0x400e0940);
+    {
+      info.chipId = readWord(0xfffff240);
+      info.arch = ARM7TDMI;
     }
-    return cid;
+    // Else use the Atmel SAM3 or SAM4 or M0+ registers 
+    else 
+    {
+      //Check if it is Cortex M0+
+      cid = readWord(0x41002018); //This is DSU_DID register
+      if(cid !=0)
+      {
+        //M0+ device cid will be 0x10010000.
+        info.chipId = cid;
+        info.arch = M0;
+        return info;
+      }
+
+      //M3 or M4
+      cid = readWord(0x400e0740);
+      if (cid == 0)
+        cid = readWord(0x400e0940);
+
+      info.chipId = cid;
+      info.arch = M3_M4;
+    }
+    return info;
 }
 
 void
@@ -588,4 +628,5 @@ Samba::reset(void)
     // sort out things before closing the port.
     usleep(100000);
 }
+
 

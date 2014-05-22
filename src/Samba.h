@@ -16,6 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ///////////////////////////////////////////////////////////////////////////////
+
 #ifndef _SAMBA_H
 #define _SAMBA_H
 
@@ -26,12 +27,31 @@
 
 #include "SerialPort.h"
 
+
+
+
+enum CHIP_ARCH
+{
+   M0,
+   M3_M4,
+   ARM7TDMI,
+   ARM9
+};
+ 
+
+typedef struct
+{
+  uint32_t chipId;
+  CHIP_ARCH arch;
+}ChipInfo;
+
 class SambaError : public std::exception
 {
 public:
     SambaError() : exception() {};
     const char* what() const throw() { return "SAM-BA operation failed"; }
 };
+
 
 class Samba
 {
@@ -57,6 +77,8 @@ public:
 
     uint32_t chipId();
 
+    ChipInfo chipInfo();
+
     void setDebug(bool debug) { _debug = debug; }
 
     const SerialPort& getSerialPort() { return *_port; }
@@ -78,6 +100,8 @@ private:
 
     void writeBinary(const uint8_t* buffer, int size);
     void readBinary(uint8_t* buffer, int size);
+
 };
+
 
 #endif // _SAMBA_H

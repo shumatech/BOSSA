@@ -19,7 +19,8 @@
 #include "FlashFactory.h"
 
 #include "EfcFlash.h"
-#include "EefcFlash.h"
+#include "EefcFlash.h" 
+#include "NvmFlash.h"
 
 FlashFactory::FlashFactory()
 {
@@ -30,10 +31,28 @@ FlashFactory::~FlashFactory()
 }
 
 Flash::Ptr
-FlashFactory::create(Samba& samba, uint32_t chipId)
+FlashFactory::create(Samba& samba, ChipInfo info)
 {
     Flash* flash;
+    uint32_t chipId = info.chipId;
 
+    ///CORTEX M0+
+    if(info.arch == M0)
+    {
+        switch(chipId)
+        {
+	
+	//SAMD21J18A
+        case 0x10010000:
+            flash = new NvmFlash(samba, "ATSAMD21J18A", 0x000000, 4096, 0x40000, 1, 16, 0x804000, 0x20008000, 0x41004000 /*Base address for the NVMCTRL module */, true);
+
+        case 0x10010005:
+            flash = new NvmFlash(samba, "ATSAMD21G18A", 0x000000, 4096, 0x40000, 1, 16, 0x804000, 0x20008000, 0x0000, true);
+	}
+
+        return Flash::Ptr(flash);
+    }
+    
     switch (chipId & 0x7fffffe0)
     {
     //
@@ -201,6 +220,7 @@ FlashFactory::create(Samba& samba, uint32_t chipId)
     case 0x329973a0 :
         flash = new EefcFlash(samba, "ATSAM9XE128", 0x200000, 256, 512, 1, 8, 0x300000, 0x303000, 0xfffffa00, true);
         break;
+
     default:
         flash = NULL;
         break;

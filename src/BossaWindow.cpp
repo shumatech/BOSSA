@@ -252,11 +252,11 @@ BossaWindow::CreateFlash()
     Samba& samba = wxGetApp().samba;
     Flash::Ptr& flash = wxGetApp().flash;
     FlashFactory flashFactory;
-    uint32_t chipId;
+    ChipInfo info;
 
     try
     {
-        chipId = samba.chipId();
+        info = samba.chipInfo();
     }
     catch (exception& e)
     {
@@ -265,11 +265,11 @@ BossaWindow::CreateFlash()
         return;
     }
 
-    flash = flashFactory.create(samba, chipId);
+    flash = flashFactory.create(samba, info);
     if (flash.get() == NULL)
     {
         Disconnected();
-        Error(wxString::Format(wxT("Chip ID 0x%08x is not supported"), chipId));
+        Error(wxString::Format(wxT("Chip ID 0x%08x is not supported"), info.chipId));
         return;
     }
 

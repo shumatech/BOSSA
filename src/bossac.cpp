@@ -311,11 +311,12 @@ main(int argc, char* argv[])
             printf("Device found on %s\n", port.c_str());
         }
 
-        uint32_t chipId = samba.chipId();
-        Flash::Ptr flash = flashFactory.create(samba, chipId);
+ 
+        ChipInfo info = samba.chipInfo();
+        Flash::Ptr flash = flashFactory.create(samba, info);
         if (flash.get() == NULL)
         {
-            fprintf(stderr, "Flash for chip ID %08x is not supported\n", chipId);
+            fprintf(stderr, "Flash for chip ID %08x is not supported\n", info.chipId);
             return 1;
         }
 
