@@ -19,13 +19,52 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <stdint.h>
+#include <unistd.h>
 #include <memory>
+
 #include <exception>
 
 #include "Samba.h"
 #include "WordCopyApplet.h"
 #include "NvmFlash.h"
 
+//The _regs parameter to this class is module base address.
+#define MODULE_BASE_ADDR _regs
+
+//The base address of the NVM module in 
+//main memory + offset to the CTRLA register
+#define NVM_CTRLA_REG MODULE_BASE_ADDR+0x00 
+
+//The NVM register that stores lock status
+#define NVM_LOCK_REG MODULE_BASE_ADDR+0x20
+
+//NVM input register to some of the 
+//CMDEX commands executed by the NVM controller
+#define ADDR  MOUDLE_BASE_ADDR+0x1c
+
+//CMDEX should be 0xA5 to execute any command 
+//on the NVM controller's APB bus.
+#define CMDEX 0xa500   
+
+//List of NVM Commands.//as per datasheet prefix CMDEX
+#define CMD_LOCK_REGION   CMDEX | 0x0040
+#define CMD_UNLOCK_REGION CMDEX | 0x0041
+#define CMD_ERASE_ROW     CMDEX | 0x0002
+
+
+//Just for readability
+#define FOUR_PAGES 4
+
+//Size of a page should be computed based on the input
+#define PAGE_SIZE_IN_BYTES (uint32_t)size/pages
+
+//Size of the samba bootloader in any configuration
+#define BOOTLOADER_SIZE_IN_BYTES 8192 
+
+//This is the row size which is a standard number for all SAMD21
+#define ROW_SIZE FOUR_PAGES 
+
+/* This class is designed specifically for M0+ architecture in mind */
 NvmFlash::NvmFlash(Samba& samba,
              const std::string& name,
              uint32_t addr,
@@ -53,7 +92,21 @@ NvmFlash::~NvmFlash()
 void
 NvmFlash::eraseAll()
 {
+    //Leave the first 8KB, where samba resides, erase the rest
+    //Trivia : 64 bytes => 1 page , 4 page => 1 row. 
+    //Row is a concept used for erasing. When writing you have to write 
+    //page(s). When erasing you have to erase row(s).
+    uint32_t total_rows = (size / PAGE_SIZE_IN_BYTES)/ROW_SIZE;
+    uint32_t boot_rows = (BOOTLOADER_SIZE_IN_BYTES/PAGE_SIZE_IN_BYTES)/ROW_SIZE;
 
+    uint32_t addr_to_lock = getAddressByRegion(region);
+    for(int row=boot_rows+1;row<=total_rows;row++)
+    {
+        uint32_t addr = row * ROW_SIZE * PAGE_SIZE_IN_BYTES;
+        _samba.writeWord(ADDR, addr);
+        sleep(0.2);//Sleep for 200 milliseconds. I don't understand waitstates
+        _samba.writeWord(NVM_CTRLA_REG, CMD_ERASE_ROW);
+    }
 }
 
 void 
@@ -71,12 +124,42 @@ NvmFlash::isLocked()
 bool 
 NvmFlash::getLockRegion(uint32_t region)
 {
-    return false;
+    if(region >= _lockRegions)
+        throw FlashRegionError();
+    uint32_t lock_reg = NVM_LOCK_REG;
+    uint32_t value = _samba.readWord(lock_reg);
+    return ((value & (2^region)) == 0);
 }
 
 void 
 NvmFlash::setLockRegion(uint32_t region, bool enable)
 {
+   if(region >= _lockRegions)
+     throw FlashRegionError();
+   
+   if(enable != getLockRegion(region))
+   {
+       if(enable)
+       {
+	   //To lock a region you have to pass an address to the
+           //ADDR register, and then execute "lock region" cmd 
+           //on the NVM controller.
+	   uint32_t addr_to_lock = getAddressByRegion(region);
+ 	   _samba.writeWord(ADDR, addr_to_lock);
+           sleep(0.1);
+           _samba.writeWord(NVM_CTRLA_REG, CMD_LOCK_REGION);
+           sleep(0.1);
+       }    
+       else
+       {
+	   uint32_t addr_to_unlock = getAddressByRegion(region);
+ 	   _samba.writeWord(ADDR, addr_to_unlock);
+           sleep(0.1);
+           _samba.writeWord(NVM_CTRLA_REG, CMD_UNLOCK_REGION);
+           sleep(0.1);
+            
+       }
+   }
 }
 
 void 
@@ -148,7 +231,6 @@ NvmFlash::loadBuffer(const uint8_t* data)
 void 
 NvmFlash::writePage(uint32_t page)
 {
-
     if (page >= _pages)
         throw FlashPageError();
 }
@@ -157,4 +239,15 @@ void
 NvmFlash::readPage(uint32_t page, uint8_t* data)
 {
 
+}
+
+uint32_t 
+NvmFlash::getAddressByRegion(uint32_t region_num)
+{
+    if(region_num >= _lockRegions)
+        throw FlashRegionError();
+    
+    uint32_t size_of_region = _size/_lockRegions; //Flash Size / no of lock regions
+    uint32_t addr = _addr + (region_num * size_of_region);
+    return addr;
 }

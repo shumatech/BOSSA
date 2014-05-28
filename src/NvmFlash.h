@@ -76,6 +76,8 @@ private:
     bool _canBrownout;
     bool _eraseAuto;
 
+    uint32_t getAddressByRegion(uint32_t region);
+
 };
 
 #endif // _NVMFLASH_H
