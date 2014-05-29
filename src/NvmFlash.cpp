@@ -28,7 +28,8 @@
 #include "WordCopyApplet.h"
 #include "NvmFlash.h"
 
-//The _regs parameter to this class is module base address.
+//The _regs parameter to this class is the module base address.
+//redefined here with a more appropriate name
 #define MODULE_BASE_ADDR _regs
 
 //The base address of the NVM module in 
@@ -39,8 +40,11 @@
 #define NVM_LOCK_REG MODULE_BASE_ADDR+0x20
 
 //NVM input register to some of the 
-//CMDEX commands executed by the NVM controller
-#define ADDR  MOUDLE_BASE_ADDR+0x1c
+//CMDEX commands.
+#define ADDR  MODULE_BASE_ADDR+0x1c
+
+//NVM STATUS register
+#define STATUS MODULE_BASE_ADDR+0x18
 
 //CMDEX should be 0xA5 to execute any command 
 //on the NVM controller's APB bus.
@@ -50,13 +54,14 @@
 #define CMD_LOCK_REGION   CMDEX | 0x0040
 #define CMD_UNLOCK_REGION CMDEX | 0x0041
 #define CMD_ERASE_ROW     CMDEX | 0x0002
+#define CMD_SET_SECURITY_BIT CMDEX | 0x0045
 
 
 //Just for readability
 #define FOUR_PAGES 4
 
 //Size of a page should be computed based on the input
-#define PAGE_SIZE_IN_BYTES (uint32_t)size/pages
+#define PAGE_SIZE_IN_BYTES (uint32_t) _size/_pages
 
 //Size of the samba bootloader in any configuration
 #define BOOTLOADER_SIZE_IN_BYTES 8192 
@@ -96,22 +101,26 @@ NvmFlash::eraseAll()
     //Trivia : 64 bytes => 1 page , 4 page => 1 row. 
     //Row is a concept used for erasing. When writing you have to write 
     //page(s). When erasing you have to erase row(s).
-    uint32_t total_rows = (size / PAGE_SIZE_IN_BYTES)/ROW_SIZE;
+    uint32_t total_rows = (_size / PAGE_SIZE_IN_BYTES)/ROW_SIZE;
     uint32_t boot_rows = (BOOTLOADER_SIZE_IN_BYTES/PAGE_SIZE_IN_BYTES)/ROW_SIZE;
 
-    uint32_t addr_to_lock = getAddressByRegion(region);
-    for(int row=boot_rows+1;row<=total_rows;row++)
+    for(uint32_t row=boot_rows+1;row<=total_rows;row++)
     {
-        uint32_t addr = row * ROW_SIZE * PAGE_SIZE_IN_BYTES;
-        _samba.writeWord(ADDR, addr);
-        sleep(0.2);//Sleep for 200 milliseconds. I don't understand waitstates
+        uint32_t addr_in_flash = row * ROW_SIZE * PAGE_SIZE_IN_BYTES;
+        // the ADDR register is 22 bits so mask it.
+	// the address is byte address, so convert it to word address.
+	addr_in_flash = (addr_in_flash / 4) & 0x1fffff;
+        _samba.writeWord(ADDR, addr_in_flash) ;
+        sleep(0.2);//Sleep for 200 milliseconds, for the information to be ready.
         _samba.writeWord(NVM_CTRLA_REG, CMD_ERASE_ROW);
+        sleep(0.2);
     }
 }
 
 void 
 NvmFlash::eraseAuto(bool enable)
 {
+
 }
 
 
@@ -126,9 +135,11 @@ NvmFlash::getLockRegion(uint32_t region)
 {
     if(region >= _lockRegions)
         throw FlashRegionError();
+
     uint32_t lock_reg = NVM_LOCK_REG;
-    uint32_t value = _samba.readWord(lock_reg);
-    return ((value & (2^region)) == 0);
+    uint32_t value = _samba.readWord(lock_reg) & 0xffff; //Only read 16 bits from LSB, Little endian
+    sleep(0.2); 
+    return ((value & (1 << region)) == 0); //0 -> locked, 1 -> unlocked
 }
 
 void 
@@ -145,44 +156,47 @@ NvmFlash::setLockRegion(uint32_t region, bool enable)
            //ADDR register, and then execute "lock region" cmd 
            //on the NVM controller.
 	   uint32_t addr_to_lock = getAddressByRegion(region);
+	   addr_to_lock = addr_to_lock & 0x1fffff;//the ADDR reg is only 21 bits wide.
  	   _samba.writeWord(ADDR, addr_to_lock);
-           sleep(0.1);
+           sleep(0.2); //Implement wait states in host itself.
            _samba.writeWord(NVM_CTRLA_REG, CMD_LOCK_REGION);
-           sleep(0.1);
+           sleep(0.2); //Implement wait states in host itself.
        }    
        else
        {
 	   uint32_t addr_to_unlock = getAddressByRegion(region);
+	   addr_to_unlock = addr_to_unlock & 0x1fffff; //the ADDR reg is 21 bits wide.
  	   _samba.writeWord(ADDR, addr_to_unlock);
-           sleep(0.1);
+           sleep(0.2);
            _samba.writeWord(NVM_CTRLA_REG, CMD_UNLOCK_REGION);
-           sleep(0.1);
+           sleep(0.2);
             
        }
    }
 }
 
-void 
-NvmFlash::lockAll()
-{
-}
-
-void 
-NvmFlash::unlockAll()
-{
-}
 
 bool 
 NvmFlash::getSecurity()
 {
-    return false;
+    //Read status register and take only the LSB 16 bits
+    uint16_t status_reg_value = _samba.readWord(STATUS) & 0xffff;
+    sleep(0.2);
+    //If the 8th bit is 1 then security bit is set, else unset.
+    return ((status_reg_value & (1<<8)) == 1);
 }
-
 
 void 
 NvmFlash::setSecurity()
 {
-
+    
+    if(!getSecurity()) //If security bit is not set
+    {
+        _samba.writeWord(NVM_CTRLA_REG, CMD_SET_SECURITY_BIT);	
+	sleep(0.2);
+	if(!getSecurity())
+ 	    throw FlashLockError();
+    }
 }
 
 void 
@@ -241,6 +255,10 @@ NvmFlash::readPage(uint32_t page, uint8_t* data)
 
 }
 
+///Returns the start address of a specified region number
+///based on the flash specifications. The returned address is 
+///word address (not byte address).
+
 uint32_t 
 NvmFlash::getAddressByRegion(uint32_t region_num)
 {
@@ -248,6 +266,7 @@ NvmFlash::getAddressByRegion(uint32_t region_num)
         throw FlashRegionError();
     
     uint32_t size_of_region = _size/_lockRegions; //Flash Size / no of lock regions
-    uint32_t addr = _addr + (region_num * size_of_region);
+    uint32_t addr = address() + (region_num * size_of_region);
+    addr = addr / 4; //Convert byte address to word address;
     return addr;
 }

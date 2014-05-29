@@ -41,7 +41,7 @@ using namespace std;
 
 #define min(a, b)   ((a) < (b) ? (a) : (b))
 
-Samba::Samba() : _debug(true), _isUsb(false)
+Samba::Samba() : _debug(false), _isUsb(false)
 {
 }
 

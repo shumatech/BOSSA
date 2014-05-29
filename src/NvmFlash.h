@@ -42,8 +42,6 @@ public:
 
     virtual ~NvmFlash();
 
-    void lockAll();
-    void unlockAll();
     void loadBuffer(const uint8_t*);
 
     void eraseAll();
