@@ -28,6 +28,10 @@
 #include "WordCopyApplet.h"
 #include "NvmFlash.h"
 
+
+
+//NVM User row address
+#define SYSCTRL_BOD33_REG 0x40000800 + 0x34 //SYSCTRL base address + BOD33 reg offset
 //The _regs parameter to this class is the module base address.
 //redefined here with a more appropriate name
 #define MODULE_BASE_ADDR _regs
@@ -98,10 +102,9 @@ void
 NvmFlash::eraseAll()
 {
     //Leave the first 8KB, where samba resides, erase the rest
-    //Trivia : 64 bytes => 1 page , 4 page => 1 row. 
     //Row is a concept used for erasing. When writing you have to write 
     //page(s). When erasing you have to erase row(s).
-    uint32_t total_rows = (_size / PAGE_SIZE_IN_BYTES)/ROW_SIZE;
+    uint32_t total_rows = _pages/ROW_SIZE;
     uint32_t boot_rows = (BOOTLOADER_SIZE_IN_BYTES/PAGE_SIZE_IN_BYTES)/ROW_SIZE;
 
     for(uint32_t row=boot_rows+1;row<=total_rows;row++)
@@ -120,14 +123,14 @@ NvmFlash::eraseAll()
 void 
 NvmFlash::eraseAuto(bool enable)
 {
-
+    _eraseAuto = enable;
 }
 
 
 bool 
 NvmFlash::isLocked()
 {
-    return false;
+   return false;
 }
 
 bool 
@@ -202,38 +205,47 @@ NvmFlash::setSecurity()
 void 
 NvmFlash::setBod(bool enable)
 {
-
+    
 }
 
 bool 
 NvmFlash::getBod()
 {
-    return false;
+    uint32_t value = _samba.readWord(SYSCTRL_BOD33_REG);
+    sleep(0.2);
+    return ((value & 0x2) == 0x1); //If Bit 1 of the BOD33 register is 1, then it's enabled
+    
 }
 
 bool 
 NvmFlash::getBor()
 {
-    return false;
+
+    uint32_t value = _samba.readWord(SYSCTRL_BOD33_REG);
+    sleep(0.2);
+    return ((value & 0x18) == 1); //If bits 3,4 = 0x1 then brown out action is reset, else it's not
 }
 
 void 
 NvmFlash::setBor(bool enable)
 {
-
+    //to set it use the User flash row, reset required.
 }
 
 
 bool 
 NvmFlash::getBootFlash()
 {
-    return false;
+    //Always boots from flash. No ROM boot available.
+    return true;
 }
 
 void 
 NvmFlash::setBootFlash(bool enable)
 {
-
+    //Boot to flash is the only supported option. Other means is not possible with this device.
+    if(!enable)
+        throw BootFlashError();
 }
 
 void 
@@ -252,7 +264,12 @@ NvmFlash::writePage(uint32_t page)
 void 
 NvmFlash::readPage(uint32_t page, uint8_t* data)
 {
+    if(page >= _pages)
+        throw FlashPageError();
 
+    //Convert page number into physical address. flash_base_address + page.no * page_size
+    uint32_t addr = _addr + (page * PAGE_SIZE_IN_BYTES);
+    _samba.read(addr, data, PAGE_SIZE_IN_BYTES);
 }
 
 ///Returns the start address of a specified region number
@@ -270,3 +287,5 @@ NvmFlash::getAddressByRegion(uint32_t region_num)
     addr = addr / 4; //Convert byte address to word address;
     return addr;
 }
+
+

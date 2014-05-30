@@ -54,6 +54,14 @@ public:
     const char* what() const throw() { return "Flash command failed"; }
 };
 
+class BootFlashError : public std::exception
+{
+public:
+    BootFlashError() : exception() {};
+    const char* what() const throw() { return "Cannot clear Boot Flash. No ROM boot option available for this device"; }
+
+};
+
 class Flash
 {
 public:
