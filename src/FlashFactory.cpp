@@ -37,7 +37,7 @@ FlashFactory::create(Samba& samba, ChipInfo info)
     uint32_t chipId = info.chipId;
 
     ///CORTEX M0+
-    if(info.arch == M0)
+    if(info.arch == M0_PLUS)
     {
         switch(chipId)
         {

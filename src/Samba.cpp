@@ -103,7 +103,7 @@ Samba::init()
         printf("chipId=%#08x\n", cid);
 
     //Check for M0+ processors.
-    if(info.arch == M0)
+    if(info.arch == M0_PLUS)
     {
        int arch = -1;
        arch = cid >> ((sizeof(int)*8) - 4); //see the 4 bits from MSB
@@ -596,10 +596,10 @@ Samba::chipInfo()
       {
         //M0+ device cid will be 0x10010000.
         info.chipId = cid;
-        info.arch = M0;
-        return info;
+        info.arch = M0_PLUS;
       }
-
+      else
+      {
       //M3 or M4
       cid = readWord(0x400e0740);
       if (cid == 0)
@@ -607,8 +607,10 @@ Samba::chipInfo()
 
       info.chipId = cid;
       info.arch = M3_M4;
+      }
     }
     return info;
+   
 }
 
 void

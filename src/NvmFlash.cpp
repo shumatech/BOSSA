@@ -19,18 +19,22 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <stdint.h>
-#include <unistd.h>
+#include <malloc.h>
 #include <memory>
-
+#include <iostream>
 #include <exception>
 
 #include "Samba.h"
 #include "WordCopyApplet.h"
 #include "NvmFlash.h"
 
+using namespace std;
 
 
-//NVM User row address
+//NVM User row in flash, 64 bytes in length
+#define NVMCTRL_USER_ROW 0x804000
+
+//NVM System control brown out register.
 #define SYSCTRL_BOD33_REG 0x40000800 + 0x34 //SYSCTRL base address + BOD33 reg offset
 //The _regs parameter to this class is the module base address.
 //redefined here with a more appropriate name
@@ -114,9 +118,7 @@ NvmFlash::eraseAll()
 	// the address is byte address, so convert it to word address.
 	addr_in_flash = (addr_in_flash / 4) & 0x1fffff;
         _samba.writeWord(ADDR, addr_in_flash) ;
-        sleep(0.2);//Sleep for 200 milliseconds, for the information to be ready.
         _samba.writeWord(NVM_CTRLA_REG, CMD_ERASE_ROW);
-        sleep(0.2);
     }
 }
 
@@ -141,7 +143,6 @@ NvmFlash::getLockRegion(uint32_t region)
 
     uint32_t lock_reg = NVM_LOCK_REG;
     uint32_t value = _samba.readWord(lock_reg) & 0xffff; //Only read 16 bits from LSB, Little endian
-    sleep(0.2); 
     return ((value & (1 << region)) == 0); //0 -> locked, 1 -> unlocked
 }
 
@@ -161,19 +162,14 @@ NvmFlash::setLockRegion(uint32_t region, bool enable)
 	   uint32_t addr_to_lock = getAddressByRegion(region);
 	   addr_to_lock = addr_to_lock & 0x1fffff;//the ADDR reg is only 21 bits wide.
  	   _samba.writeWord(ADDR, addr_to_lock);
-           sleep(0.2); //Implement wait states in host itself.
            _samba.writeWord(NVM_CTRLA_REG, CMD_LOCK_REGION);
-           sleep(0.2); //Implement wait states in host itself.
        }    
        else
        {
 	   uint32_t addr_to_unlock = getAddressByRegion(region);
 	   addr_to_unlock = addr_to_unlock & 0x1fffff; //the ADDR reg is 21 bits wide.
  	   _samba.writeWord(ADDR, addr_to_unlock);
-           sleep(0.2);
            _samba.writeWord(NVM_CTRLA_REG, CMD_UNLOCK_REGION);
-           sleep(0.2);
-            
        }
    }
 }
@@ -184,7 +180,6 @@ NvmFlash::getSecurity()
 {
     //Read status register and take only the LSB 16 bits
     uint16_t status_reg_value = _samba.readWord(STATUS) & 0xffff;
-    sleep(0.2);
     //If the 8th bit is 1 then security bit is set, else unset.
     return ((status_reg_value & (1<<8)) == 1);
 }
@@ -196,7 +191,6 @@ NvmFlash::setSecurity()
     if(!getSecurity()) //If security bit is not set
     {
         _samba.writeWord(NVM_CTRLA_REG, CMD_SET_SECURITY_BIT);	
-	sleep(0.2);
 	if(!getSecurity())
  	    throw FlashLockError();
     }
@@ -205,14 +199,27 @@ NvmFlash::setSecurity()
 void 
 NvmFlash::setBod(bool enable)
 {
-    
+    int size  = 8; //The user row is 64 bytes in size
+    uint8_t* buffer = (uint8_t*)malloc(size);
+    _samba.read(NVMCTRL_USER_ROW, buffer, size);
+    if(buffer)
+    {
+       uint64_t value = 0;
+       for(uint8_t i=0;i<size;i++)
+       {
+	   uint8_t byte = *(buffer+i);
+ 	   value |= byte << (8*i);
+	   std::cout<<(char)byte<<endl;
+       }
+       std::cout<<endl<<value;
+    }
+    //_samba.write(NVMCTRL_USER_ROW, buffer, size);
 }
 
 bool 
 NvmFlash::getBod()
 {
     uint32_t value = _samba.readWord(SYSCTRL_BOD33_REG);
-    sleep(0.2);
     return ((value & 0x2) == 0x1); //If Bit 1 of the BOD33 register is 1, then it's enabled
     
 }
@@ -222,7 +229,6 @@ NvmFlash::getBor()
 {
 
     uint32_t value = _samba.readWord(SYSCTRL_BOD33_REG);
-    sleep(0.2);
     return ((value & 0x18) == 1); //If bits 3,4 = 0x1 then brown out action is reset, else it's not
 }
 
@@ -262,14 +268,27 @@ NvmFlash::writePage(uint32_t page)
 }
 
 void 
-NvmFlash::readPage(uint32_t page, uint8_t* data)
+NvmFlash::readPage(uint32_t page, uint8_t* buf)
 {
     if(page >= _pages)
         throw FlashPageError();
+    
+    for(uint32_t i=0;i<8;i++)
+        buf[i] = i;
 
     //Convert page number into physical address. flash_base_address + page.no * page_size
     uint32_t addr = _addr + (page * PAGE_SIZE_IN_BYTES);
-    _samba.read(addr, data, PAGE_SIZE_IN_BYTES);
+    _samba.read(addr, buf, PAGE_SIZE_IN_BYTES);
+    uint32_t number;
+    for(int j=0;j<16;j++)
+    {
+        number = 0;
+        for(int i = 0;i <4;i++)
+        {
+           number |= buf[i] << (8*i);
+        }
+    	printf("\n%x : %x",addr + (j*4), number);
+    }
 }
 
 ///Returns the start address of a specified region number
