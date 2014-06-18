@@ -35,6 +35,7 @@ using namespace std;
 
 //NVM System control brown out register.
 #define SYSCTRL_BOD33_REG (0x40000800 + 0x34) //SYSCTRL base address + BOD33 reg offset
+#define SYSCTRL_STATUS_REG_ENABLE_BIT 0x2
 //The _regs parameter to this class is the module base address.
 //redefined here with a more appropriate name
 #define MODULE_BASE_ADDR _regs
@@ -157,7 +158,7 @@ NvmFlash::getLockRegion(uint32_t region)
         throw FlashRegionError();
 
     uint32_t lock_reg = NVM_LOCK_REG;
-    uint32_t value = _samba.readWord(lock_reg) & 0xffff; //Only read 16 bits from LSB, Little endian
+    uint16_t value = _samba.readWord(lock_reg) & 0xffff; //Only read 16 bits from LSB, Little endian
     return ((value & (1 << region)) == 0); //Read the bit corresponding to the region number, if it's 0 -> locked, 1 -> unlocked, 
 }
 
@@ -175,25 +176,22 @@ NvmFlash::setLockRegion(uint32_t region, bool enable)
            //ADDR register, and then execute "lock region" cmd 
            //on the NVM controller.
 	   uint32_t addr_to_lock = getAddressByRegion(region);
-	   addr_to_lock = addr_to_lock & 0x1fffff;//the ADDR reg is only 21 bits wide.
-        while(!nvm_is_ready())
-        {
-		
-            std::cout<<endl<<"Waiting ..... ";
-        }
+	   addr_to_lock = addr_to_lock & 0x1fffff;
+           while(!nvm_is_ready())
+           {
+               //std::cout<<endl<<"Waiting ..... ";
+           }
  	   _samba.writeWord(ADDR_REG, addr_to_lock);
            _samba.writeWord(NVM_CTRLA_REG, CMD_LOCK_REGION);
        }    
        else
        {
 	   uint32_t addr_to_unlock = getAddressByRegion(region);
-	   addr_to_unlock = addr_to_unlock & 0x1fffff; //the ADDR reg is 21 bits wide.
+	   addr_to_unlock = addr_to_unlock & 0x1fffff; 
 	   while(!nvm_is_ready())
 	   {
-	       std::cout<<endl<<"Waiting ..... ";
+	       //std::cout<<endl<<"Waiting ..... ";
            }
-
-
  	   _samba.writeWord(ADDR_REG, addr_to_unlock);
            _samba.writeWord(NVM_CTRLA_REG, CMD_UNLOCK_REGION);
        }
@@ -222,32 +220,29 @@ NvmFlash::setSecurity()
     }
 }
 
+//Enable/disable the Bod mechanism. The values are lost on target reset.
 void 
 NvmFlash::setBod(bool enable)
 {
-    int size  = 8; //The user row is 64 bytes in size
-    uint8_t* buffer = (uint8_t*)malloc(size);
-    _samba.read(NVMCTRL_USER_ROW, buffer, size);
-    if(buffer)
+    uint32_t bod33_ctrl_reg = _samba.readWord(SYSCTRL_BOD33_REG);
+
+    if(enable)
     {
-       uint64_t value = 0;
-       for(uint8_t i=0;i<size;i++)
-       {
-	   uint8_t byte = *(buffer+i);
- 	   value |= byte << (8*i);
-	   std::cout<<(char)byte<<endl;
-       }
-       std::cout<<endl<<value;
+        bod33_ctrl_reg |= SYSCTRL_STATUS_REG_ENABLE_BIT;//Enable the bod control
+        _samba.writeWord(SYSCTRL_BOD33_REG, bod33_ctrl_reg);
     }
-    //_samba.write(NVMCTRL_USER_ROW, buffer, size);
+    else
+    {
+       bod33_ctrl_reg &= 0xfffffffd;//Negate just the STATUS_REG bit.
+       _samba.writeWord(SYSCTRL_BOD33_REG, bod33_ctrl_reg);
+    }
 }
 
 bool 
 NvmFlash::getBod()
 {
     uint32_t value = _samba.readWord(SYSCTRL_BOD33_REG);
-    return ((value & 0x2) == 0x1); //If Bit 1 of the BOD33 register is 1, then it's enabled
-    
+    return (((value & SYSCTRL_STATUS_REG_ENABLE_BIT) >> 1) == 0x1); //If Bit 1 of the BOD33 register is 1, then it's enabled
 }
 
 bool 
