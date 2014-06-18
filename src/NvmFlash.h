@@ -25,6 +25,16 @@
 
 #include "Flash.h"
 
+
+class NvmFlashCmdError : public std::exception
+{
+public:
+    NvmFlashCmdError(const char* message) : exception(), _message(message) {};
+    const char* what() const throw() { return _message; }
+protected:
+    const char* _message;
+};
+
 class NvmFlash : public Flash
 {
 public:
@@ -68,6 +78,8 @@ public:
 
     void writePage(uint32_t page);
     void readPage(uint32_t page, uint8_t* data);
+    
+    bool nvm_is_ready();
 
 private:
     uint32_t _regs;

@@ -1,4 +1,3 @@
-
 ///////////////////////////////////////////////////////////////////////////////
 // BOSSA
 //
@@ -35,42 +34,44 @@ using namespace std;
 #define NVMCTRL_USER_ROW 0x804000
 
 //NVM System control brown out register.
-#define SYSCTRL_BOD33_REG 0x40000800 + 0x34 //SYSCTRL base address + BOD33 reg offset
+#define SYSCTRL_BOD33_REG (0x40000800 + 0x34) //SYSCTRL base address + BOD33 reg offset
 //The _regs parameter to this class is the module base address.
 //redefined here with a more appropriate name
 #define MODULE_BASE_ADDR _regs
 
 //The base address of the NVM module in 
 //main memory + offset to the CTRLA register
-#define NVM_CTRLA_REG MODULE_BASE_ADDR+0x00 
+#define NVM_CTRLA_REG (MODULE_BASE_ADDR+0x00)
 
 //The NVM register that stores lock status
-#define NVM_LOCK_REG MODULE_BASE_ADDR+0x20
+#define NVM_LOCK_REG (MODULE_BASE_ADDR+0x20)
+
+//The interrupt status register
+#define NVM_INT_STATUS (MODULE_BASE_ADDR+0x14)
 
 //NVM input register to some of the 
 //CMDEX commands.
-#define ADDR  MODULE_BASE_ADDR+0x1c
+#define ADDR_REG  (MODULE_BASE_ADDR+0x1c)
 
 //NVM STATUS register
-#define STATUS MODULE_BASE_ADDR+0x18
+#define STATUS (MODULE_BASE_ADDR+0x18)
 
 //CMDEX should be 0xA5 to execute any command 
 //on the NVM controller's APB bus.
 #define CMDEX 0xa500   
 
 //List of NVM Commands.//as per datasheet prefix CMDEX
-#define CMD_LOCK_REGION   CMDEX | 0x0040
-#define CMD_UNLOCK_REGION CMDEX | 0x0041
-#define CMD_ERASE_ROW     CMDEX | 0x0002
-#define CMD_SET_SECURITY_BIT CMDEX | 0x0045
+#define CMD_LOCK_REGION   (CMDEX | 0x0040)
+#define CMD_UNLOCK_REGION (CMDEX | 0x0041)
+#define CMD_ERASE_ROW     (CMDEX | 0x0002)
+#define CMD_SET_SECURITY_BIT (CMDEX | 0x0045)
 
 
 //Just for readability
 #define FOUR_PAGES 4
 
 //Size of a page should be computed based on the input
-#define PAGE_SIZE_IN_BYTES (uint32_t) _size/_pages
-
+#define PAGE_SIZE_IN_BYTES (_size/_pages) 
 //Size of the samba bootloader in any configuration
 #define BOOTLOADER_SIZE_IN_BYTES 8192 
 
@@ -105,21 +106,34 @@ NvmFlash::~NvmFlash()
 void
 NvmFlash::eraseAll()
 {
-    //Leave the first 8KB, where samba resides, erase the rest
-    //Row is a concept used for erasing. When writing you have to write 
+    //Leave the first 8KB, where samba resides, erase the rest.
+    //Row is a concept used for convinence. When writing you have to write 
     //page(s). When erasing you have to erase row(s).
     uint32_t total_rows = _pages/ROW_SIZE;
     uint32_t boot_rows = (BOOTLOADER_SIZE_IN_BYTES/PAGE_SIZE_IN_BYTES)/ROW_SIZE;
 
-    for(uint32_t row=boot_rows+1;row<=total_rows;row++)
+    for(uint32_t row=boot_rows+10;row<=total_rows-10;row++)
     {
-        uint32_t addr_in_flash = row * ROW_SIZE * PAGE_SIZE_IN_BYTES;
-        // the ADDR register is 22 bits so mask it.
+        uint32_t addr_in_flash = _addr + (row * ROW_SIZE * PAGE_SIZE_IN_BYTES);
 	// the address is byte address, so convert it to word address.
-	addr_in_flash = (addr_in_flash / 4) & 0x1fffff;
-        _samba.writeWord(ADDR, addr_in_flash) ;
+	addr_in_flash = (addr_in_flash / 4);
+
+        while(!nvm_is_ready())
+        {
+            std::cout<<endl<<"Waiting ..... ";
+        }
+
+        _samba.writeWord(ADDR_REG, addr_in_flash) ;
         _samba.writeWord(NVM_CTRLA_REG, CMD_ERASE_ROW);
     }
+}
+
+
+bool
+NvmFlash::nvm_is_ready()
+{
+    uint8_t int_flag = _samba.readByte(NVM_INT_STATUS) & 0x1;//Read the ready bit
+    return int_flag == 1;
 }
 
 void 
@@ -135,6 +149,7 @@ NvmFlash::isLocked()
    return false;
 }
 
+///Returns true if locked, false otherwise.
 bool 
 NvmFlash::getLockRegion(uint32_t region)
 {
@@ -143,7 +158,7 @@ NvmFlash::getLockRegion(uint32_t region)
 
     uint32_t lock_reg = NVM_LOCK_REG;
     uint32_t value = _samba.readWord(lock_reg) & 0xffff; //Only read 16 bits from LSB, Little endian
-    return ((value & (1 << region)) == 0); //0 -> locked, 1 -> unlocked
+    return ((value & (1 << region)) == 0); //Read the bit corresponding to the region number, if it's 0 -> locked, 1 -> unlocked, 
 }
 
 void 
@@ -161,14 +176,25 @@ NvmFlash::setLockRegion(uint32_t region, bool enable)
            //on the NVM controller.
 	   uint32_t addr_to_lock = getAddressByRegion(region);
 	   addr_to_lock = addr_to_lock & 0x1fffff;//the ADDR reg is only 21 bits wide.
- 	   _samba.writeWord(ADDR, addr_to_lock);
+        while(!nvm_is_ready())
+        {
+		
+            std::cout<<endl<<"Waiting ..... ";
+        }
+ 	   _samba.writeWord(ADDR_REG, addr_to_lock);
            _samba.writeWord(NVM_CTRLA_REG, CMD_LOCK_REGION);
        }    
        else
        {
 	   uint32_t addr_to_unlock = getAddressByRegion(region);
 	   addr_to_unlock = addr_to_unlock & 0x1fffff; //the ADDR reg is 21 bits wide.
- 	   _samba.writeWord(ADDR, addr_to_unlock);
+	   while(!nvm_is_ready())
+	   {
+	       std::cout<<endl<<"Waiting ..... ";
+           }
+
+
+ 	   _samba.writeWord(ADDR_REG, addr_to_unlock);
            _samba.writeWord(NVM_CTRLA_REG, CMD_UNLOCK_REGION);
        }
    }
@@ -249,9 +275,8 @@ NvmFlash::getBootFlash()
 void 
 NvmFlash::setBootFlash(bool enable)
 {
-    //Boot to flash is the only supported option. Other means is not possible with this device.
-    if(!enable)
-        throw BootFlashError();
+    //Boot to flash is the only supported option. Other means are not possible with this device.
+    throw BootFlashError();
 }
 
 void 
