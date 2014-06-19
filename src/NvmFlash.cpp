@@ -133,7 +133,7 @@ NvmFlash::eraseAll()
 bool
 NvmFlash::nvm_is_ready()
 {
-    uint8_t int_flag = _samba.readByte(NVM_INT_STATUS) & 0x1;//Read the ready bit
+    uint8_t int_flag = _samba.readByte(NVM_INT_STATUS)&0x1;//Read the ready bit
     return int_flag == 1;
 }
 
@@ -147,7 +147,7 @@ NvmFlash::eraseAuto(bool enable)
 bool 
 NvmFlash::isLocked()
 {
-   return false;
+   return getLockRegion(0);
 }
 
 ///Returns true if locked, false otherwise.
@@ -157,8 +157,7 @@ NvmFlash::getLockRegion(uint32_t region)
     if(region >= _lockRegions)
         throw FlashRegionError();
 
-    uint32_t lock_reg = NVM_LOCK_REG;
-    uint16_t value = _samba.readWord(lock_reg) & 0xffff; //Only read 16 bits from LSB, Little endian
+    uint32_t value = _samba.readWord(NVM_LOCK_REG); 
     return ((value & (1 << region)) == 0); //Read the bit corresponding to the region number, if it's 0 -> locked, 1 -> unlocked, 
 }
 
@@ -176,23 +175,19 @@ NvmFlash::setLockRegion(uint32_t region, bool enable)
            //ADDR register, and then execute "lock region" cmd 
            //on the NVM controller.
 	   uint32_t addr_to_lock = getAddressByRegion(region);
-	   addr_to_lock = addr_to_lock & 0x1fffff;
-           while(!nvm_is_ready())
-           {
-               //std::cout<<endl<<"Waiting ..... ";
-           }
+	   //addr_to_lock = addr_to_lock & 0x1fffff;
+           while(!nvm_is_ready());
  	   _samba.writeWord(ADDR_REG, addr_to_lock);
+           while(!nvm_is_ready());
            _samba.writeWord(NVM_CTRLA_REG, CMD_LOCK_REGION);
        }    
        else
        {
 	   uint32_t addr_to_unlock = getAddressByRegion(region);
 	   addr_to_unlock = addr_to_unlock & 0x1fffff; 
-	   while(!nvm_is_ready())
-	   {
-	       //std::cout<<endl<<"Waiting ..... ";
-           }
+	   while(!nvm_is_ready());
  	   _samba.writeWord(ADDR_REG, addr_to_unlock);
+	   while(!nvm_is_ready());
            _samba.writeWord(NVM_CTRLA_REG, CMD_UNLOCK_REGION);
        }
    }
@@ -203,20 +198,22 @@ bool
 NvmFlash::getSecurity()
 {
     //Read status register and take only the LSB 16 bits
+    while(!nvm_is_ready());
     uint16_t status_reg_value = _samba.readWord(STATUS) & 0xffff;
     //If the 8th bit is 1 then security bit is set, else unset.
-    return ((status_reg_value & (1<<8)) == 1);
+    return (((status_reg_value >> 8) & 0x1) == 1);
 }
 
 void 
 NvmFlash::setSecurity()
 {
-    
     if(!getSecurity()) //If security bit is not set
     {
+
+        while(!nvm_is_ready());
         _samba.writeWord(NVM_CTRLA_REG, CMD_SET_SECURITY_BIT);	
 	if(!getSecurity())
- 	    throw FlashLockError();
+ 	    throw NvmFlashCmdError("Error when setting security bit");
     }
 }
 
@@ -248,15 +245,13 @@ NvmFlash::getBod()
 bool 
 NvmFlash::getBor()
 {
-
-    uint32_t value = _samba.readWord(SYSCTRL_BOD33_REG);
-    return ((value & 0x18) == 1); //If bits 3,4 = 0x1 then brown out action is reset, else it's not
+    throw NvmFlashCmdError("BOR not supported in this target");
 }
 
 void 
 NvmFlash::setBor(bool enable)
 {
-    //to set it use the User flash row, reset required.
+    throw NvmFlashCmdError("BOR not supported in this target");
 }
 
 
