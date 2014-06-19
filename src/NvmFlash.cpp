@@ -309,16 +309,6 @@ NvmFlash::readPage(uint32_t page, uint8_t* buf)
     //Convert page number into physical address. flash_base_address + page.no * page_size
     uint32_t addr = _addr + (page * PAGE_SIZE_IN_BYTES);
     _samba.read(addr, buf, PAGE_SIZE_IN_BYTES);
-    uint32_t number;
-    for(int j=0;j<16;j++)
-    {
-        number = 0;
-        for(int i = 0;i <4;i++)
-        {
-           number |= buf[i] << (8*i);
-        }
-    	printf("\n%x : %x",addr + (j*4), number);
-    }
 }
 
 ///Returns the start address of a specified region number
