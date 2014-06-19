@@ -239,20 +239,35 @@ bool
 NvmFlash::getBod()
 {
     uint32_t value = _samba.readWord(SYSCTRL_BOD33_REG);
-    return (((value & SYSCTRL_STATUS_REG_ENABLE_BIT) >> 1) == 0x1); //If Bit 1 of the BOD33 register is 1, then it's enabled
+    bool bod_set =  (((value & SYSCTRL_STATUS_REG_ENABLE_BIT) >> 1) == 0x1); //If Bit 1 of the BOD33 register is 1, then it's enabled
+    return bod_set;
 }
 
 bool 
 NvmFlash::getBor()
 {
-    throw NvmFlashCmdError("BOR not supported in this target");
+    uint32_t bod33_ctrl_reg = _samba.readWord(SYSCTRL_BOD33_REG);
+    bool reset_enabled = ((bod33_ctrl_reg >> 3) & 0x1) == 0x1;
+    return reset_enabled;
 }
 
 void 
 NvmFlash::setBor(bool enable)
 {
-    throw NvmFlashCmdError("BOR not supported in this target");
+    uint32_t bod33_ctrl_reg = _samba.readWord(SYSCTRL_BOD33_REG);
+
+    if(enable)
+    {
+        bod33_ctrl_reg |= 0x8; //To enable brown out reset set bit 3.
+        _samba.writeWord(SYSCTRL_BOD33_REG, bod33_ctrl_reg);
+    }
+    else
+    {
+       bod33_ctrl_reg &= 0xffffffe7;//Zero out bit 3 and bit 4. So brown out action is none
+       _samba.writeWord(SYSCTRL_BOD33_REG, bod33_ctrl_reg);
+    }
 }
+
 
 
 bool 
