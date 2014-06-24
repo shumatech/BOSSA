@@ -231,6 +231,7 @@ Samba::readByte(uint32_t addr)
     return value;
 }
 
+
 void
 Samba::writeWord(uint32_t addr, uint32_t value)
 {
@@ -252,6 +253,7 @@ Samba::writeWord(uint32_t addr, uint32_t value)
     if (_isUsb)
         _port->flush();
 }
+
 
 uint32_t
 Samba::readWord(uint32_t addr)

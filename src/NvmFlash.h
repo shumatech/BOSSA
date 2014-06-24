@@ -80,11 +80,13 @@ public:
     void readPage(uint32_t page, uint8_t* data);
     
     bool nvm_is_ready();
+    void execute_nvm_command(uint32_t cmd);
 
 private:
     uint32_t _regs;
     bool _canBrownout;
     bool _eraseAuto;
+    const uint8_t* _buffer; 
 
     uint32_t getAddressByRegion(uint32_t region);
 
