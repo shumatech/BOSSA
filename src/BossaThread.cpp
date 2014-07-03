@@ -139,6 +139,7 @@ WriteThread::Entry()
         if (numPages > flash.numPages())
             throw FileSizeError();
 
+        flash.beforeWrite();
         while ((fbytes = fread(buffer, 1, pageSize, infile)) > 0)
         {
             if (_stopped)
@@ -155,7 +156,7 @@ WriteThread::Entry()
                          percent);
             }
 
-            flash.loadBuffer(buffer);
+            flash.loadBuffer(buffer, fbytes);
             flash.writePage(pageNum);
 
             pageNum++;

@@ -52,7 +52,7 @@ public:
 
     virtual ~NvmFlash();
 
-    void loadBuffer(const uint8_t*);
+    void loadBuffer(const uint8_t*, uint16_t size);
 
     void eraseAll();
     void eraseAuto(bool enable);
@@ -81,13 +81,17 @@ public:
     
     bool nvm_is_ready();
     void execute_nvm_command(uint32_t cmd);
+    
+    void beforeWrite();
 
 private:
     uint32_t _regs;
+    uint16_t _bufferSize;
     bool _canBrownout;
     bool _eraseAuto;
     const uint8_t* _buffer; 
 
+    void writeWord(uint32_t baseAddr, uint32_t ws);
     uint32_t getAddressByRegion(uint32_t region);
 
 };

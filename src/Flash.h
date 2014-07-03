@@ -108,9 +108,10 @@ public:
     virtual void setBootFlash(bool enable) = 0;
     virtual bool canBootFlash() = 0;
 
-    virtual void loadBuffer(const uint8_t* data);
+    virtual void loadBuffer(const uint8_t* data, uint16_t size);
     virtual void writePage(uint32_t page) = 0;
     virtual void readPage(uint32_t page, uint8_t* data) = 0;
+    virtual void beforeWrite() { }
 
     typedef std::auto_ptr<Flash> Ptr;
 

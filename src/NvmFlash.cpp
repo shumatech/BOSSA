@@ -48,8 +48,11 @@ using namespace std;
 //main memory + offset to the CTRLA register
 #define NVM_CTRLA_REG (MODULE_BASE_ADDR+0x00)
 
+#define NVM_CTRLB_REG (MODULE_BASE_ADDR+0x04)
+
 //The NVM register that stores lock status
 #define NVM_LOCK_REG (MODULE_BASE_ADDR+0x20)
+
 
 //The interrupt status register
 #define NVM_INT_STATUS_REG (MODULE_BASE_ADDR+0x14)
@@ -128,6 +131,7 @@ NvmFlash::eraseAll()
 	// the address is byte address, so convert it to word address.
 	addr_in_flash = addr_in_flash / 2;
 
+        //safe wait. Check and see if this is needed all the time
         while(!nvm_is_ready())
         {
             std::cout<<endl<<"Waiting ..... ";
@@ -293,9 +297,16 @@ NvmFlash::setBootFlash(bool enable)
     std::cout<<"Flash boot is the only available option";
 }
 
-void 
-NvmFlash::loadBuffer(const uint8_t* data)
+void
+NvmFlash::beforeWrite()
 {
+    eraseAll();
+}
+
+void 
+NvmFlash::loadBuffer(const uint8_t* data, uint16_t bufferSize)
+{
+    _bufferSize = bufferSize;
     _buffer = data;
 }
 
@@ -307,20 +318,26 @@ NvmFlash::writePage(uint32_t page)
     if (page >= _pages)
         throw FlashPageError();
 
+    if(_bufferSize > PAGE_SIZE_IN_BYTES)
+        throw FlashPageError();
+
     page = page + 128; //Start the application from adress 0x2000
     if(!_buffer)
         throw NvmFlashCmdError("The input buffer is not valid");
 
     //The application doesn't support individual page ws. It is ok to erase all and program it again
-    eraseAll();
+    //eraseAll();
 
     //clear page buffer
     execute_nvm_command(CMD_CLEAR_PAGE_BUFFER);
 
-
     //clear error flags
     uint16_t status_reg = _samba.readWord(NVM_STATUS_REG) & 0xffff;
     _samba.writeWord(NVM_STATUS_REG, status_reg | NVMCTRL_STATUS_MASK);
+
+    //Configure manual page write
+    uint32_t ctrlb_reg = _samba.readWord(NVM_CTRLB_REG);
+    _samba.writeWord(NVM_CTRLB_REG, ctrlb_reg | (0x1 << 7));
 
     //wait till the module becomes available
     while(!nvm_is_ready());
@@ -329,36 +346,56 @@ NvmFlash::writePage(uint32_t page)
     //The API writes byte by byte, but the NVM controller can only be written word by word
     //So we do manual write here !
     uint32_t addr = _addr + ((page * PAGE_SIZE_IN_BYTES) / 2);
-    uint32_t addr_cache = addr;
+    //uint32_t addr_cache = addr;
+
+    for(int i=0;i<_bufferSize;i++)
+        writeWord(addr,i);
 
 
     /* NVM _must_ be accessed as a series of 32-bit words, perform manual copy
     * to ensure alignment */
     
-     int num_Words = PAGE_SIZE_IN_BYTES / 4;
-     for (uint8_t i = 0; i <num_Words; i++) {
-
-        uint32_t ws = i*4; //start address of a double word.
-        uint32_t data;
-
-        /*Copy first byte of the 16-bit chunk to the temporary buffer */
-        data = _buffer[ws];
-
-        /* If we are not at the end of a write request with an odd byte count,
-        * store the next byte of data as well */
-        if (i < (PAGE_SIZE_IN_BYTES - 1)) {
-  	    data |= (_buffer[ws + 1] << 8);
-            data |= (_buffer[ws + 2] << 16);
-            data |= (_buffer[ws + 3] << 24);
-        }
-
-	/* Store next 16-bit chunk to the NVM memory space */
-        _samba.writeWord(addr, data);
-        addr = addr+2;
+    while(!nvm_is_ready())
+    {
+        std::cout<<"Waiting..."; 
     }
-     
-    _samba.writeWord(NVM_ADDR_REG,addr_cache);
+    
+     /*int num_Words = PAGE_SIZE_IN_BYTES / 4;
+     uint32_t data = 0;
+     for (int i = 0; i <num_Words; i++) {
+
+        int ws = i*4; 
+
+        data = _buffer[ws]; 
+
+        data |= (_buffer[ws + 1] << 8);
+        data |= (_buffer[ws + 2] << 16);
+        data |= (_buffer[ws + 3] << 24);
+
+        printf("0x%x = 0x%x\t", addr, data);
+
+        while(!nvm_is_ready());
+        _samba.writeWord(addr, data);
+        addr = addr+4;
+        while(!nvm_is_ready());
+    }*/
+
+
+    printf("\n");
+    _samba.writeWord(NVM_ADDR_REG,addr);
     execute_nvm_command(CMD_WRITE_PAGE);
+    //Reset the buffer, so that subsequent reads are clear
+}
+
+
+void NvmFlash::writeWord(uint32_t baseAddr, uint32_t ws)
+{
+        uint32_t data = _buffer[ws]; 
+        data |= (_buffer[ws + 1] << 8);
+        data |= (_buffer[ws + 2] << 16);
+        data |= (_buffer[ws + 3] << 24);
+        while(!nvm_is_ready());
+        _samba.writeWord(baseAddr+(ws*4), data);
 }
 
 void 
