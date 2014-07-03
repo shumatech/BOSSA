@@ -342,9 +342,6 @@ NvmFlash::writePage(uint32_t page)
     //wait till the module becomes available
     while(!nvm_is_ready());
 
-    //Note : the Samba.cpp file has a write api that accepts arbitary number of bytes.
-    //The API writes byte by byte, but the NVM controller can only be written word by word
-    //So we do manual write here !
     uint32_t addr = _addr + ((page * PAGE_SIZE_IN_BYTES) / 2);
     //uint32_t addr_cache = addr;
 
@@ -422,7 +419,7 @@ NvmFlash::getAddressByRegion(uint32_t region_num)
     if(region_num >= _lockRegions)
         throw FlashRegionError();
     uint32_t size_of_region = (PAGE_SIZE_IN_BYTES * numPages())/_lockRegions; //Flash Size / no of lock regions 
-    uint32_t addr = address() + (region_num * size_of_region); addr = addr / 4; //Convert byte address to word address;
+    uint32_t addr = address() + (region_num * size_of_region); addr = addr / 2; //Convert byte address to word address;
     return addr;
 }
 
