@@ -34,7 +34,9 @@ using namespace std;
 #define NVMCTRL_USER_ROW _user
 
 //System control brown out register.
-#define SYSCTRL_BOD33_REG (0x40000800 + 0x34) //SYSCTRL base address + BOD33 reg offset
+//SYSCTRL base address + BOD33 reg offset
+
+#define SYSCTRL_BOD33_REG (0x40000800 + 0x34) 
 #define SYSCTRL_STATUS_REG_ENABLE_BIT 0x2
 #define SYSCTRL_STATUS_REG_BOD33_MASK 0xfffffffd;
 #define SYSCTRL_STATUS_REG_BOD33_RESET_ENABLE_BIT 0x8
@@ -55,10 +57,12 @@ using namespace std;
 
 
 //The interrupt status register
-#define NVM_INT_STATUS_REG (MODULE_BASE_ADDR+0x14)
+#define NVM_INT_STATUS_REG (MODULE_BASE_ADDR+0x14) 
 
-//NVM input register to some of the 
-//CMDEX commands.
+//NVM ready bit mask
+#define NVM_INT_STATUS_READY_MASK 0x1
+
+//NVM input register to some of the CMDEX commands.
 #define NVM_ADDR_REG (MODULE_BASE_ADDR+0x1c)
 
 //NVM STATUS register
@@ -80,14 +84,13 @@ using namespace std;
 
 //Just for readability
 #define FOUR_PAGES 4
-
-//Size of a page is got from the input table.
+#define WORD_SIZE 4
+#define ROW_SIZE FOUR_PAGES 
 #define PAGE_SIZE_IN_BYTES pageSize()
-//Size of the samba bootloader in any configuration
+
+//Maximum size of the samba bootloader in any configuration
 #define BOOTLOADER_SIZE_IN_BYTES 8192 
 
-//This is the row size which is a standard number for all SAMD21
-#define ROW_SIZE FOUR_PAGES 
 
 /* This class is designed specifically for M0+ architecture in mind */
 NvmFlash::NvmFlash(Samba& samba,
@@ -121,6 +124,8 @@ NvmFlash::eraseAll()
     //Row is a concept used for convinence. When writing you have to write 
     //page(s). When erasing you have to erase row(s).
     uint32_t total_rows = _pages/ROW_SIZE;
+
+    //Calculate the number of rows that samba occupies.
     uint32_t boot_rows = (BOOTLOADER_SIZE_IN_BYTES/PAGE_SIZE_IN_BYTES)/ROW_SIZE;
 
     //clear error flags
@@ -151,10 +156,13 @@ NvmFlash::eraseAll()
 bool
 NvmFlash::nvm_is_ready()
 {
-    uint8_t int_flag = _samba.readByte(NVM_INT_STATUS_REG)&0x1;//Read the ready bit
+    uint8_t int_flag = _samba.readByte(NVM_INT_STATUS_REG)
+                       & NVM_INT_STATUS_READY_MASK;
+
     return int_flag == 1;
 }
 
+//Practically we are not using this 
 void 
 NvmFlash::eraseAuto(bool enable)
 {
@@ -176,9 +184,10 @@ NvmFlash::getLockRegion(uint32_t region)
         throw FlashRegionError();
 
     uint32_t value = _samba.readWord(NVM_LOCK_REG); 
-    return ((value & (1 << region)) == 0); //Read the bit corresponding to the region number, if it's 0 -> locked, 1 -> unlocked, 
+    return ((value & (1 << region)) == 0); // 0 -> locked, 1 -> unlocked, 
 }
 
+//Locks a given region number.
 void 
 NvmFlash::setLockRegion(uint32_t region, bool enable)
 {
@@ -210,6 +219,7 @@ NvmFlash::setLockRegion(uint32_t region, bool enable)
 }
 
 
+//Read the security bit, returns true if set, false otherwise.
 bool 
 NvmFlash::getSecurity()
 {
@@ -219,6 +229,7 @@ NvmFlash::getSecurity()
     return (((status_reg_value >> 8) & 0x1) == 1);
 }
 
+//Set's the security bit.
 void 
 NvmFlash::setSecurity()
 {
@@ -232,7 +243,7 @@ NvmFlash::setSecurity()
     }
 }
 
-//Enable/disable the Bod mechanism. The values are lost on target reset.
+//Enable/disable the Bod. The values are lost on target reset.
 void 
 NvmFlash::setBod(bool enable)
 {
@@ -297,6 +308,11 @@ NvmFlash::setBootFlash(bool enable)
     std::cout<<"Flash boot is the only available option";
 }
 
+//During writePage/loadBuffer we do not know if we are in middle of a 
+//write operation. So the context to call erase is not possible.
+//So we introduce a new callback which is called before a page write 
+//session. This is called before the first page is about to be written
+
 void
 NvmFlash::beforeWrite()
 {
@@ -314,85 +330,74 @@ NvmFlash::loadBuffer(const uint8_t* data, uint16_t bufferSize)
 void 
 NvmFlash::writePage(uint32_t page)
 {
+    //Start the application from adress 0x2000
+    page = page + 128;     
 
     if (page >= _pages)
         throw FlashPageError();
 
     if(_bufferSize > PAGE_SIZE_IN_BYTES)
         throw FlashPageError();
-
-    page = page + 128; //Start the application from adress 0x2000
+        
     if(!_buffer)
         throw NvmFlashCmdError("The input buffer is not valid");
-
-    //The application doesn't support individual page ws. It is ok to erase all and program it again
-    //eraseAll();
 
     //clear page buffer
     execute_nvm_command(CMD_CLEAR_PAGE_BUFFER);
 
-    //clear error flags
+    //clear error flags in target
     uint16_t status_reg = _samba.readWord(NVM_STATUS_REG) & 0xffff;
     _samba.writeWord(NVM_STATUS_REG, status_reg | NVMCTRL_STATUS_MASK);
 
-    //Configure manual page write
+    //Configure manual page write. This is critical for the write to work
+    //irrespective of full page or partial page.
     uint32_t ctrlb_reg = _samba.readWord(NVM_CTRLB_REG);
     _samba.writeWord(NVM_CTRLB_REG, ctrlb_reg | (0x1 << 7));
 
-    //wait till the module becomes available
-    while(!nvm_is_ready());
-
+    //compute the start address.
     uint32_t addr = _addr + ((page * PAGE_SIZE_IN_BYTES) / 2);
-    //uint32_t addr_cache = addr;
 
-    for(int i=0;i<_bufferSize;i++)
-        writeWord(addr,i);
-
-
-    /* NVM _must_ be accessed as a series of 32-bit words, perform manual copy
-    * to ensure alignment */
+    uint16_t wCount = _bufferSize / WORD_SIZE;
+    uint16_t residue = _bufferSize % WORD_SIZE;
+     
+    uint16_t i;
+    //Write all the words except the last. We don't know if
+    //the last word is full or partial word (< 4 bytes). We will
+    //handle it in next step.
+    for( i=0; i<wCount-1; i++ )
+        writeWord(addr,i*WORD_SIZE, WORD_SIZE);
+    //Now there is one last word left. It could be a complete word
+    //or an incomplete word.
+    if(residue == 0) //complete word
+        writeWord(addr,i*WORD_SIZE, WORD_SIZE);
+    else //incomplete word
+        writeWord(addr,i * WORD_SIZE ,residue);
+      
+    while(!nvm_is_ready());
     
-    while(!nvm_is_ready())
-    {
-        std::cout<<"Waiting..."; 
-    }
-    
-     /*int num_Words = PAGE_SIZE_IN_BYTES / 4;
-     uint32_t data = 0;
-     for (int i = 0; i <num_Words; i++) {
-
-        int ws = i*4; 
-
-        data = _buffer[ws]; 
-
-        data |= (_buffer[ws + 1] << 8);
-        data |= (_buffer[ws + 2] << 16);
-        data |= (_buffer[ws + 3] << 24);
-
-        printf("0x%x = 0x%x\t", addr, data);
-
-        while(!nvm_is_ready());
-        _samba.writeWord(addr, data);
-        addr = addr+4;
-        while(!nvm_is_ready());
-    }*/
-
-
-    printf("\n");
     _samba.writeWord(NVM_ADDR_REG,addr);
     execute_nvm_command(CMD_WRITE_PAGE);
     //Reset the buffer, so that subsequent reads are clear
 }
 
 
-void NvmFlash::writeWord(uint32_t baseAddr, uint32_t ws)
+//NVM Page buffer supports only 16-bit, 32-bit word writes.
+//The samba layer has only 32-bit write API's. So we don't
+//really have a choice other than to write 32-bit words.
+void 
+NvmFlash::writeWord(uint32_t baseAddr, uint16_t wordOffset, uint8_t byteCount)
+
 {
-        uint32_t data = _buffer[ws]; 
-        data |= (_buffer[ws + 1] << 8);
-        data |= (_buffer[ws + 2] << 16);
-        data |= (_buffer[ws + 3] << 24);
-        while(!nvm_is_ready());
-        _samba.writeWord(baseAddr+(ws*4), data);
+    uint32_t data = 0;
+    for(uint8_t k = 0; k < byteCount ; k++)
+    {
+        data |= (_buffer[wordOffset + k] << (8*k));
+    }
+
+    while(!nvm_is_ready());
+    uint32_t targetAddr = baseAddr+wordOffset;
+    printf("0x%x = 0x%x\n",targetAddr,data);
+    _samba.writeWord(targetAddr, data);
 }
 
 void 

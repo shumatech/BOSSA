@@ -79,8 +79,6 @@ public:
     void writePage(uint32_t page);
     void readPage(uint32_t page, uint8_t* data);
     
-    bool nvm_is_ready();
-    void execute_nvm_command(uint32_t cmd);
     
     void beforeWrite();
 
@@ -91,8 +89,10 @@ private:
     bool _eraseAuto;
     const uint8_t* _buffer; 
 
-    void writeWord(uint32_t baseAddr, uint32_t ws);
+    void writeWord(uint32_t baseAddr, uint16_t wordOffset, uint8_t byteCount);
     uint32_t getAddressByRegion(uint32_t region);
+    bool nvm_is_ready();
+    void execute_nvm_command(uint32_t cmd);
 
 };
 
