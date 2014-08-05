@@ -629,7 +629,7 @@ void
 Samba::reset(void)
 {
 				 
-		uint32_t chipId = chipId();
+		uint32_t chipId = Samba::chipId();
 
 		//If it's SAMD21G18 or SAMD21J18	
 		if(chipId == 0x10010000 || chipId == 0x10010005) {
