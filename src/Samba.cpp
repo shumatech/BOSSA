@@ -628,10 +628,25 @@ Samba::chipInfo()
 void
 Samba::reset(void)
 {
-    if (chipId() != 0x285e0a60) {
+				 
+		uint32_t chipId = chipId();
+
+		//If it's SAMD21G18 or SAMD21J18	
+		if(chipId == 0x10010000 || chipId == 0x10010005) {
+		  //The following write resets the controller.
+	    //More info : http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0484c/index.html
+			writeWord(0xE000ED0C,0x05FA0004);
+			return;
+		}
+
+		//Now do the rest
+					
+
+    if (chipId != 0x285e0a60) {
         printf("Reset not supported for this CPU");
         return;
     }
+
 
     printf("CPU reset.\n");
     writeWord(0x400E1A00, 0xA500000D);
@@ -642,5 +657,3 @@ Samba::reset(void)
     // sort out things before closing the port.
     usleep(100000);
 }
-
-
