@@ -40,13 +40,13 @@ public:
     EefcFlash(Samba& samba,
               const std::string& name,
               uint32_t addr,
-              uint32_t regs,
               uint32_t pages,
               uint32_t size,
               uint32_t planes,
               uint32_t lockRegions,
               uint32_t user,
               uint32_t stack,
+              uint32_t regs,
               bool canBrownout);
     virtual ~EefcFlash();
 

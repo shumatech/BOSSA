@@ -81,6 +81,7 @@ Flasher::write(const char* filename)
     if (!infile)
         throw FileOpenError(errno);
 
+    _flash->beforeWrite();
     try
     {
         if (fseek(infile, 0, SEEK_END) != 0 ||
@@ -99,7 +100,7 @@ Flasher::write(const char* filename)
             if (pageNum % 10 == 0)
                 progressBar(pageNum, numPages);
 
-            _flash->loadBuffer(buffer);
+            _flash->loadBuffer(buffer, fbytes);
             _flash->writePage(pageNum);
 
             pageNum++;

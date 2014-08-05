@@ -26,6 +26,7 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ///////////////////////////////////////////////////////////////////////////////
+
 #ifndef _SAMBA_H
 #define _SAMBA_H
 
@@ -36,6 +37,24 @@
 
 #include "SerialPort.h"
 
+
+
+
+enum CHIP_ARCH
+{
+   M0_PLUS,
+   M3_M4,
+   ARM7TDMI,
+   ARM9
+};
+ 
+
+typedef struct
+{
+  uint32_t chipId;
+  CHIP_ARCH arch;
+}ChipInfo;
+
 class SambaError : public std::exception
 {
 public:
@@ -43,13 +62,14 @@ public:
     const char* what() const throw() { return "SAM-BA operation failed"; }
 };
 
+
 class Samba
 {
 public:
     Samba();
     virtual ~Samba();
 
-    bool connect(SerialPort::Ptr port);
+    bool connect(SerialPort::Ptr port, int bps=115200);
     void disconnect();
 
     void writeByte(uint32_t addr, uint8_t value);
@@ -67,9 +87,13 @@ public:
 
     uint32_t chipId();
 
+    ChipInfo chipInfo();
+
     void setDebug(bool debug) { _debug = debug; }
 
     const SerialPort& getSerialPort() { return *_port; }
+
+    void reset(void);
 
 private:
     bool _debug;
@@ -86,6 +110,8 @@ private:
 
     void writeBinary(const uint8_t* buffer, int size);
     void readBinary(uint8_t* buffer, int size);
+
 };
+
 
 #endif // _SAMBA_H

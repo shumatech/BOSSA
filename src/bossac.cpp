@@ -50,6 +50,7 @@ public:
     bool write;
     bool read;
     bool verify;
+    bool reset;
     bool port;
     bool boot;
     bool bor;
@@ -60,6 +61,8 @@ public:
     bool info;
     bool debug;
     bool help;
+    bool forceUsb;
+    string forceUsbArg;
 
     int readArg;
     string portArg;
@@ -84,11 +87,14 @@ BossaConfig::BossaConfig()
     security = false;
     info = false;
     help = false;
+    forceUsb = false;
 
     readArg = 0;
     bootArg = 1;
     bodArg = 1;
     borArg = 1;
+
+    reset = false;
 }
 
 static BossaConfig config;
@@ -172,6 +178,16 @@ static Option opts[] =
       'h', "help", &config.help,
       { ArgNone },
       "display this help text"
+    },
+    {
+      'U', "force_usb_port", &config.forceUsb,
+      { ArgRequired, ArgString, "true/false", { &config.forceUsbArg } },
+      "override USB port autodetection"
+    },
+    {
+      'R', "reset", &config.reset,
+      { ArgNone },
+      "reset CPU (if supported)"
     }
 };
 
@@ -266,9 +282,28 @@ main(int argc, char* argv[])
         if (config.debug)
             samba.setDebug(true);
 
+        bool isUsb = false;
+        if (config.forceUsb)
+        {
+            if (config.forceUsbArg.compare("true")==0)
+                isUsb = true;
+            else if (config.forceUsbArg.compare("false")==0)
+                isUsb = false;
+            else
+            {
+                fprintf(stderr, "Invalid USB value: %s\n", config.forceUsbArg.c_str());
+                return 1;
+            }
+        }
+
         if (config.port)
         {
-            if (!samba.connect(portFactory.create(config.portArg)))
+            bool res;
+            if (config.forceUsb)
+                res = samba.connect(portFactory.create(config.portArg, isUsb));
+            else
+                res = samba.connect(portFactory.create(config.portArg));
+            if (!res)
             {
                 fprintf(stderr, "No device found on %s\n", config.portArg.c_str());
                 return 1;
@@ -286,11 +321,12 @@ main(int argc, char* argv[])
             printf("Device found on %s\n", port.c_str());
         }
 
-        uint32_t chipId = samba.chipId();
-        Flash::Ptr flash = flashFactory.create(samba, chipId);
+ 
+        ChipInfo info = samba.chipInfo();
+        Flash::Ptr flash = flashFactory.create(samba, info);
         if (flash.get() == NULL)
         {
-            fprintf(stderr, "Flash for chip ID %08x is not supported\n", chipId);
+            fprintf(stderr, "Flash for chip ID %08x is not supported\n", info.chipId);
             return 1;
         }
 
@@ -341,6 +377,9 @@ main(int argc, char* argv[])
 
         if (config.info)
             flasher.info(samba);
+
+        if (config.reset)
+            samba.reset();
     }
     catch (exception& e)
     {

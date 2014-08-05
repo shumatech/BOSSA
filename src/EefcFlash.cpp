@@ -72,7 +72,7 @@ EefcFlash::EefcFlash(Samba& samba,
       _regs(regs), _canBrownout(canBrownout), _eraseAuto(true)
 {
     assert(planes == 1 || planes == 2);
-    assert(pages <= 1024);
+    assert(pages <= 2048);
     assert(lockRegions <= 32);
 
     // SAM3 Errata (FWS must be 6)
@@ -246,6 +246,8 @@ EefcFlash::setBootFlash(bool enable)
 {
     waitFSR();
     writeFCR0(enable ? EEFC_FCMD_SGPB : EEFC_FCMD_CGPB, (_canBrownout ? 3 : 1));
+    waitFSR();
+    usleep(10000);
 }
 
 void

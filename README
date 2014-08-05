@@ -1,3 +1,16 @@
+BOSSA 1.2 for Arduino Due
+
+This version of BOSSA is a fork of the original project and contains some
+patches specific for the Arduino Due product that are unlike to be accepted
+upstream.
+
+The original software is developed by Scott Shumate and can be found here:
+
+http://www.shumatech.com/web/products/bossa
+
+Original README follows.
+
+
 BOSSA 1.2
 
 FILES

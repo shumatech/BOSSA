@@ -35,6 +35,7 @@
 
 #include <string>
 
+
 using namespace std;
 
 BossaWindow::BossaWindow() : MainFrame(NULL)
@@ -102,14 +103,14 @@ BossaWindow::BossaWindow() : MainFrame(NULL)
 
     wxString port;
     wxConfig& config = wxGetApp().config;
-    if (config.Read("Port", &port))
+    if (config.Read(_("Port"), &port))
     {
         if (_portComboBox->FindString(port) >= 0)
         {
             PortFactory& portFactory = wxGetApp().portFactory;
             Samba& samba = wxGetApp().samba;
 
-            if (samba.connect(portFactory.create(port.mb_str())))
+            if (samba.connect(portFactory.create(std::string(port.mb_str()))))
             {
                 CreateFlash();
             }
@@ -117,7 +118,7 @@ BossaWindow::BossaWindow() : MainFrame(NULL)
     }
 
     wxString file;
-    if (config.Read("File", &file))
+    if (config.Read(_("File"), &file))
     {
         _filePicker->SetPath(file);
     }
@@ -133,8 +134,8 @@ BossaWindow::~BossaWindow()
 {
     wxConfig& config = wxGetApp().config;
 
-    config.Write("Port", _portComboBox->GetStringSelection());
-    config.Write("File", _filePicker->GetPath());
+    config.Write(_("Port"), _portComboBox->GetStringSelection());
+    config.Write(_("File"), _filePicker->GetPath());
 }
 
 void
@@ -149,7 +150,7 @@ BossaWindow::RefreshSerial()
          port != portFactory.end();
          port = portFactory.next())
     {
-        _portComboBox->Append(port.c_str());
+        _portComboBox->Append(wxString(port.c_str(), wxConvUTF8));
     }
 
     if (!_portComboBox->SetStringSelection(selection))
@@ -179,7 +180,7 @@ BossaWindow::Connected()
 
     _statusBar->SetStatusText(wxT("Connected"), 0);
     _statusBar->SetStatusText(wxString::Format(wxT("Device: %s"), flash.name().c_str()), 1);
-    _portComboBox->SetStringSelection(port.name().c_str());
+    _portComboBox->SetStringSelection(wxString(port.name().c_str(), wxConvUTF8));
     _bootCheckBox->Enable(flash.canBootFlash());
     _bodCheckBox->Enable(flash.canBod());
     _borCheckBox->Enable(flash.canBor());
@@ -193,7 +194,7 @@ void
 BossaWindow::Disconnected()
 {
     _statusBar->SetStatusText(wxT("Not connected"), 0);
-    _statusBar->SetStatusText("", 1);
+    _statusBar->SetStatusText(_(""), 1);
     _portComboBox->SetSelection(wxNOT_FOUND);
     _writeButton->Enable(false);
     _verifyButton->Enable(false);
@@ -207,7 +208,7 @@ BossaWindow::Error(const wxString& message)
     wxMessageDialog* dialog = new wxMessageDialog(
         this,
         message,
-        "Error",
+        _("Error"),
         wxOK | wxICON_ERROR
     );
     dialog->ShowModal();
@@ -220,7 +221,7 @@ BossaWindow::Warning(const wxString& message)
     wxMessageDialog* dialog = new wxMessageDialog(
         this,
         message,
-        "Warning",
+        _("Warning"),
         wxOK | wxICON_WARNING
     );
     dialog->ShowModal();
@@ -233,7 +234,7 @@ BossaWindow::Info(const wxString& message)
     wxMessageDialog* dialog = new wxMessageDialog(
         this,
         message,
-        "Info",
+        _("Info"),
         wxOK | wxICON_INFORMATION
     );
     dialog->ShowModal();
@@ -246,7 +247,7 @@ BossaWindow::Question(const wxString& message)
     wxMessageDialog* dialog = new wxMessageDialog(
         this,
         message,
-        "Question",
+        _("Question"),
         wxYES_NO | wxICON_QUESTION
     );
     int resp = dialog->ShowModal();
@@ -261,24 +262,24 @@ BossaWindow::CreateFlash()
     Samba& samba = wxGetApp().samba;
     Flash::Ptr& flash = wxGetApp().flash;
     FlashFactory flashFactory;
-    uint32_t chipId;
+    ChipInfo info;
 
     try
     {
-        chipId = samba.chipId();
+        info = samba.chipInfo();
     }
     catch (exception& e)
     {
         Disconnected();
-        Error(wxString(e.what()));
+        Error(wxString(e.what(), wxConvUTF8));
         return;
     }
 
-    flash = flashFactory.create(samba, chipId);
+    flash = flashFactory.create(samba, info);
     if (flash.get() == NULL)
     {
         Disconnected();
-        Error(wxString::Format(wxT("Chip ID 0x%08x is not supported"), chipId));
+        Error(wxString::Format(wxT("Chip ID 0x%08x is not supported"), info.chipId));
         return;
     }
 
@@ -293,10 +294,10 @@ BossaWindow::OnSerial(wxCommandEvent& event)
     Samba& samba = wxGetApp().samba;
 
     wxString port = _portComboBox->GetString(event.GetSelection());
-    if (!samba.connect(portFactory.create(port.mb_str())))
+    if (!samba.connect(portFactory.create(std::string(port.mb_str()))))
     {
         Disconnected();
-        Error(wxString::Format(wxT("Could not connect to device on %s"), port.mb_str()));
+        Error(wxString::Format(_("Could not connect to device on %s"), port.c_str()));
         return;
     }
 
@@ -356,7 +357,7 @@ BossaWindow::OnWrite(wxCommandEvent& event)
     }
     catch(exception& e)
     {
-        Error(e.what());
+        Error(wxString(e.what(), wxConvUTF8));
         return;
     }
 
@@ -441,7 +442,7 @@ BossaWindow::OnRead(wxCommandEvent& event)
         size = strtol(_sizeTextCtrl->GetValue().mb_str(), NULL, 0);
         if (size == 0)
         {
-            Error("Read size is invalid");
+            Error(_("Read size is invalid"));
             return;
         }
     }
@@ -456,7 +457,7 @@ BossaWindow::OnRead(wxCommandEvent& event)
     if (_thread->Create() != wxTHREAD_NO_ERROR ||
         _thread->Run() != wxTHREAD_NO_ERROR)
     {
-        Error(wxT("Unable to start worker thread"));
+        Error(_("Unable to start worker thread"));
         return;
     }
 
@@ -474,7 +475,7 @@ BossaWindow::OnInfo(wxCommandEvent& event)
     }
     catch (exception& e)
     {
-        Error(wxString(e.what()));
+        Error(wxString(e.what(), wxConvUTF8));
         return;
     }
 

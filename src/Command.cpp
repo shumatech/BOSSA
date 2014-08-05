@@ -162,12 +162,12 @@ Command::flashable()
 bool
 Command::createFlash()
 {
-    uint32_t chipId = _samba.chipId();
+    ChipInfo info = _samba.chipInfo();
 
-    _flash = _flashFactory.create(_samba, chipId);
+    _flash = _flashFactory.create(_samba, info);
     if (_flash.get() == NULL)
     {
-        printf("Flash for chip ID %08x is not supported\n", chipId);
+        printf("Flash for chip ID %08x is not supported\n", info.chipId);
         return false;
     }
 
@@ -1103,7 +1103,7 @@ CommandScan::invoke(char* argv[], int argc)
     _connected = false;
 
     printf("Auto scan for device failed.\n"
-           "Try specifying a serial port with the \"port\" command.\n");
+           "Try specifying a serial port with the \"connect\" command.\n");
 }
 
 CommandSecurity::CommandSecurity() :
@@ -1178,3 +1178,16 @@ CommandWrite::invoke(char* argv[], int argc)
 
     _flasher.write(argv[1]);
 }
+
+CommandReset::CommandReset() :
+    Command("reset",
+            "Reset the CPU. (only for supported CPU)",
+            "reset\n")
+{}
+
+void
+CommandReset::invoke(char* argv[], int argc)
+{
+    _samba.reset();
+}
+

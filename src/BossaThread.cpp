@@ -149,6 +149,7 @@ WriteThread::Entry()
         if (numPages > flash.numPages())
             throw FileSizeError();
 
+        flash.beforeWrite();
         while ((fbytes = fread(buffer, 1, pageSize, infile)) > 0)
         {
             if (_stopped)
@@ -165,7 +166,7 @@ WriteThread::Entry()
                          percent);
             }
 
-            flash.loadBuffer(buffer);
+            flash.loadBuffer(buffer, fbytes);
             flash.writePage(pageNum);
 
             pageNum++;
@@ -191,11 +192,11 @@ WriteThread::Entry()
     {
         if (infile)
             fclose(infile);
-        Error(e.what());
+        Error(wxString(e.what(), wxConvUTF8));
         return 0;
     }
 
-    Success("Write completed successfully");
+    Success(_("Write completed successfully"));
     return 0;
 }
 
@@ -280,21 +281,21 @@ VerifyThread::Entry()
     {
         if (infile)
             fclose(infile);
-        Error(e.what());
+        Error(wxString(e.what(), wxConvUTF8));
         return 0;
     }
 
     if (byteErrors != 0)
     {
-        Warning(wxString::Format(
+        Warning(wxString::Format(_(
             "Verify failed\n"
             "Page errors: %d\n"
-            "Byte errors: %d\n",
+            "Byte errors: %d\n"),
             pageErrors, totalErrors));
         return 0;
     }
 
-    Success("Verify successful\n");
+    Success(_("Verify successful\n"));
 
     return 0;
 }
@@ -317,7 +318,7 @@ ReadThread::Entry()
     if (_size == 0)
         _size = pageSize * flash.numPages();
 
-    outfile = fopen(_filename, "wb");
+    outfile = fopen(_filename.mb_str(), "wb");
     if (!outfile)
         throw FileOpenError();
 
@@ -356,11 +357,11 @@ ReadThread::Entry()
     {
         if (outfile)
             fclose(outfile);
-        Error(e.what());
+        Error(wxString(e.what(), wxConvUTF8));
         return 0;
     }
 
-    Success("Read completed successfully");
+    Success(_("Read completed successfully"));
     return 0;
 }
 
