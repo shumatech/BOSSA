@@ -58,7 +58,7 @@ FlashFactory::create(Samba& samba, ChipInfo info)
         break;
 
         case 0x10010005:
-            flash = new NvmFlash(samba, "ATSAMD21G18A", 0x000000, 4096, 64, 1, 16, 0x804000, 0x20008000, 0x0000, true);
+            flash = new NvmFlash(samba, "ATSAMD21G18A", 0x000000, 4096, 64, 1, 16, 0x804000, 0x20008000, 0x41004000, true);
         break;
 	}
 
