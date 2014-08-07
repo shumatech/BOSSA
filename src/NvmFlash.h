@@ -89,7 +89,8 @@ private:
     bool _eraseAuto;
     const uint8_t* _buffer; 
 
-    void writeWord(uint32_t baseAddr, uint16_t wordOffset, uint8_t byteCount);
+		const uint8_t* get_complete_page(const uint8_t*, uint16_t);
+		void setup_page_write();
     uint32_t getAddressByRegion(uint32_t region);
     bool nvm_is_ready();
     void execute_nvm_command(uint32_t cmd);
