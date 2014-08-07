@@ -85,7 +85,7 @@ using namespace std;
 //Just for readability
 #define FOUR_PAGES 4
 //This is the word size allowed by the commu. layer of this bossa client. Not the NVM word size which is 2 bytes
-#define WORD_SIZE 4 //bytes
+#define SAMBA_API_WORD_SIZE 4 //bytes
 #define ROW_SIZE FOUR_PAGES 
 #define PAGE_SIZE_IN_BYTES pageSize()
 
@@ -400,25 +400,25 @@ NvmFlash::writePage(uint32_t page)
 	setup_page_write();
 
 	//compute the start address.
-	uint32_t addr = _addr + ((page * PAGE_SIZE_IN_BYTES) / 2);
-	uint32_t addr_cached = addr, start = 0;
+	uint32_t addr = _addr + (page * PAGE_SIZE_IN_BYTES);
+	uint32_t addr_cached = addr;
+	uint32_t start = 0;
 
 	//Get a full page. Sometimes the page size might be less than a page size, in which
 	//case we should prepare a complete page by padding 0xff.
 	const uint8_t* page_buf = get_complete_page(_buffer, _bufferSize);
 
 	
-	for(uint16_t i=0;i<(PAGE_SIZE_IN_BYTES/WORD_SIZE); i++ )
+	for(uint16_t i=0;i<(PAGE_SIZE_IN_BYTES/SAMBA_API_WORD_SIZE); i++ )
 	{
-		start = 0;
+		start = i * SAMBA_API_WORD_SIZE;
 		uint32_t data = (page_buf[start+3] << 24) | (page_buf[start+2] << 16) | (page_buf[start+1] << 8) | (page_buf[start]);
 		while(!nvm_is_ready());
-		printf("0x%x = 0x%x\n",addr,data);
 		_samba.writeWord(addr, data);
-		addr = addr+4;
+		addr = addr+SAMBA_API_WORD_SIZE;
 	}
 	while(!nvm_is_ready());
-	_samba.writeWord(NVM_ADDR_REG,addr_cached);
+	_samba.writeWord(NVM_ADDR_REG,addr_cached >> 1);
 	execute_nvm_command(CMD_WRITE_PAGE);
 	//Reset the buffer, so that subsequent reads are clear
 }
