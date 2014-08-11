@@ -93,6 +93,11 @@ public:
     virtual uint32_t numPages() { return _pages; }
     virtual uint32_t numPlanes() { return _planes; }
 
+    //Usually all the bootloaders are in ROM and the application is flashed 
+    //in page 0.But for some types of Flash, it could be different and will
+    //be overrided in the derived class
+    virtual uint16_t appStartPage() { return 0;}
+
     virtual void eraseAll() = 0;
     virtual void eraseAuto(bool enable) = 0;
 

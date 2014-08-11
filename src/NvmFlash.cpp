@@ -384,8 +384,6 @@ void
 NvmFlash::writePage(uint32_t page)
 {
 	//loadBuffer is called before this function is called each time.
-	//Start the application from adress 0x2000
-	page = page + 128;
 
 	if (page >= _pages)
 		throw FlashPageError();
@@ -429,9 +427,6 @@ NvmFlash::readPage(uint32_t page, uint8_t* buf)
 {
 	if(page >= _pages)
 		throw FlashPageError();
-
-	for(uint32_t i=0;i<8;i++)
-		buf[i] = i;
 
 	//Convert page number into physical address. flash_base_address + page.no * page_size
 	uint32_t addr = _addr + (page * PAGE_SIZE_IN_BYTES);
