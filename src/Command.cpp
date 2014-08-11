@@ -162,12 +162,12 @@ Command::flashable()
 bool
 Command::createFlash()
 {
-    ChipInfo info = _samba.chipInfo();
+    uint32_t chipId = _samba.chipId();
 
-    _flash = _flashFactory.create(_samba, info);
+    _flash = _flashFactory.create(_samba, chipId);
     if (_flash.get() == NULL)
     {
-        printf("Flash for chip ID %08x is not supported\n", info.chipId);
+        printf("Flash for chip ID %08x is not supported\n", chipId);
         return false;
     }
 

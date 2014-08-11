@@ -37,24 +37,6 @@
 
 #include "SerialPort.h"
 
-
-
-
-enum CHIP_ARCH
-{
-   M0_PLUS,
-   M3_M4,
-   ARM7TDMI,
-   ARM9
-};
- 
-
-typedef struct
-{
-  uint32_t chipId;
-  CHIP_ARCH arch;
-}ChipInfo;
-
 class SambaError : public std::exception
 {
 public:
@@ -86,8 +68,6 @@ public:
     std::string version();
 
     uint32_t chipId();
-
-    ChipInfo chipInfo();
 
     void setDebug(bool debug) { _debug = debug; }
 

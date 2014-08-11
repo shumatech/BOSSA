@@ -41,32 +41,24 @@ FlashFactory::~FlashFactory()
 }
 
 Flash::Ptr
-FlashFactory::create(Samba& samba, ChipInfo info)
+FlashFactory::create(Samba& samba, uint32_t chipId)
 {
     Flash* flash;
-    uint32_t chipId = info.chipId;
 
-    ///CORTEX M0+
-    if(info.arch == M0_PLUS)
+    switch (chipId)
     {
-        switch(chipId)
-        {
-	
-	//SAMD21J18A
-        case 0x10010000:
-            flash = new NvmFlash(samba, "ATSAMD21J18A", 0x000000, 4096, 64, 1, 16, 0x804000, 0x20008000, 0x41004000 /*Base address for the NVMCTRL module */, true);
+    //
+    // SAMD21
+    //
+    case 0x10010000:
+        flash = new NvmFlash(samba, "ATSAMD21J18A", 0x000000, 4096, 64, 1, 16, 0x804000, 0x20008000, 0x41004000, true);
+        // 0x41004000 == Base address for the NVMCTRL module
         break;
 
-        case 0x10010005:
-            flash = new NvmFlash(samba, "ATSAMD21G18A", 0x000000, 4096, 64, 1, 16, 0x804000, 0x20008000, 0x41004000, true);
+    case 0x10010005:
+        flash = new NvmFlash(samba, "ATSAMD21G18A", 0x000000, 4096, 64, 1, 16, 0x804000, 0x20008000, 0x41004000, true);
         break;
-	}
 
-        return Flash::Ptr(flash);
-    }
-    
-    switch (chipId & 0x7fffffe0)
-    {
     //
     // SAM7SE
     //
