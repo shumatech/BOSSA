@@ -100,7 +100,10 @@ Samba::init()
     try
     {
         info = chipInfo();
-        cid = info.chipId;
+
+      if(info.arch == UNKNOWN)
+	  return false;
+      cid = info.chipId;
     }
     catch (SambaError)
     {
@@ -589,6 +592,7 @@ Samba::chipInfo()
     uint32_t cid;
     uint32_t vector;
     ChipInfo info;
+    CHIP_ARCH arch;
 
     // Read the ARM reset vector
     vector = readWord(0x0);
@@ -596,39 +600,46 @@ Samba::chipInfo()
     // If the vector is a ARM7TDMI branch, then assume Atmel SAM7 registers
     if ((vector & 0xff000000) == 0xea000000)
     {
-      info.chipId = readWord(0xfffff240);
-      info.arch = ARM7TDMI;
+      cid = readWord(0xfffff240);
+      arch = ARM7TDMI;
     }
     // Else use the Atmel SAM3 or SAM4 or M0+ registers 
     else 
     {
-      //Check if it is Cortex M0+
-      cid = readWord(0x41002018); //This is DSU_DID register
-      if(cid !=0)
+      //The M0+, M3 and M4 have the CPUID register at
+      //a commen addresss in CORE.
+      uint32_t cpuid_reg = readWord(0xe000ed00);
+      uint16_t part_no = cpuid_reg & 0x00fff0;
+      if(part_no == 0xC230)
       {
-        //M0+ device cid will be 0x10010000.
-        info.chipId = cid;
-        info.arch = M0_PLUS;
+        cid = readWord(0x400e0940);//CHIPID
+	arch = M3;
+      }
+      else if(part_no == 0xC240)
+      {
+        cid = readWord(0x400e0740); //CHIPID
+	arch = M4;
+      }
+      else if(part_no == 0xC600)
+      {
+        cid = readWord(0x41002018); //DSU_DID
+	arch = M0_PLUS;
       }
       else
       {
-      //M3 or M4
-      cid = readWord(0x400e0740);
-      if (cid == 0)
-        cid = readWord(0x400e0940);
-
-      info.chipId = cid;
-      info.arch = M3_M4;
+        cid = 0;
+	arch = UNKNOWN;
       }
     }
+
+    info.chipId = cid;
+    info.arch = arch;
     return info;
-   
 }
 
 void
 Samba::reset(void)
 {
-				 
 		uint32_t chipId = Samba::chipId();
 
 		//If it's SAMD21G18 or SAMD21J18	

@@ -43,9 +43,11 @@
 enum CHIP_ARCH
 {
    M0_PLUS,
-   M3_M4,
+   M3,
+   M4,
    ARM7TDMI,
-   ARM9
+   ARM9,
+   UNKNOWN
 };
  
 
