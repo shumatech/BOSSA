@@ -1,20 +1,30 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BOSSA
 //
-// Copyright (C) 2011-2012 ShumaTech http://www.shumatech.com/
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+// Copyright (c) 2011-2012, ShumaTech
+// All rights reserved.
+// 
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+//     * Redistributions in binary form must reproduce the above copyright
+//       notice, this list of conditions and the following disclaimer in the
+//       documentation and/or other materials provided with the distribution.
+//     * Neither the name of the <organization> nor the
+//       names of its contributors may be used to endorse or promote products
+//       derived from this software without specific prior written permission.
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+// DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+// DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+// ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ///////////////////////////////////////////////////////////////////////////////
 #include "Samba.h"
 
@@ -86,9 +96,14 @@ Samba::init()
     _port->read(cmd, 2);
 
     // Read the chip ID
+    ChipInfo info;
     try
     {
-        cid = chipId();
+        info = chipInfo();
+
+      if(info.arch == UNKNOWN)
+	  return false;
+      cid = info.chipId;
     }
     catch (SambaError)
     {
@@ -99,6 +114,18 @@ Samba::init()
 
     if (_debug)
         printf("chipId=%#08x\n", cid);
+
+    //Check for M0+ processors.
+    if(info.arch == M0_PLUS)
+    {
+       int arch = -1;
+       arch = cid >> ((sizeof(int)*8) - 4); //see the 4 bits from MSB
+       if(arch == 1)
+          return true;
+       if(_debug)
+          printf("Unsupported M0+ architecture\n");
+    }
+
 
     uint8_t eproc = (cid >> 5) & 0x7;
     uint8_t arch = (cid >> 20) & 0xff;
@@ -217,6 +244,7 @@ Samba::readByte(uint32_t addr)
     return value;
 }
 
+
 void
 Samba::writeWord(uint32_t addr, uint32_t value)
 {
@@ -238,6 +266,7 @@ Samba::writeWord(uint32_t addr, uint32_t value)
     if (_isUsb)
         _port->flush();
 }
+
 
 uint32_t
 Samba::readWord(uint32_t addr)
@@ -553,31 +582,82 @@ Samba::version()
 uint32_t
 Samba::chipId()
 {
-    uint32_t vector;
+    ChipInfo info = chipInfo();
+    return info.chipId;
+}
+
+ChipInfo
+Samba::chipInfo()
+{
     uint32_t cid;
+    uint32_t vector;
+    ChipInfo info;
+    CHIP_ARCH arch;
 
     // Read the ARM reset vector
     vector = readWord(0x0);
 
     // If the vector is a ARM7TDMI branch, then assume Atmel SAM7 registers
     if ((vector & 0xff000000) == 0xea000000)
-        cid = readWord(0xfffff240);
-    // Else use the Atmel SAM3 registers
-    else {
-        cid = readWord(0x400e0740);
-        if (cid == 0)
-            cid = readWord(0x400e0940);
+    {
+      cid = readWord(0xfffff240);
+      arch = ARM7TDMI;
     }
-    return cid;
+    // Else use the Atmel SAM3 or SAM4 or M0+ registers 
+    else 
+    {
+      //The M0+, M3 and M4 have the CPUID register at
+      //a commen addresss in CORE.
+      uint32_t cpuid_reg = readWord(0xe000ed00);
+      uint16_t part_no = cpuid_reg & 0x00fff0;
+      if(part_no == 0xC230)
+      {
+        cid = readWord(0x400e0940);//CHIPID
+	arch = M3;
+      }
+      else if(part_no == 0xC240)
+      {
+        cid = readWord(0x400e0740); //CHIPID
+	arch = M4;
+      }
+      else if(part_no == 0xC600)
+      {
+        cid = readWord(0x41002018); //DSU_DID
+	arch = M0_PLUS;
+      }
+      else
+      {
+        cid = 0;
+	arch = UNKNOWN;
+      }
+    }
+
+    info.chipId = cid;
+    info.arch = arch;
+    return info;
 }
 
 void
 Samba::reset(void)
 {
-    if (chipId() != 0x285e0a60) {
+		uint32_t chipId = Samba::chipId();
+
+		//If it's SAMD21G18 or SAMD21J18	
+		if(chipId == 0x10010000 || chipId == 0x10010005) {
+		  //The following write resets the controller.
+	    //More info : http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0484c/index.html
+			writeWord(0xE000ED0C,0x05FA0004);
+			return;
+		}
+
+		//Now do the rest
+					
+
+    if (chipId != 0x285e0a60) {
         printf("Reset not supported for this CPU");
         return;
     }
+
 
     printf("CPU reset.\n");
     writeWord(0x400E1A00, 0xA500000D);
@@ -588,4 +668,3 @@ Samba::reset(void)
     // sort out things before closing the port.
     usleep(100000);
 }
-
