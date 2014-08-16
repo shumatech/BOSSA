@@ -628,28 +628,28 @@ Samba::chipInfo()
 void
 Samba::reset(void)
 {
-				 
-		uint32_t chipId = Samba::chipId();
+    printf("CPU reset.\n");
 
-		//If it's SAMD21G18 or SAMD21J18	
-		if(chipId == 0x10010000 || chipId == 0x10010005) {
-		  //The following write resets the controller.
-	    //More info : http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0484c/index.html
-			writeWord(0xE000ED0C,0x05FA0004);
-			return;
-		}
+    uint32_t chipId = Samba::chipId();
 
-		//Now do the rest
-					
+    switch (chipId)
+    {
+    // SAMD21G18 or SAMD21J18
+    case 0x10010000:
+    case 0x10010005:
+        // http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0484c/index.html
+        writeWord(0xE000ED0C, 0x05FA0004);
+        break;
 
-    if (chipId != 0x285e0a60) {
-        printf("Reset not supported for this CPU");
+    // SAM3X8E
+    case 0x285e0a60:
+        writeWord(0x400E1A00, 0xA500000D);
+        break;
+
+    default:
+        printf("Reset not supported for this CPU.\n");
         return;
     }
-
-
-    printf("CPU reset.\n");
-    writeWord(0x400E1A00, 0xA500000D);
 
     // Some linux users experienced a lock up if the serial
     // port is closed while the port itself is being destroyed.
