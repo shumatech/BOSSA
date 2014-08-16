@@ -361,17 +361,6 @@ NvmFlash::setup_page_write()
 	_samba.writeWord(NVM_CTRLB_REG, ctrlb_reg | (0x1 << 7));
 }
 
-//During writePage/loadBuffer we do not know if we are in middle of a 
-//write operation. So the context to call erase is not possible.
-//So we introduce a new callback which is called before a page write
-//session. This is called before first call to a writePage().
-
-void
-NvmFlash::beforeWrite()
-{
-	eraseAll();
-}
-
 void 
 NvmFlash::loadBuffer(const uint8_t* data, uint16_t bufferSize)
 {

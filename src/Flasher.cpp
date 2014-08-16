@@ -82,7 +82,6 @@ Flasher::write(const char* filename)
     if (!infile)
         throw FileOpenError(errno);
 
-    _flash->beforeWrite();
     try
     {
         if (fseek(infile, 0, SEEK_END) != 0 ||
