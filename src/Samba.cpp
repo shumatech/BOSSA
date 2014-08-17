@@ -378,7 +378,7 @@ Samba::readXmodem(uint8_t* buffer, int size)
 
         _port->put(ACK);
 
-        memcpy(buffer, &blk[3], min(size, BLK_SIZE));
+        memmove(buffer, &blk[3], min(size, BLK_SIZE));
         buffer += BLK_SIZE;
         size -= BLK_SIZE;
         blkNum++;
@@ -418,7 +418,7 @@ Samba::writeXmodem(const uint8_t* buffer, int size)
         blk[0] = SOH;
         blk[1] = (blkNum & 0xff);
         blk[2] = ~(blkNum & 0xff);
-        memcpy(&blk[3], buffer, min(size, BLK_SIZE));
+        memmove(&blk[3], buffer, min(size, BLK_SIZE));
         if (size < BLK_SIZE)
             memset(&blk[3] + size, 0, BLK_SIZE - size);
         crc16Add(blk);
