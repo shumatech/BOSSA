@@ -142,6 +142,11 @@ Samba::init()
         if (_debug)
             printf("Unsupported ARM920T architecture\n");
     }
+    // Check for supported M0+ processor
+    else if (cid == 0x10010000 || cid == 0x10010005)
+    {
+        return true;
+    }
     else
     {
         if (_debug)
@@ -565,34 +570,30 @@ Samba::version()
 uint32_t
 Samba::chipId()
 {
-    uint32_t vector;
-    uint32_t cid;
-
     // Read the ARM reset vector
-    vector = readWord(0x0);
+    uint32_t vector = readWord(0x0);
 
     // If the vector is a ARM7TDMI branch, then assume Atmel SAM7 registers
     if ((vector & 0xff000000) == 0xea000000)
     {
-        cid = readWord(0xfffff240);
+        return readWord(0xfffff240);
     }
+
     // Else use the Atmel SAM3 or SAM4 or M0+ registers 
-    else 
+
+    // The M0+, M3 and M4 have the CPUID register at a common addresss 0xe000ed00
+    uint32_t cpuid_reg = readWord(0xe000ed00);
+    uint16_t part_no = cpuid_reg & 0x0000fff0;
+    // Check if it is Cortex M0+
+    if (part_no == 0xC600)
     {
-        // Check if it is Cortex M0+
-        cid = readWord(0x41002018); // This is DSU_DID register
-        if (cid != 0)
-        {
-            // M0+ device cid will be 0x10010000.
-        }
-        else
-        {
-            // M3 or M4
-            cid = readWord(0x400e0740);
-            if (cid == 0)
-                cid = readWord(0x400e0940);
-        }
+        return readWord(0x41002018); // DSU_DID register
     }
+
+    // Else assume M3 or M4
+    uint32_t cid = readWord(0x400e0740);
+    if (cid == 0)
+        cid = readWord(0x400e0940);
     return cid;
 }
 
