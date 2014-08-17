@@ -138,10 +138,7 @@ NvmFlash::eraseAll()
 		addr_in_flash = addr_in_flash / 2;
 
 		//safe wait. Check and see if this is needed all the time
-		while(!nvm_is_ready())
-		{
-			std::cout<<endl<<"Waiting ..... ";
-		}
+		while (!nvm_is_ready()) { }
 
 		//clear error bits
 		uint16_t status_reg = _samba.readWord(NVM_STATUS_REG) & 0xffff;
@@ -306,7 +303,7 @@ NvmFlash::getBootFlash()
 	void 
 NvmFlash::setBootFlash(bool enable)
 {
-	std::cout<<"Flash boot is the only available option";
+	printf("Ignoring set boot from flash flag.\n");
 }
 
 
