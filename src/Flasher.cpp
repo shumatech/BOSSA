@@ -107,8 +107,6 @@ Flasher::write(const char* filename)
             if (pageNum == numPages || fbytes != pageSize)
                 break;
         }
-        if (fbytes < 0)
-            throw FileIoError(errno);
         progressBar(pageNum, numPages);
         printf("\n");
     }
@@ -176,8 +174,6 @@ Flasher::verify(const char* filename)
             if (pageNum == numPages || fbytes != pageSize)
                 break;
         }
-        if (fbytes < 0)
-            throw FileIoError(errno);
         progressBar(pageNum, numPages);
         printf("\n");
     }
@@ -235,8 +231,6 @@ Flasher::read(const char* filename, long fsize)
             if (pageNum == numPages - 1 && fsize % pageSize > 0)
                 pageSize = fsize % pageSize;
             fbytes = fwrite(buffer, 1, pageSize, outfile);
-            if (fbytes < 0)
-                throw FileIoError(errno);
             if (fbytes != pageSize)
                 throw FileShortError();
         }
@@ -272,7 +266,7 @@ Flasher::lock(string& regionArg, bool enable)
         do
         {
             delim = regionArg.find(',', pos);
-            sub = regionArg.substr(pos, delim < 0 ? -1 : delim - pos);
+            sub = regionArg.substr(pos, delim - pos);
             region = strtol(sub.c_str(), NULL, 0);
             printf("%s region %d\n", enable ? "Lock" : "Unlock", region);
             _flash->setLockRegion(region, enable);
