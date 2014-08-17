@@ -3,7 +3,7 @@
 //
 // Copyright (c) 2011-2012, ShumaTech
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //     * Redistributions of source code must retain the above copyright
@@ -14,7 +14,7 @@
 //     * Neither the name of the <organization> nor the
 //       names of its contributors may be used to endorse or promote products
 //       derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -579,7 +579,7 @@ Samba::chipId()
         return readWord(0xfffff240);
     }
 
-    // Else use the Atmel SAM3 or SAM4 or M0+ registers 
+    // Else use the Atmel SAM3 or SAM4 or M0+ registers
 
     // The M0+, M3 and M4 have the CPUID register at a common addresss 0xe000ed00
     uint32_t cpuid_reg = readWord(0xe000ed00);

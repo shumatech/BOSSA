@@ -17,14 +17,13 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef _NVMFLASH_H 
-#define _NVMFLASH_H 
+#ifndef _NVMFLASH_H
+#define _NVMFLASH_H
 
 #include <stdint.h>
 #include <exception>
 
 #include "Flash.h"
-
 
 class NvmFlashCmdError : public std::exception
 {
@@ -39,16 +38,16 @@ class NvmFlash : public Flash
 {
 public:
     NvmFlash(Samba& samba,
-              const std::string& name,
-              uint32_t addr,
-              uint32_t pages,
-              uint32_t size,
-              uint32_t planes,
-              uint32_t lockRegions,
-              uint32_t user,
-              uint32_t stack,
-              uint32_t regs,
-              bool canBrownout);
+             const std::string& name,
+             uint32_t addr,
+             uint32_t pages,
+             uint32_t size,
+             uint32_t planes,
+             uint32_t lockRegions,
+             uint32_t user,
+             uint32_t stack,
+             uint32_t regs,
+             bool canBrownout);
 
     virtual ~NvmFlash();
 
@@ -79,22 +78,22 @@ public:
     void writePage(uint32_t page);
     void readPage(uint32_t page, uint8_t* data);
 
-    //The application starts at page 128, i.e address 0x2000
-    //Since bootloader is in page 0.
-    uint16_t appStartPage() { return 128;}
-    
+    // The application starts at page 128, i.e address 0x2000
+    // Since bootloader is in page 0.
+    uint16_t appStartPage() { return 128; }
+
 private:
     uint32_t _regs;
     uint16_t _bufferSize;
     bool _canBrownout;
     bool _eraseAuto;
-    const uint8_t* _buffer; 
+    const uint8_t* _buffer;
 
-		const uint8_t* get_complete_page(const uint8_t*, uint16_t);
-		void setup_page_write();
+    const uint8_t* getCompletePage(const uint8_t*, uint16_t);
+    void setup_page_write();
     uint32_t getAddressByRegion(uint32_t region);
-    bool nvm_is_ready();
-    void execute_nvm_command(uint32_t cmd);
+    bool nvmIsReady();
+    void executeNvmCommand(uint32_t cmd);
 
 };
 
