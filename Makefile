@@ -3,7 +3,7 @@
 # 
 # Version
 #
-VERSION=1.3a
+VERSION=1.4-arduino
 WXVERSION=3.0
 
 #
