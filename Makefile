@@ -37,7 +37,7 @@ ifeq ($(OS),MINGW32)
 EXE=.exe
 COMMON_SRCS+=WinSerialPort.cpp WinPortFactory.cpp
 COMMON_LDFLAGS=-Wl,--enable-auto-import -static -static-libstdc++ -static-libgcc
-COMMON_LIBS=-Wl,--as-needed -lsetupapi -ltermcap
+COMMON_LIBS=-Wl,--as-needed -lsetupapi
 BOSSA_RC=BossaRes.rc
 WIXDIR="C:\Program Files (x86)\Windows Installer XML v3.5\bin"
 
@@ -175,7 +175,7 @@ all: $(BINDIR)/bossa$(EXE) $(BINDIR)/bossac$(EXE) $(BINDIR)/bossash$(EXE)
 #
 define common_obj
 $(OBJDIR)/$(1:%.cpp=%.o): $(SRCDIR)/$(1)
-	@echo CPP $$<
+	@echo CPP COMMON $$<
 	$$(Q)$$(CXX) $$(COMMON_CXXFLAGS) -c -o $$@ $$<
 endef
 $(foreach src,$(COMMON_SRCS),$(eval $(call common_obj,$(src))))
@@ -190,7 +190,7 @@ $(SRCDIR)/$(1:%.asm=%.cpp): $(SRCDIR)/$(1)
 	$$(Q)$$(ARMOBJCOPY) -O binary $$(@:%.o=%.obj) $$(@:%.o=%.bin)
 	$$(Q)appletgen $(1:%.asm=%) $(SRCDIR) $(OBJDIR)
 $(OBJDIR)/$(1:%.asm=%.o): $(SRCDIR)/$(1:%.asm=%.cpp)
-	@echo CPP $$<
+	@echo CPP APPLET $$<
 	$$(Q)$$(CXX) $$(COMMON_CXXFLAGS) -c -o $$(@) $$(<:%.asm=%.cpp)
 endef
 $(foreach src,$(APPLET_SRCS),$(eval $(call applet_obj,$(src))))
@@ -200,7 +200,7 @@ $(foreach src,$(APPLET_SRCS),$(eval $(call applet_obj,$(src))))
 #
 define bossa_obj
 $(OBJDIR)/$(1:%.cpp=%.o): $(SRCDIR)/$(1)
-	@echo CPP $$<
+	@echo CPP BOSSA $$<
 	$$(Q)$$(CXX) $$(BOSSA_CXXFLAGS) -c -o $$@ $$<
 endef
 $(foreach src,$(BOSSA_SRCS),$(eval $(call bossa_obj,$(src))))
@@ -219,7 +219,7 @@ endif
 #
 define bossac_obj
 $(OBJDIR)/$(1:%.cpp=%.o): $(SRCDIR)/$(1)
-	@echo CPP $$<
+	@echo CPP BOSSAC $$<
 	$$(Q)$$(CXX) $$(BOSSAC_CXXFLAGS) -c -o $$@ $$<
 endef
 $(foreach src,$(BOSSAC_SRCS),$(eval $(call bossac_obj,$(src))))
@@ -229,7 +229,7 @@ $(foreach src,$(BOSSAC_SRCS),$(eval $(call bossac_obj,$(src))))
 #
 define bossash_obj
 $(OBJDIR)/$(1:%.cpp=%.o): $(SRCDIR)/$(1)
-	@echo CPP $$<
+	@echo CPP BOSSASH $$<
 	$$(Q)$$(CXX) $$(BOSSASH_CXXFLAGS) -c -o $$@ $$<
 endef
 $(foreach src,$(BOSSASH_SRCS),$(eval $(call bossash_obj,$(src))))
