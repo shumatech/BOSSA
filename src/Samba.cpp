@@ -143,7 +143,7 @@ Samba::init()
             printf("Unsupported ARM920T architecture\n");
     }
     // Check for supported M0+ processor
-    else if (cid == 0x10010000 || cid == 0x10010005)
+	else if (cid == 0x10010000 || cid == 0x10010100 || cid == 0x10010005)
     {
         return true;
     }
@@ -608,6 +608,7 @@ Samba::reset(void)
     {
     // SAMD21G18 or SAMD21J18
     case 0x10010000:
+	case 0x10010100:
     case 0x10010005:
         // http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0484c/index.html
         writeWord(0xE000ED0C, 0x05FA0004);

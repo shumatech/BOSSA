@@ -51,12 +51,13 @@ FlashFactory::create(Samba& samba, uint32_t chipId)
     // SAMD21
     //
     case 0x10010000:
-        flash = new NvmFlash(samba, "ATSAMD21J18A", 0x000000, 4096, 64, 1, 16, 0x804000, 0x20008000, 0x41004000, true);
+	case 0x10010100:
+        flash = new NvmFlash(samba, "ATSAMD21J18A", 0x000000, 4096, 64, 1, 16, 0x20004000, 0x20008000, 0x41004000, true);
         // 0x41004000 == Base address for the NVMCTRL module
         break;
 
     case 0x10010005:
-        flash = new NvmFlash(samba, "ATSAMD21G18A", 0x000000, 4096, 64, 1, 16, 0x804000, 0x20008000, 0x41004000, true);
+        flash = new NvmFlash(samba, "ATSAMD21G18A", 0x000000, 4096, 64, 1, 16, 0x20004000, 0x20008000, 0x41004000, true);
         break;
 
     //
