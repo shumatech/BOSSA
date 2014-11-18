@@ -110,48 +110,8 @@ Samba::init()
     if (_debug)
         printf("chipId=%#08x\n", cid);
 
-    uint8_t eproc = (cid >> 5) & 0x7;
-    uint8_t arch = (cid >> 20) & 0xff;
-
-    // Check for ARM7TDMI processor
-    if (eproc == 2)
-    {
-        // Check for SAM7 architecture
-        if (arch >= 0x70 && arch <= 0x76)
-            return true;
-        if (_debug)
-            printf("Unsupported ARM7TDMI architecture\n");
-    }
-    // Check for Cortex-M3 processor
-    else if (eproc == 3)
-    {
-        // Check for SAM3 architecture
-        if (arch >= 0x80 && arch <= 0x8a)
-            return true;
-        if (arch >= 0x93 && arch <= 0x9a)
-            return true;
-        if (_debug)
-            printf("Unsupported Cortex-M3 architecture\n");
-    }
-    // Check for ARM920T processor
-    else if (eproc == 4)
-    {
-        // Check for SAM9XE architecture
-        if (arch == 0x29)
-            return true;
-        if (_debug)
-            printf("Unsupported ARM920T architecture\n");
-    }
-    // Check for supported M0+ processor
-	else if (cid == 0x10010000 || cid == 0x10010100 || cid == 0x10010005)
-    {
-        return true;
-    }
-    else
-    {
-        if (_debug)
-            printf("Unsupported processor\n");
-    }
+    if (getChipArchitecture(cid) != Unsupported)
+      return true;
 
     return false;
 }
@@ -600,26 +560,34 @@ Samba::chipId()
 void
 Samba::reset(void)
 {
+    uint32_t chipId;
+
     printf("CPU reset.\n");
 
-    uint32_t chipId = Samba::chipId();
-
-    switch (chipId)
+    // Read the chip ID
+    try
     {
-    // SAMD21G18 or SAMD21J18
-    case 0x10010000:
-	case 0x10010100:
-    case 0x10010005:
+        chipId = Samba::chipId();
+    }
+    catch (SambaError)
+    {
+        printf("Reset failed.\n");
+        return;
+    }
+
+    switch (getChipArchitecture(chipId))
+    {
+      case SAMD20:
+      case SAMD21:
         // http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0484c/index.html
         writeWord(0xE000ED0C, 0x05FA0004);
         break;
 
-    // SAM3X8E
-    case 0x285e0a60:
+      case SAM3X:
         writeWord(0x400E1A00, 0xA500000D);
         break;
-
-    default:
+      
+      default:
         printf("Reset not supported for this CPU.\n");
         return;
     }
@@ -629,4 +597,87 @@ Samba::reset(void)
     // This delay is here to give the time to kernel driver to
     // sort out things before closing the port.
     usleep(100000);
+}
+
+
+Samba::ChipArchitecture
+Samba::getChipArchitecture(uint32_t cid)
+{
+    uint8_t eproc = (cid >> 5) & 0x7;
+    uint8_t arch = (cid >> 20) & 0xff;
+
+    // Check for ARM7TDMI processor
+    if (eproc == 2)
+    {
+        // Check for SAM7 architecture
+        if (arch == 0x70)
+            return SAM7S;
+        else if (arch == 0x71)
+            return SAM7XC;
+        else if (arch == 0x72)
+            return SAM7SE;
+        else if (arch == 0x73)
+            return SAM7L;
+        else if (arch == 0x75)
+            return SAM7X;
+        else if (arch == 0x76)
+            return SAM7SL;
+
+        if (_debug)
+            printf("Unsupported ARM7TDMI architecture\n");
+    }
+    // Check for Cortex-M3 processor
+    else if (eproc == 3)
+    {
+        // Check for SAM3 architecture
+        if (arch >= 0x80 && arch <= 0x81)
+            return SAM3U;
+        else if (arch == 0x83)
+            return SAM3A;
+        else if (arch >= 0x84 && arch <= 0x86)
+            return SAM3X;
+        else if (arch >= 0x88 && arch <= 0x8A)
+            return SAM3S;
+        else if (arch >= 0x93 && arch <= 0x95)
+            return SAM3N;
+        else if (arch >= 0x98 && arch <= 0x9A)
+            return SAM3SD;
+
+        if (_debug)
+            printf("Unsupported Cortex-M3 architecture\n");
+    }
+    // Check for ARM920T processor
+    else if (eproc == 4)
+    {
+        // Check for SAM9XE architecture
+        if (arch == 0x29)
+            return SAM9XE;
+
+        if (_debug)
+            printf("Unsupported ARM920T architecture\n");
+    }
+    // Check for SAMD Cortex-M0+ processor
+    else if ((cid & 0xff800000) == 0x10000000)
+    {
+        uint8_t series = (cid >> 16) & 0x3f;
+
+        if (series == 0x00)
+        {
+            return SAMD20;
+        }
+        else if (series == 0x01)
+        {
+            return SAMD21;
+        }
+
+        if (_debug)
+            printf("Unsupported Cortex-M0+ architecture\n");
+    }    
+    else
+    {
+        if (_debug)
+            printf("Unsupported processor\n");
+    }
+
+    return Unsupported;
 }

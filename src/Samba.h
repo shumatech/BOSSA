@@ -76,6 +76,26 @@ public:
     void reset(void);
 
 private:
+    enum ChipArchitecture
+    {
+        Unsupported = 0,
+        SAM3U,
+        SAM3A,
+        SAM3X,
+        SAM3S,
+        SAM3SD,
+        SAM3N,
+        SAM7S,
+        SAM7XC,
+        SAM7SE,
+        SAM7L,
+        SAM7X,
+        SAM7SL,
+        SAM9XE,
+        SAMD20,
+        SAMD21
+    };
+
     bool _debug;
     bool _isUsb;
     SerialPort::Ptr _port;
@@ -90,6 +110,8 @@ private:
 
     void writeBinary(const uint8_t* buffer, int size);
     void readBinary(uint8_t* buffer, int size);
+
+    ChipArchitecture getChipArchitecture(uint32_t cid);
 
 };
 
