@@ -77,13 +77,13 @@ class Flash
 public:
     Flash(Samba& samba,
           const std::string& name,
-          uint32_t addr,
-          uint32_t pages,
-          uint32_t size,
-          uint32_t planes,
-          uint32_t lockRegions,
-          uint32_t user,
-          uint32_t stack);
+          uint32_t addr,                 // Flash base address
+          uint32_t pages,                // Number of pages
+          uint32_t size,                 // Page size in bytes
+          uint32_t planes,               // Number of flash planes
+          uint32_t lockRegions,          // Number of flash lock regions
+          uint32_t user,                 // Address in SRAM where the applet and buffers will be placed
+          uint32_t stack);               // Address in SRAM where the applet stack will be placed
     virtual ~Flash() {}
 
     const std::string& name() { return _name; }
@@ -92,11 +92,6 @@ public:
     virtual uint32_t pageSize() { return _size; }
     virtual uint32_t numPages() { return _pages; }
     virtual uint32_t numPlanes() { return _planes; }
-
-    // Usually all the bootloaders are in ROM and the application is flashed
-    // in page 0. But for some types of Flash, it could be different and will
-    // be overrided in the derived class
-    virtual uint16_t appStartPage() { return 0; }
 
     virtual void eraseAll() = 0;
     virtual void eraseAuto(bool enable) = 0;

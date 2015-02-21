@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BOSSA
 //
-// Copyright (C) 2011-2012 ShumaTech http://www.shumatech.com/
+// Copyright (c) 2015, Arduino
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -51,8 +51,6 @@ public:
 
     virtual ~NvmFlash();
 
-    void loadBuffer(const uint8_t*, uint16_t size);
-
     void eraseAll();
     void eraseAuto(bool enable);
 
@@ -78,19 +76,12 @@ public:
     void writePage(uint32_t page);
     void readPage(uint32_t page, uint8_t* data);
 
-    // The application starts at page 128, i.e address 0x2000
-    // Since bootloader is in page 0.
-    uint16_t appStartPage() { return 128; }
-
 private:
-    uint32_t _regs;
-    uint16_t _bufferSize;
-    bool _canBrownout;
-    bool _eraseAuto;
-    const uint8_t* _buffer;
+    uint32_t _regs ;
+    uint32_t _flash_page_base ;
+    uint32_t _flash_row_base ;
+    bool _canBrownout ;
 
-    const uint8_t* getCompletePage(const uint8_t*, uint16_t);
-    void setup_page_write();
     uint32_t getAddressByRegion(uint32_t region);
     bool nvmIsReady();
     void executeNvmCommand(uint32_t cmd);

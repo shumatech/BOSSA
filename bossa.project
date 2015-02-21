@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeLite_Project Name="bossa" InternalType="">
+  <Description/>
+  <Dependencies/>
+  <VirtualDirectory Name="flasher">
+    <File Name="src/EefcFlash.cpp"/>
+    <File Name="src/EefcFlash.h"/>
+    <File Name="src/EfcFlash.cpp"/>
+    <File Name="src/EfcFlash.h"/>
+    <File Name="src/Flash.cpp"/>
+    <File Name="src/Flash.h"/>
+    <File Name="src/Flasher.cpp"/>
+    <File Name="src/Flasher.h"/>
+    <File Name="src/NvmFlash.cpp"/>
+    <File Name="src/NvmFlash.h"/>
+    <File Name="src/FlashFactory.cpp"/>
+    <File Name="src/FlashFactory.h"/>
+    <File Name="src/Devices.h"/>
+  </VirtualDirectory>
+  <VirtualDirectory Name="src">
+    <File Name="src/bossac.cpp"/>
+    <File Name="src/CmdOpts.cpp"/>
+    <File Name="src/CmdOpts.h"/>
+    <File Name="src/FileError.h"/>
+    <File Name="src/Samba.cpp"/>
+    <File Name="src/Samba.h"/>
+  </VirtualDirectory>
+  <VirtualDirectory Name="serial port">
+    <File Name="src/LinuxPortFactory.cpp"/>
+    <File Name="src/LinuxPortFactory.h"/>
+    <File Name="src/OSXPortFactory.cpp"/>
+    <File Name="src/OSXPortFactory.h"/>
+    <File Name="src/PosixSerialPort.cpp"/>
+    <File Name="src/PosixSerialPort.h"/>
+    <File Name="src/WinPortFactory.cpp"/>
+    <File Name="src/WinPortFactory.h"/>
+    <File Name="src/WinSerialPort.cpp"/>
+    <File Name="src/WinSerialPort.h"/>
+    <File Name="src/SerialPort.h"/>
+    <File Name="src/Driver.h"/>
+    <File Name="src/PortFactory.h"/>
+  </VirtualDirectory>
+  <VirtualDirectory Name="applet">
+    <File Name="src/Applet.cpp"/>
+    <File Name="src/Applet.h"/>
+    <File Name="src/WordCopyArm.cpp"/>
+    <File Name="src/WordCopyArm.h"/>
+    <File Name="src/TemplateArm.asm"/>
+    <File Name="src/WordCopyApplet.cpp"/>
+    <File Name="src/WordCopyApplet.h"/>
+    <File Name="src/WordCopyArm.asm"/>
+  </VirtualDirectory>
+  <VirtualDirectory Name="wx-gui">
+    <File Name="src/BossaAbout.cpp"/>
+    <File Name="src/BossaAbout.h"/>
+    <File Name="src/BossaBitmaps.cpp"/>
+    <File Name="src/BossaBitmaps.h"/>
+    <File Name="src/BossaLogo.cpp"/>
+    <File Name="src/BossaForm.cpp"/>
+    <File Name="src/BossaForm.h"/>
+    <File Name="src/BossaWindow.cpp"/>
+    <File Name="src/BossaWindow.h"/>
+    <File Name="src/ShumaTechLogo.cpp"/>
+    <File Name="src/BossaThread.cpp"/>
+    <File Name="src/BossaThread.h"/>
+    <File Name="src/BossaIcon.cpp"/>
+    <File Name="src/BossaInfo.cpp"/>
+    <File Name="src/BossaApp.cpp"/>
+    <File Name="src/BossaApp.h"/>
+    <File Name="src/BossaInfo.h"/>
+    <File Name="src/BossaProgress.cpp"/>
+    <File Name="src/BossaProgress.h"/>
+  </VirtualDirectory>
+  <VirtualDirectory Name="build">
+    <File Name="Makefile"/>
+    <File Name="appletgen"/>
+    <File Name="README"/>
+  </VirtualDirectory>
+  <VirtualDirectory Name="shell">
+    <File Name="src/bossash.cpp"/>
+    <File Name="src/Command.cpp"/>
+    <File Name="src/Command.h"/>
+    <File Name="src/Shell.cpp"/>
+    <File Name="src/Shell.h"/>
+  </VirtualDirectory>
+  <Settings Type="Dynamic Library">
+    <GlobalSettings>
+      <Compiler Options="" C_Options="" Assembler="">
+        <IncludePath Value="."/>
+      </Compiler>
+      <Linker Options="">
+        <LibraryPath Value="."/>
+      </Linker>
+      <ResourceCompiler Options=""/>
+    </GlobalSettings>
+    <Configuration Name="Debug" CompilerType="MinGW ( CodeLite-4.8.1 )" DebuggerType="GNU gdb debugger" Type="Dynamic Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+      <Compiler Options="-g" C_Options="-g" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
+        <IncludePath Value="."/>
+      </Compiler>
+      <Linker Options="" Required="yes"/>
+      <ResourceCompiler Options="" Required="no"/>
+      <General OutputFile="" IntermediateDirectory="./Debug" Command="" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
+      <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
+        <![CDATA[]]>
+      </Environment>
+      <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="" IsExtended="no">
+        <DebuggerSearchPaths/>
+        <PostConnectCommands/>
+        <StartupCommands/>
+      </Debugger>
+      <PreBuild/>
+      <PostBuild/>
+      <CustomBuild Enabled="yes">
+        <RebuildCommand>make clean bin/bossac.exe</RebuildCommand>
+        <CleanCommand>make clean</CleanCommand>
+        <BuildCommand>make bin/bossac.exe</BuildCommand>
+        <PreprocessFileCommand/>
+        <SingleFileCommand/>
+        <MakefileGenerationCommand/>
+        <ThirdPartyToolName>None</ThirdPartyToolName>
+        <WorkingDirectory>$(WorkspacePath)</WorkingDirectory>
+      </CustomBuild>
+      <AdditionalRules>
+        <CustomPostBuild/>
+        <CustomPreBuild/>
+      </AdditionalRules>
+      <Completion EnableCpp11="no">
+        <ClangCmpFlagsC/>
+        <ClangCmpFlags/>
+        <ClangPP/>
+        <SearchPaths/>
+      </Completion>
+    </Configuration>
+    <Configuration Name="Release" CompilerType="MinGW ( CodeLite-4.8.1 )" DebuggerType="GNU gdb debugger" Type="Dynamic Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+      <Compiler Options="" C_Options="" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
+        <IncludePath Value="."/>
+      </Compiler>
+      <Linker Options="-O2" Required="yes"/>
+      <ResourceCompiler Options="" Required="no"/>
+      <General OutputFile="" IntermediateDirectory="./Release" Command="" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
+      <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
+        <![CDATA[]]>
+      </Environment>
+      <Debugger IsRemote="no" RemoteHostName="" RemoteHostPort="" DebuggerPath="" IsExtended="no">
+        <DebuggerSearchPaths/>
+        <PostConnectCommands/>
+        <StartupCommands/>
+      </Debugger>
+      <PreBuild/>
+      <PostBuild/>
+      <CustomBuild Enabled="yes">
+        <RebuildCommand/>
+        <CleanCommand>make clean</CleanCommand>
+        <BuildCommand>make</BuildCommand>
+        <PreprocessFileCommand/>
+        <SingleFileCommand/>
+        <MakefileGenerationCommand/>
+        <ThirdPartyToolName>None</ThirdPartyToolName>
+        <WorkingDirectory>$(WorkspacePath)</WorkingDirectory>
+      </CustomBuild>
+      <AdditionalRules>
+        <CustomPostBuild/>
+        <CustomPreBuild/>
+      </AdditionalRules>
+      <Completion EnableCpp11="no">
+        <ClangCmpFlagsC/>
+        <ClangCmpFlags/>
+        <ClangPP/>
+        <SearchPaths/>
+      </Completion>
+    </Configuration>
+  </Settings>
+</CodeLite_Project>

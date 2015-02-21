@@ -3,7 +3,7 @@
 //
 // Copyright (c) 2011-2012, ShumaTech
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //     * Redistributions of source code must retain the above copyright
@@ -14,7 +14,7 @@
 //     * Neither the name of the <organization> nor the
 //       names of its contributors may be used to endorse or promote products
 //       derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -120,7 +120,6 @@ WriteThread::Entry()
     uint32_t pageSize = flash.pageSize();
     uint8_t buffer[pageSize];
     uint32_t pageNum = 0;
-    uint16_t appStartPage = flash.appStartPage();
     uint32_t numPages;
     long fsize;
     size_t fbytes;
@@ -167,7 +166,7 @@ WriteThread::Entry()
             }
 
             flash.loadBuffer(buffer, fbytes);
-            flash.writePage((appStartPage+pageNum));
+            flash.writePage(pageNum);
 
             pageNum++;
             if (pageNum == numPages)
@@ -215,7 +214,6 @@ VerifyThread::Entry()
     uint8_t bufferB[pageSize];
     uint32_t pageNum = 0;
     uint32_t numPages;
-    uint16_t appStartPage=flash.appStartPage();
     uint32_t byteErrors = 0;
     uint32_t pageErrors = 0;
     uint32_t totalErrors = 0;
@@ -253,7 +251,7 @@ VerifyThread::Entry()
                          percent);
             }
 
-            flash.readPage((appStartPage+pageNum), bufferB);
+            flash.readPage(pageNum, bufferB);
 
             byteErrors = 0;
             for (uint32_t i = 0; i < fbytes; i++)
