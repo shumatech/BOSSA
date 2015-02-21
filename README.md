@@ -18,6 +18,7 @@ BOSSA 1.5-arduino
   * NVMFlash::write() rewritten.
   * Removed some useless functions from 1.4 release.
   * Added a mask for SAMD chipid: DIE and REV bitfields are not taken into account as they may vary in the time without impacting the features.
+  * Write operation time divided by 2
 
 
 BOSSA 1.4-arduino
