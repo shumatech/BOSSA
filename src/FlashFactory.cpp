@@ -3,7 +3,7 @@
 //
 // Copyright (c) 2011-2012, ShumaTech
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //     * Redistributions of source code must retain the above copyright
@@ -14,7 +14,7 @@
 //     * Neither the name of the <organization> nor the
 //       names of its contributors may be used to endorse or promote products
 //       derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -28,8 +28,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include "FlashFactory.h"
 
+#include "Devices.h"
 #include "EfcFlash.h"
-#include "EefcFlash.h" 
+#include "EefcFlash.h"
 #include "NvmFlash.h"
 
 FlashFactory::FlashFactory()
@@ -50,15 +51,17 @@ FlashFactory::create(Samba& samba, uint32_t chipId)
     //
     // SAMD21
     //
-    case 0x10010000:
-	case 0x10010100:
-        flash = new NvmFlash(samba, "ATSAMD21J18A", 0x000000, 4096, 64, 1, 16, 0x20004000, 0x20008000, 0x41004000, true);
-        // 0x41004000 == Base address for the NVMCTRL module
-        break;
+    case ATSAMD21J18A_CHIPID:
+        flash = new NvmFlash( samba, ATSAMD21J18A_NAME, ATSAMD21J18A_FLASH_BASE, ATSAMD21J18A_FLASH_PAGES, ATSAMD21J18A_FLASH_PAGE_SIZE,
+                              ATSAMD21J18A_FLASH_PLANES, ATSAMD21J18A_FLASH_LOCK_REGIONS,
+                              ATSAMD21J18A_BUFFER_ADDR, ATSAMD21J18A_STACK_ADDR, ATSAMD21J18A_NVMCTRL_BASE, /*canBrownout*/true ) ;
+        break ;
 
-    case 0x10010005:
-        flash = new NvmFlash(samba, "ATSAMD21G18A", 0x000000, 4096, 64, 1, 16, 0x20004000, 0x20008000, 0x41004000, true);
-        break;
+    case ATSAMD21G18A_CHIPID:
+        flash = new NvmFlash( samba, ATSAMD21G18A_NAME, ATSAMD21G18A_FLASH_BASE, ATSAMD21G18A_FLASH_PAGES, ATSAMD21G18A_FLASH_PAGE_SIZE,
+                              ATSAMD21G18A_FLASH_PLANES, ATSAMD21G18A_FLASH_LOCK_REGIONS,
+                              ATSAMD21G18A_BUFFER_ADDR, ATSAMD21G18A_STACK_ADDR, ATSAMD21G18A_NVMCTRL_BASE, /*canBrownout*/true ) ;
+        break ;
 
     //
     // SAM7SE

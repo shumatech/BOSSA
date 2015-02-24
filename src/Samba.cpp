@@ -34,6 +34,8 @@
 #include <ctype.h>
 #include <unistd.h>
 
+#include "Devices.h"
+
 using namespace std;
 
 // XMODEM definitions
@@ -579,7 +581,7 @@ Samba::chipId()
         return readWord(0xfffff240);
     }
 
-    // Else use the Atmel SAM3 or SAM4 or M0+ registers
+    // Else use the Atmel SAM3 or SAM4 or SAMD registers
 
     // The M0+, M3 and M4 have the CPUID register at a common addresss 0xe000ed00
     uint32_t cpuid_reg = readWord(0xe000ed00);
@@ -587,7 +589,7 @@ Samba::chipId()
     // Check if it is Cortex M0+
     if (part_no == 0xC600)
     {
-        return readWord(0x41002018); // DSU_DID register
+        return readWord(0x41002018)& ATSAMD_CHIPID_MASK ; // DSU_DID register masked to remove DIE and REV
     }
 
     // Else assume M3 or M4
@@ -607,9 +609,8 @@ Samba::reset(void)
     switch (chipId)
     {
     // SAMD21G18 or SAMD21J18
-    case 0x10010000:
-	case 0x10010100:
-    case 0x10010005:
+    case ATSAMD21J18A_CHIPID:
+	  case ATSAMD21G18A_CHIPID:
         // http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0484c/index.html
         writeWord(0xE000ED0C, 0x05FA0004);
         break;
