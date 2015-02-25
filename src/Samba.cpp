@@ -538,7 +538,7 @@ Samba::go(uint32_t addr)
 std::string
 Samba::version()
 {
-    uint8_t cmd[33];
+    uint8_t cmd[256];
     char* str;
     int size;
     int pos;
