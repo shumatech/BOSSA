@@ -579,7 +579,7 @@ Samba::chipId()
         return readWord(0xfffff240);
     }
 
-    // Else use the Atmel SAM3 or SAM4 or M0+ registers
+    // Else use the Atmel SAM3 or SAM4 or SAMD registers
 
     // The M0+, M3 and M4 have the CPUID register at a common addresss 0xe000ed00
     uint32_t cpuid_reg = readWord(0xe000ed00);

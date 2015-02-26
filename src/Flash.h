@@ -77,13 +77,13 @@ class Flash
 public:
     Flash(Samba& samba,
           const std::string& name,
-          uint32_t addr,
-          uint32_t pages,
-          uint32_t size,
-          uint32_t planes,
-          uint32_t lockRegions,
-          uint32_t user,
-          uint32_t stack);
+          uint32_t addr,                 // Flash base address
+          uint32_t pages,                // Number of pages
+          uint32_t size,                 // Page size in bytes
+          uint32_t planes,               // Number of flash planes
+          uint32_t lockRegions,          // Number of flash lock regions
+          uint32_t user,                 // Address in SRAM where the applet and buffers will be placed
+          uint32_t stack);               // Address in SRAM where the applet stack will be placed
     virtual ~Flash() {}
 
     const std::string& name() { return _name; }

@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := all
 
-# 
+#
 # Version
 #
 VERSION=1.4-arduino
@@ -103,7 +103,7 @@ install: strip app
 	ln -s /usr/bin /Volumes/$(VOLUME)/bin
 	mkdir /Volumes/$(VOLUME)/.background
 	cp $(BACKGROUND) /Volumes/$(VOLUME)/.background
-	osascript < $(INSTALLDIR)/dmgwin.osa 
+	osascript < $(INSTALLDIR)/dmgwin.osa
 	hdiutil detach /Volumes/$(VOLUME)/
 	hdiutil convert -format UDBZ -o $(BINDIR)/tmp$(DMG) $(BINDIR)/$(DMG)
 	mv -f $(BINDIR)/tmp$(DMG) $(BINDIR)/$(DMG)
@@ -124,11 +124,11 @@ BOSSASH_OBJS=$(APPLET_OBJS) $(COMMON_OBJS) $(foreach src,$(BOSSASH_SRCS),$(OBJDI
 #
 # Dependencies
 #
-DEPENDS=$(COMMON_SRCS:%.cpp=$(OBJDIR)/%.d) 
-DEPENDS+=$(APPLET_SRCS:%.asm=$(OBJDIR)/%.d) 
-DEPENDS+=$(BOSSA_SRCS:%.cpp=$(OBJDIR)/%.d) 
-DEPENDS+=$(BOSSAC_SRCS:%.cpp=$(OBJDIR)/%.d) 
-DEPENDS+=$(BOSSASH_SRCS:%.cpp=$(OBJDIR)/%.d) 
+DEPENDS=$(COMMON_SRCS:%.cpp=$(OBJDIR)/%.d)
+DEPENDS+=$(APPLET_SRCS:%.asm=$(OBJDIR)/%.d)
+DEPENDS+=$(BOSSA_SRCS:%.cpp=$(OBJDIR)/%.d)
+DEPENDS+=$(BOSSAC_SRCS:%.cpp=$(OBJDIR)/%.d)
+DEPENDS+=$(BOSSASH_SRCS:%.cpp=$(OBJDIR)/%.d)
 
 #
 # Tools
@@ -144,7 +144,7 @@ ARMOBJCOPY=$(ARM)objcopy
 #
 COMMON_CXXFLAGS+=-Wall -Werror -MT $@ -MD -MP -MF $(@:%.o=%.d) -DVERSION=\"$(VERSION)\" -g -O2
 WX_CXXFLAGS:=$(shell wx-config --cxxflags --version=$(WXVERSION)) -DWX_PRECOMP -Wno-ctor-dtor-privacy -O2 -fno-strict-aliasing
-BOSSA_CXXFLAGS=$(COMMON_CXXFLAGS) $(WX_CXXFLAGS) 
+BOSSA_CXXFLAGS=$(COMMON_CXXFLAGS) $(WX_CXXFLAGS)
 BOSSAC_CXXFLAGS=$(COMMON_CXXFLAGS)
 BOSSASH_CXXFLAGS=$(COMMON_CXXFLAGS)
 
@@ -249,7 +249,7 @@ $(foreach bmp,$(BOSSA_BMPS),$(eval $(call bossa_bmp,$(bmp))))
 #
 $(OBJDIR):
 	@mkdir $@
-    
+
 $(BINDIR):
 	@mkdir $@
 
