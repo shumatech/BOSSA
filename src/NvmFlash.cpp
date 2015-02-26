@@ -76,7 +76,6 @@ using namespace std;
 #define CMD_CLEAR_PAGE_BUFFER (CMDEX_KEY | 0x0044u)
 
 #define ROW_SIZE FOUR_PAGES
-#define PAGE_SIZE_IN_BYTES pageSize()
 // This is the word size allowed by the communication layer of this bossa client, not the NVM word size which is 2 bytes
 #define SAMBA_API_WORD_SIZE (4ul) // bytes
 
@@ -116,13 +115,13 @@ NvmFlash::eraseAll()
     uint32_t total_rows = _pages/ROW_SIZE;
 
     // Calculate the number of rows that samba occupies.
-    uint32_t boot_rows = (BOOTLOADER_SIZE_IN_BYTES/PAGE_SIZE_IN_BYTES)/ROW_SIZE;
+    uint32_t boot_rows = (BOOTLOADER_SIZE_IN_BYTES/pagesize())/ROW_SIZE;
 
     // Clear error flags
 
     for (uint32_t row=boot_rows; row<total_rows; row++)
     {
-        uint32_t addr_in_flash = _addr + (row * ROW_SIZE * PAGE_SIZE_IN_BYTES);
+        uint32_t addr_in_flash = _addr + (row * ROW_SIZE * pageSize());
         // The address is byte address, so convert it to word address.
         addr_in_flash = addr_in_flash / 2;
 
@@ -154,7 +153,6 @@ NvmFlash::eraseAuto(bool enable)
 {
     _eraseAuto = enable;
 }
-
 
 bool
 NvmFlash::isLocked()
@@ -307,9 +305,9 @@ NvmFlash::getCompletePage(const uint8_t* buffer, uint16_t size)
 {
     uint8_t* page_buf;
 
-    if (size < PAGE_SIZE_IN_BYTES) //If it is a partial page, do padding
+    if (size < pageSize()) //If it is a partial page, do padding
     {
-        page_buf = (uint8_t*)malloc(PAGE_SIZE_IN_BYTES * sizeof(uint8_t));
+        page_buf = (uint8_t*)malloc(pageSize() * sizeof(uint8_t));
 
         // First copy all the bytes from source
         for (uint16_t m=0; m<size; m++)
@@ -318,14 +316,14 @@ NvmFlash::getCompletePage(const uint8_t* buffer, uint16_t size)
         }
 
         // Now pad the remaining.
-        for (uint16_t m=size; m<PAGE_SIZE_IN_BYTES; m++)
+        for (uint16_t m=size; m<pageSize(); m++)
         {
             page_buf[m] = 255;
         }
 
         return (const uint8_t*)page_buf;
     }
-    else if (size == PAGE_SIZE_IN_BYTES)
+    else if (size == pageSize())
     {
         return buffer; // Return the source as it is
     }
@@ -368,7 +366,7 @@ NvmFlash::writePage(uint32_t page)
     if (page >= _pages)
         throw FlashPageError();
 
-    if (_bufferSize > PAGE_SIZE_IN_BYTES)
+    if (_bufferSize > pageSize())
         throw FlashPageError();
 
     if (!_buffer)
@@ -377,7 +375,7 @@ NvmFlash::writePage(uint32_t page)
     setup_page_write();
 
     // Compute the start address.
-    uint32_t addr = _addr + (page * PAGE_SIZE_IN_BYTES);
+    uint32_t addr = _addr + (page * _size );
     uint32_t addr_cached = addr;
     uint32_t start = 0;
 
@@ -385,7 +383,7 @@ NvmFlash::writePage(uint32_t page)
     // case we should prepare a complete page by padding 0xff.
     const uint8_t* page_buf = getCompletePage(_buffer, _bufferSize);
 
-    for (uint16_t i=0; i<(PAGE_SIZE_IN_BYTES/SAMBA_API_WORD_SIZE); i++)
+    for (uint16_t i=0; i<(pageSize()/SAMBA_API_WORD_SIZE); i++)
     {
         start = i * SAMBA_API_WORD_SIZE;
         uint32_t data = (page_buf[start+3] << 24) |
@@ -415,8 +413,8 @@ NvmFlash::readPage(uint32_t page, uint8_t* buf)
     // Convert page number into physical address.
     // The flash base should be defined as starting after bootloader (ie at 0x00002000 => page number 128)
     // flash_base_address + page.no * page_size
-    uint32_t addr = _addr + (page * PAGE_SIZE_IN_BYTES);
-    _samba.read(addr, buf, PAGE_SIZE_IN_BYTES);
+    uint32_t addr = _addr + (page * pageSize());
+    _samba.read(addr, buf, pageSize());
 }
 
 // Returns the start address of a specified region number
@@ -429,7 +427,8 @@ NvmFlash::getAddressByRegion(uint32_t region_num)
     {
         throw FlashRegionError();
     }
-    uint32_t size_of_region = (PAGE_SIZE_IN_BYTES * numPages()) / _lockRegions; // Flash Size / no of lock regions
+
+    uint32_t size_of_region = (pageSize() * numPages()) / _lockRegions; // Flash Size / no of lock regions
     uint32_t addr = address() + (region_num * size_of_region);
     addr = addr / 2; // Convert byte address to word address
 
