@@ -104,7 +104,7 @@ static Option opts[] =
     {
       'e', "erase", &config.erase,
       { ArgNone },
-      "erase the entire flash"
+      "erase the entire flash (keep the 8KB of bootloader for SAM Dxx)"
     },
     {
       'w', "write", &config.write,
