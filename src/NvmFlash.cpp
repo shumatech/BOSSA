@@ -29,8 +29,6 @@
 #include "NvmFlash.h"
 #include "Devices.h"
 
-using namespace std;
-
 // System control brown out register.
 // SYSCTRL base address + BOD33 reg offset
 
