@@ -343,13 +343,6 @@ NvmFlash::setup_page_write()
     _samba.writeWord(NVM_CTRLB_REG, ctrlb_reg | (0x1 << 7));
 }
 
-void
-NvmFlash::loadBuffer(const uint8_t* data, uint16_t bufferSize)
-{
-    _bufferSize = bufferSize;
-    _buffer = data;
-}
-
 // Reference : Atmel ASF nvm_write_buffer
 void
 NvmFlash::writePage(uint32_t page)

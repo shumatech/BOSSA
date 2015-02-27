@@ -51,8 +51,6 @@ public:
 
     virtual ~NvmFlash();
 
-    void loadBuffer(const uint8_t*, uint16_t size);
-
     void eraseAll();
     void eraseAuto(bool enable);
 
@@ -80,9 +78,7 @@ public:
 
 private:
     uint32_t _regs;
-    uint16_t _bufferSize;
     bool _canBrownout;
-    const uint8_t* _buffer;
 
     const uint8_t* getCompletePage(const uint8_t*, uint16_t);
     void setup_page_write();
