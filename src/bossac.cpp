@@ -31,6 +31,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "CmdOpts.h"
 #include "Samba.h"
@@ -220,6 +221,7 @@ main(int argc, char* argv[])
     int args;
     char* pos;
     CmdOpts cmd(argc, argv, sizeof(opts) / sizeof(opts[0]), opts);
+    time_t t_start, t_end;
 
     if ((pos = strrchr(argv[0], '/')) || (pos = strrchr(argv[0], '\\')))
         argv[0] = pos + 1;
@@ -322,6 +324,8 @@ main(int argc, char* argv[])
         }
 
         uint32_t chipId = samba.chipId();
+        printf( "Atmel SMART device 0x%08x found\n", chipId ) ;
+
         Flash::Ptr flash = flashFactory.create(samba, chipId);
         if (flash.get() == NULL)
         {
@@ -331,21 +335,46 @@ main(int argc, char* argv[])
 
         Flasher flasher(flash);
 
+        if (config.info)
+            flasher.info(samba);
+
         if (config.unlock)
             flasher.lock(config.unlockArg, false);
 
         if (config.erase)
+        {
+            t_start=time(NULL);
             flasher.erase();
+            t_end=time(NULL);
+            printf("Erase done in %ld seconds\n", t_end-t_start);
+        }
 
         if (config.write)
+        {
+            t_start=time(NULL);
             flasher.write(argv[args]);
+            t_end=time(NULL);
+            printf("Write done in %ld seconds\n", t_end-t_start);
+        }
 
         if (config.verify)
-            if  (!flasher.verify(argv[args]))
+        {
+            t_start=time(NULL);
+            if (!flasher.verify(argv[args]))
+            {
                 return 2;
+            }
+            t_end=time(NULL);
+            printf("Verify done in %ld seconds\n", t_end-t_start);
+        }
 
         if (config.read)
+        {
+            t_start=time(NULL);
             flasher.read(argv[args], config.readArg);
+            t_end=time(NULL);
+            printf("Read done in %ld seconds\n", t_end-t_start);
+        }
 
         if (config.boot)
         {
@@ -373,9 +402,6 @@ main(int argc, char* argv[])
 
         if (config.lock)
             flasher.lock(config.lockArg, true);
-
-        if (config.info)
-            flasher.info(samba);
 
         if (config.reset)
             samba.reset();
