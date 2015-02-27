@@ -73,7 +73,7 @@ Flasher::write(const char* filename)
     uint32_t pageSize = _flash->pageSize();
     uint8_t buffer[pageSize];
     uint32_t pageNum = 0;
-    uint16_t offset = _flash->appStartPage();
+    uint16_t offset = 0;
     uint32_t numPages;
     long fsize;
     size_t fbytes;
@@ -126,7 +126,7 @@ Flasher::verify(const char* filename)
     uint8_t bufferA[pageSize];
     uint8_t bufferB[pageSize];
     uint32_t pageNum = 0;
-    uint16_t offset = _flash->appStartPage();
+    uint16_t offset = 0;
     uint32_t numPages;
     uint32_t byteErrors = 0;
     uint32_t pageErrors = 0;

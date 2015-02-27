@@ -120,7 +120,6 @@ WriteThread::Entry()
     uint32_t pageSize = flash.pageSize();
     uint8_t buffer[pageSize];
     uint32_t pageNum = 0;
-    uint16_t appStartPage = flash.appStartPage();
     uint32_t numPages;
     long fsize;
     size_t fbytes;
@@ -167,7 +166,7 @@ WriteThread::Entry()
             }
 
             flash.loadBuffer(buffer, fbytes);
-            flash.writePage((appStartPage+pageNum));
+            flash.writePage(pageNum);
 
             pageNum++;
             if (pageNum == numPages)
@@ -215,7 +214,6 @@ VerifyThread::Entry()
     uint8_t bufferB[pageSize];
     uint32_t pageNum = 0;
     uint32_t numPages;
-    uint16_t appStartPage=flash.appStartPage();
     uint32_t byteErrors = 0;
     uint32_t pageErrors = 0;
     uint32_t totalErrors = 0;
@@ -253,7 +251,7 @@ VerifyThread::Entry()
                          percent);
             }
 
-            flash.readPage((appStartPage+pageNum), bufferB);
+            flash.readPage(pageNum, bufferB);
 
             byteErrors = 0;
             for (uint32_t i = 0; i < fbytes; i++)

@@ -78,10 +78,6 @@ public:
     void writePage(uint32_t page);
     void readPage(uint32_t page, uint8_t* data);
 
-    // The application starts at page 128, i.e address 0x2000
-    // Since bootloader is in page 0.
-    uint16_t appStartPage() { return 128; }
-
 private:
     uint32_t _regs;
     uint16_t _bufferSize;
