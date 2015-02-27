@@ -27,11 +27,9 @@
 #include "Samba.h"
 #include "WordCopyApplet.h"
 #include "NvmFlash.h"
+#include "Devices.h"
 
 using namespace std;
-
-// NVM User row in flash, 64 bytes in length
-#define NVMCTRL_USER_ROW _user
 
 // System control brown out register.
 // SYSCTRL base address + BOD33 reg offset
@@ -75,12 +73,8 @@ using namespace std;
 #define CMD_SET_SECURITY_BIT  (CMDEX_KEY | 0x0045u)
 #define CMD_CLEAR_PAGE_BUFFER (CMDEX_KEY | 0x0044u)
 
-#define ROW_SIZE FOUR_PAGES
 // This is the word size allowed by the communication layer of this bossa client, not the NVM word size which is 2 bytes
 #define SAMBA_API_WORD_SIZE (4ul) // bytes
-
-// Maximum size of the samba bootloader in any configuration
-#define BOOTLOADER_SIZE_IN_BYTES 8192
 
 /* This class is designed specifically for SAM Dxx architecture in mind */
 NvmFlash::NvmFlash(Samba& samba,
@@ -100,6 +94,10 @@ NvmFlash::NvmFlash(Samba& samba,
     // Upon power up the NVM controller goes through a power up sequence.
     // During this time, access to the NVM controller is halted. Upon power up the
     // the NVM controller is operational without any need for user configuration.
+
+    _flash_page_base=ATSAMD_BOOTLOADER_SIZE/size ;
+    // Calculate the number of rows that samba occupies (should be 32 for 8KB/0x2000bytes).
+    _flash_row_base=_flash_page_base/ATSAMD_FLASH_ROW_PAGES ;
 }
 
 NvmFlash::~NvmFlash()
@@ -112,16 +110,13 @@ NvmFlash::eraseAll()
     // Leave the first 8KB, where bootloader resides, erase the rest.
     // Row is a concept used for convinence. When writing you have to write
     // page(s). When erasing you have to erase row(s).
-    uint32_t total_rows = _pages/ROW_SIZE;
-
-    // Calculate the number of rows that samba occupies.
-    uint32_t boot_rows = (BOOTLOADER_SIZE_IN_BYTES/pagesize())/ROW_SIZE;
+    uint32_t total_rows = _pages / ATSAMD_FLASH_ROW_PAGES ;
 
     // Clear error flags
 
-    for (uint32_t row=boot_rows; row<total_rows; row++)
+    for (uint32_t row=_flash_row_base; row<total_rows; row++)
     {
-        uint32_t addr_in_flash = _addr + (row * ROW_SIZE * pageSize());
+        uint32_t addr_in_flash = _addr + (row * ATSAMD_FLASH_ROW_PAGES * pageSize());
         // The address is byte address, so convert it to word address.
         addr_in_flash = addr_in_flash / 2;
 

@@ -29,6 +29,7 @@
 #include "Flash.h"
 
 #include <assert.h>
+#include "Devices.h"
 
 Flash::Flash(Samba& samba,
              const std::string& name,
@@ -50,7 +51,9 @@ Flash::Flash(Samba& samba,
     _wordCopy.setStack(stack);
 
     _onBufferA = true;
-    _pageBufferA = _user + _wordCopy.size();
+
+    // page buffers will have the size of a physical page and will be situated right after the applet
+    _pageBufferA = _user + ATSAM_APPLET_MAX_SIZE ; //_wordCopy.size(); -> we need to avoid non 32bits aligned access on Cortex-M0+
     _pageBufferB = _pageBufferA + size;
 }
 
