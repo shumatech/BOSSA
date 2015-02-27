@@ -78,10 +78,10 @@ public:
 
 private:
     uint32_t _regs;
+    uint32_t _flash_page_base;
+    uint32_t _flash_row_base;
     bool _canBrownout;
 
-    const uint8_t* getCompletePage(const uint8_t*, uint16_t);
-    void setup_page_write();
     uint32_t getAddressByRegion(uint32_t region);
     bool nvmIsReady();
     void executeNvmCommand(uint32_t cmd);

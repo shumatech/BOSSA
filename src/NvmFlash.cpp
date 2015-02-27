@@ -293,43 +293,14 @@ NvmFlash::setBootFlash(bool enable)
     printf("Ignoring set boot from flash flag.\n");
 }
 
-const uint8_t*
-NvmFlash::getCompletePage(const uint8_t* buffer, uint16_t size)
-{
-    uint8_t* page_buf;
-
-    if (size < pageSize()) //If it is a partial page, do padding
-    {
-        page_buf = (uint8_t*)malloc(pageSize() * sizeof(uint8_t));
-
-        // First copy all the bytes from source
-        for (uint16_t m=0; m<size; m++)
-        {
-            page_buf[m] = buffer[m]; // strncpy or memcpy ?
-        }
-
-        // Now pad the remaining.
-        for (uint16_t m=size; m<pageSize(); m++)
-        {
-            page_buf[m] = 255;
-        }
-
-        return (const uint8_t*)page_buf;
-    }
-    else if (size == pageSize())
-    {
-        return buffer; // Return the source as it is
-    }
-    else
-    {
-        throw NvmFlashCmdError(":(");
-        // We are unlucky. Grab a beer.
-    }
-}
-
 void
-NvmFlash::setup_page_write()
+NvmFlash::writePage(uint32_t page)
 {
+    if (page >= _pages)
+    {
+        throw FlashPageError();
+    }
+
     // Clear page buffer
     executeNvmCommand(CMD_CLEAR_PAGE_BUFFER);
 
@@ -341,51 +312,24 @@ NvmFlash::setup_page_write()
     // irrespective of full page or partial page.
     uint32_t ctrlb_reg = _samba.readWord(NVM_CTRLB_REG);
     _samba.writeWord(NVM_CTRLB_REG, ctrlb_reg | (0x1 << 7));
-}
-
-// Reference : Atmel ASF nvm_write_buffer
-void
-NvmFlash::writePage(uint32_t page)
-{
-    // loadBuffer is called before this function is called each time.
-
-    if (page >= _pages)
-        throw FlashPageError();
-
-    if (_bufferSize > pageSize())
-        throw FlashPageError();
-
-    if (!_buffer)
-        throw NvmFlashCmdError("The input buffer is not valid");
-
-    setup_page_write();
 
     // Compute the start address.
     uint32_t addr = _addr + (page * _size );
     uint32_t addr_cached = addr;
-    uint32_t start = 0;
 
-    // Get a full page. Sometimes the page size might be less than a page size, in which
-    // case we should prepare a complete page by padding 0xff.
-    const uint8_t* page_buf = getCompletePage(_buffer, _bufferSize);
+    // Whole page data has been loaded via Flash::loadBuffer before the call
+    // to this function in Flasher::write
+    _wordCopy.setDstAddr(addr);
+    _wordCopy.setSrcAddr(_onBufferA ? _pageBufferA : _pageBufferB);
+    _onBufferA = !_onBufferA;
+    while (!nvmIsReady());
+    _wordCopy.runv();
 
-    for (uint16_t i=0; i<(pageSize()/SAMBA_API_WORD_SIZE); i++)
-    {
-        start = i * SAMBA_API_WORD_SIZE;
-        uint32_t data = (page_buf[start+3] << 24) |
-                        (page_buf[start+2] << 16) |
-                        (page_buf[start+1] <<  8) |
-                        (page_buf[start]);
-        while (!nvmIsReady())
-            ;
-        _samba.writeWord(addr, data);
-        addr = addr+SAMBA_API_WORD_SIZE;
-    }
-    while (!nvmIsReady())
-        ;
-    _samba.writeWord(NVM_ADDR_REG,addr_cached >> 1);
-    executeNvmCommand(CMD_WRITE_PAGE);
+    while (!nvmIsReady());
+
+    _samba.writeWord(NVM_ADDR_REG, addr_cached >> 1);
     // Reset the buffer, so that subsequent reads are clear
+    executeNvmCommand(CMD_WRITE_PAGE);
 }
 
 void

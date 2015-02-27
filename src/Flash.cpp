@@ -43,8 +43,10 @@ Flash::Flash(Samba& samba,
     : _samba(samba), _name(name), _addr(addr), _pages(pages), _size(size),
       _planes(planes), _lockRegions(lockRegions), _user(user), _wordCopy(samba, user)
 {
+//  printf( "Flash pages %u, page size %u, lockregions %u", pages, size, lockRegions) ;
+
     assert((size & (size - 1)) == 0);
-    assert((pages & (pages - 1)) == 0);
+//  assert((pages & (pages - 1)) == 0); we have to remove this test as it will be false for SAMD because of bootloader pages removed from total
     assert((lockRegions & (lockRegions - 1)) == 0);
 
     _wordCopy.setWords(size / sizeof(uint32_t));
