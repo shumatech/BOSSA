@@ -95,7 +95,7 @@ NvmFlash::NvmFlash(Samba& samba,
                    uint32_t regs,
                    bool canBrownout)
     : Flash(samba, name, addr, pages, size, planes, lockRegions, user, stack),
-      _regs(regs), _canBrownout(canBrownout), _eraseAuto(true)
+      _regs(regs), _canBrownout(canBrownout)
 {
     // Upon power up the NVM controller goes through a power up sequence.
     // During this time, access to the NVM controller is halted. Upon power up the
@@ -151,7 +151,7 @@ NvmFlash::nvmIsReady()
 void
 NvmFlash::eraseAuto(bool enable)
 {
-    _eraseAuto = enable;
+    // Useless for SAMD, the flash controller doesn't have the auto erase function
 }
 
 bool

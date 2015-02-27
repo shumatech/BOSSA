@@ -82,7 +82,6 @@ private:
     uint32_t _regs;
     uint16_t _bufferSize;
     bool _canBrownout;
-    bool _eraseAuto;
     const uint8_t* _buffer;
 
     const uint8_t* getCompletePage(const uint8_t*, uint16_t);
