@@ -8,6 +8,18 @@ The original software is developed by Scott Shumate and can be found here:
 
 http://www.shumatech.com/web/products/bossa
 
+BOSSA 1.5-arduino
+-----------------
+
+* Added Codelite project for easier development and debug.
+* Improved support for SAMD21 chip by using existing applet already in use for other devices.
+  * Added time count for operations erase, write, read and verify.
+  * Added Devices.h for global definitions for each devices.
+  * NVMFlash::write() rewritten.
+  * Removed some useless functions from 1.4 release.
+  * Added a mask for SAMD chipid: DIE and REV bitfields are not taken into account as they may vary in the time without impacting the features.
+  * Improved write time performance by a factor of 2x
+
 
 BOSSA 1.4-arduino
 -----------------

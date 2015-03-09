@@ -3,7 +3,7 @@
 //
 // Copyright (c) 2011-2012, ShumaTech
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //     * Redistributions of source code must retain the above copyright
@@ -14,7 +14,7 @@
 //     * Neither the name of the <organization> nor the
 //       names of its contributors may be used to endorse or promote products
 //       derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -31,6 +31,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "CmdOpts.h"
 #include "Samba.h"
@@ -103,7 +104,7 @@ static Option opts[] =
     {
       'e', "erase", &config.erase,
       { ArgNone },
-      "erase the entire flash"
+      "erase the entire flash (keep the 8KB of bootloader for SAM Dxx)"
     },
     {
       'w', "write", &config.write,
@@ -220,6 +221,7 @@ main(int argc, char* argv[])
     int args;
     char* pos;
     CmdOpts cmd(argc, argv, sizeof(opts) / sizeof(opts[0]), opts);
+    time_t t_start, t_end;
 
     if ((pos = strrchr(argv[0], '/')) || (pos = strrchr(argv[0], '\\')))
         argv[0] = pos + 1;
@@ -322,6 +324,8 @@ main(int argc, char* argv[])
         }
 
         uint32_t chipId = samba.chipId();
+        printf( "Atmel SMART device 0x%08x found\n", chipId ) ;
+
         Flash::Ptr flash = flashFactory.create(samba, chipId);
         if (flash.get() == NULL)
         {
@@ -331,21 +335,46 @@ main(int argc, char* argv[])
 
         Flasher flasher(flash);
 
+        if (config.info)
+            flasher.info(samba);
+
         if (config.unlock)
             flasher.lock(config.unlockArg, false);
 
         if (config.erase)
+        {
+            t_start=time(NULL);
             flasher.erase();
+            t_end=time(NULL);
+            printf("Erase done in %ld seconds\n", t_end-t_start);
+        }
 
         if (config.write)
+        {
+            t_start=time(NULL);
             flasher.write(argv[args]);
+            t_end=time(NULL);
+            printf("Write done in %ld seconds\n", t_end-t_start);
+        }
 
         if (config.verify)
-            if  (!flasher.verify(argv[args]))
+        {
+            t_start=time(NULL);
+            if (!flasher.verify(argv[args]))
+            {
                 return 2;
+            }
+            t_end=time(NULL);
+            printf("Verify done in %ld seconds\n", t_end-t_start);
+        }
 
         if (config.read)
+        {
+            t_start=time(NULL);
             flasher.read(argv[args], config.readArg);
+            t_end=time(NULL);
+            printf("Read done in %ld seconds\n", t_end-t_start);
+        }
 
         if (config.boot)
         {
@@ -373,9 +402,6 @@ main(int argc, char* argv[])
 
         if (config.lock)
             flasher.lock(config.lockArg, true);
-
-        if (config.info)
-            flasher.info(samba);
 
         if (config.reset)
             samba.reset();

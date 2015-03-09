@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BOSSA
 //
-// Copyright (C) 2011-2012 ShumaTech http://www.shumatech.com/
+// Copyright (c) 2015, Arduino LLC
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -27,71 +27,54 @@
 #include "Samba.h"
 #include "WordCopyApplet.h"
 #include "NvmFlash.h"
-
-using namespace std;
-
-// NVM User row in flash, 64 bytes in length
-#define NVMCTRL_USER_ROW _user
+#include "Devices.h"
 
 // System control brown out register.
 // SYSCTRL base address + BOD33 reg offset
 
-#define SYSCTRL_BOD33_REG (0x40000800 + 0x34)
-#define SYSCTRL_STATUS_REG_ENABLE_BIT 0x2
-#define SYSCTRL_STATUS_REG_BOD33_MASK 0xfffffffd;
-#define SYSCTRL_STATUS_REG_BOD33_RESET_ENABLE_BIT 0x8
-#define SYSCTRL_STATUS_REG_BOD33_RESET_MASK 0xffffffe7
-
-// The _regs parameter to this class is the module base address.
-// redefined here with a more appropriate name
-#define MODULE_BASE_ADDR _regs
+#define SYSCTRL_BOD33_REG                         (0x40000800ul + 0x34ul)
+#define SYSCTRL_STATUS_REG_ENABLE_BIT             (0x2ul)
+#define SYSCTRL_STATUS_REG_BOD33_MASK             (0xfffffffdul)
+#define SYSCTRL_STATUS_REG_BOD33_RESET_ENABLE_BIT (0x8ul)
+#define SYSCTRL_STATUS_REG_BOD33_RESET_MASK       (0xffffffe7ul)
 
 // The base address of the NVM module in
 // main memory + offset to the CTRLA register
-#define NVM_CTRLA_REG (MODULE_BASE_ADDR+0x00)
+#define NVM_CTRLA_REG                   (_regs+0x00)
 
-#define NVM_CTRLB_REG (MODULE_BASE_ADDR+0x04)
+#define NVM_CTRLB_REG                   (_regs+0x04)
 
 // The NVM register that stores lock status
-#define NVM_LOCK_REG (MODULE_BASE_ADDR+0x20)
+#define NVM_LOCK_REG                    (_regs+0x20)
 
 // The interrupt status register
-#define NVM_INT_STATUS_REG (MODULE_BASE_ADDR+0x14)
+#define NVM_INT_STATUS_REG              (_regs+0x14)
 
 // NVM ready bit mask
-#define NVM_INT_STATUS_READY_MASK 0x1
+#define NVM_INT_STATUS_READY_MASK       0x1
 
 // NVM input register to some of the CMDEX commands.
-#define NVM_ADDR_REG (MODULE_BASE_ADDR+0x1c)
+#define NVM_ADDR_REG                    (_regs+0x1c)
 
 // NVM STATUS register
-#define NVM_STATUS_REG (MODULE_BASE_ADDR+0x18)
-#define NVMCTRL_STATUS_MASK 0xffeb
+#define NVM_STATUS_REG                  (_regs+0x18)
+#define NVMCTRL_STATUS_MASK             (0xFFEBu)
 
-// CMDEX should be 0xA5 to execute any command
-// on the NVM controller's APB bus.
-#define CMDEX 0xa500
+// CMDEX field should be 0xA5 to allow execution of any command.
+#define CMDEX_KEY             (0xa500u)
 
 // List of NVM Commands.//as per datasheet prefix CMDEX
-#define CMD_LOCK_REGION   (CMDEX | 0x0040)
-#define CMD_UNLOCK_REGION (CMDEX | 0x0041)
-#define CMD_ERASE_ROW     (CMDEX | 0x0002)
-#define CMD_WRITE_PAGE    (CMDEX | 0x0004)
-#define CMD_SET_SECURITY_BIT (CMDEX | 0x0045)
-#define CMD_CLEAR_PAGE_BUFFER (CMDEX | 0x0044)
+#define CMD_LOCK_REGION       (CMDEX_KEY | 0x0040u)
+#define CMD_UNLOCK_REGION     (CMDEX_KEY | 0x0041u)
+#define CMD_ERASE_ROW         (CMDEX_KEY | 0x0002u)
+#define CMD_WRITE_PAGE        (CMDEX_KEY | 0x0004u)
+#define CMD_SET_SECURITY_BIT  (CMDEX_KEY | 0x0045u)
+#define CMD_CLEAR_PAGE_BUFFER (CMDEX_KEY | 0x0044u)
 
-// Just for readability
-#define FOUR_PAGES 4
+// This is the word size allowed by the communication layer of this bossa client, not the NVM word size which is 2 bytes
+#define SAMBA_API_WORD_SIZE (4ul) // bytes
 
-// This is the word size allowed by the commu. layer of this bossa client. Not the NVM word size which is 2 bytes
-#define SAMBA_API_WORD_SIZE 4 //bytes
-#define ROW_SIZE FOUR_PAGES
-#define PAGE_SIZE_IN_BYTES pageSize()
-
-// Maximum size of the samba bootloader in any configuration
-#define BOOTLOADER_SIZE_IN_BYTES 8192
-
-/* This class is designed specifically for M0+ architecture in mind */
+/* This class is designed specifically for SAM Dxx architecture in mind */
 NvmFlash::NvmFlash(Samba& samba,
                    const std::string& name,
                    uint32_t addr,
@@ -104,11 +87,15 @@ NvmFlash::NvmFlash(Samba& samba,
                    uint32_t regs,
                    bool canBrownout)
     : Flash(samba, name, addr, pages, size, planes, lockRegions, user, stack),
-      _regs(regs), _canBrownout(canBrownout), _eraseAuto(true)
+      _regs(regs), _canBrownout(canBrownout)
 {
     // Upon power up the NVM controller goes through a power up sequence.
     // During this time, access to the NVM controller is halted. Upon power up the
     // the NVM controller is operational without any need for user configuration.
+
+    _flash_page_base=ATSAMD_BOOTLOADER_SIZE/size ;
+    // Calculate the number of rows that samba occupies (should be 32 for 8KB/0x2000bytes).
+    _flash_row_base=_flash_page_base/ATSAMD_FLASH_ROW_PAGES ;
 }
 
 NvmFlash::~NvmFlash()
@@ -118,25 +105,23 @@ NvmFlash::~NvmFlash()
 void
 NvmFlash::eraseAll()
 {
-    // Leave the first 8KB, where samba resides, erase the rest.
+    // Leave the first 8KB, where bootloader resides, erase the rest.
     // Row is a concept used for convinence. When writing you have to write
     // page(s). When erasing you have to erase row(s).
-    uint32_t total_rows = _pages/ROW_SIZE;
-
-    // Calculate the number of rows that samba occupies.
-    uint32_t boot_rows = (BOOTLOADER_SIZE_IN_BYTES/PAGE_SIZE_IN_BYTES)/ROW_SIZE;
+    uint32_t total_rows = _pages / ATSAMD_FLASH_ROW_PAGES ;
 
     // Clear error flags
 
-    for (uint32_t row=boot_rows; row<total_rows; row++)
+    for (uint32_t row=_flash_row_base; row<total_rows; row++)
     {
-        uint32_t addr_in_flash = _addr + (row * ROW_SIZE * PAGE_SIZE_IN_BYTES);
+        uint32_t addr_in_flash = _addr + (row * ATSAMD_FLASH_ROW_PAGES * pageSize());
         // The address is byte address, so convert it to word address.
         addr_in_flash = addr_in_flash / 2;
 
         // Safe wait. Check and see if this is needed all the time
         while (!nvmIsReady())
-            ;
+        {
+        }
 
         // Clear error bits
         uint16_t status_reg = _samba.readWord(NVM_STATUS_REG) & 0xffff;
@@ -148,21 +133,19 @@ NvmFlash::eraseAll()
     }
 }
 
-
 bool
 NvmFlash::nvmIsReady()
 {
     uint8_t int_flag = _samba.readByte(NVM_INT_STATUS_REG) & NVM_INT_STATUS_READY_MASK;
+
     return int_flag == 1;
 }
 
-// Practically we are not using this
 void
 NvmFlash::eraseAuto(bool enable)
 {
-    _eraseAuto = enable;
+    // Useless for SAMD, the flash controller doesn't have the auto erase function
 }
-
 
 bool
 NvmFlash::isLocked()
@@ -175,9 +158,12 @@ bool
 NvmFlash::getLockRegion(uint32_t region)
 {
     if (region >= _lockRegions)
+    {
         throw FlashRegionError();
+    }
 
     uint32_t value = _samba.readWord(NVM_LOCK_REG);
+
     return ((value & (1 << region)) == 0); // 0 -> locked, 1 -> unlocked,
 }
 
@@ -186,7 +172,9 @@ void
 NvmFlash::setLockRegion(uint32_t region, bool enable)
 {
     if (region >= _lockRegions)
+    {
         throw FlashRegionError();
+    }
 
     if (enable != getLockRegion(region))
     {
@@ -232,7 +220,9 @@ NvmFlash::setSecurity()
         executeNvmCommand(CMD_SET_SECURITY_BIT);
 
         if (!getSecurity())
+        {
             throw NvmFlashCmdError("Error when setting security bit");
+        }
     }
 }
 
@@ -259,6 +249,7 @@ NvmFlash::getBod()
 {
     uint32_t value = _samba.readWord(SYSCTRL_BOD33_REG);
     bool bod_set = (((value & SYSCTRL_STATUS_REG_ENABLE_BIT) >> 1) == 0x1); // If Bit 1 of the BOD33 register is 1, then it's enabled
+
     return bod_set;
 }
 
@@ -267,6 +258,7 @@ NvmFlash::getBor()
 {
     uint32_t bod33_ctrl_reg = _samba.readWord(SYSCTRL_BOD33_REG);
     bool reset_enabled = ((bod33_ctrl_reg >> 3) & 0x1) == 0x1;
+
     return reset_enabled;
 }
 
@@ -275,7 +267,7 @@ NvmFlash::setBor(bool enable)
 {
     uint32_t bod33_ctrl_reg = _samba.readWord(SYSCTRL_BOD33_REG);
 
-    if(enable)
+    if (enable)
     {
         bod33_ctrl_reg |= SYSCTRL_STATUS_REG_BOD33_RESET_ENABLE_BIT; // To enable brown out reset set bit 3.
         _samba.writeWord(SYSCTRL_BOD33_REG, bod33_ctrl_reg);
@@ -301,43 +293,14 @@ NvmFlash::setBootFlash(bool enable)
     printf("Ignoring set boot from flash flag.\n");
 }
 
-const uint8_t*
-NvmFlash::getCompletePage(const uint8_t* buffer, uint16_t size)
-{
-    uint8_t* page_buf;
-
-    if (size < PAGE_SIZE_IN_BYTES) //If it is a partial page, do padding
-    {
-        page_buf = (uint8_t*)malloc(PAGE_SIZE_IN_BYTES * sizeof(uint8_t));
-
-        // First copy all the bytes from source
-        for (uint16_t m=0; m<size; m++)
-        {
-            page_buf[m] = buffer[m]; // strncpy or memcpy ?
-        }
-
-        // Now pad the remaining.
-        for (uint16_t m=size; m<PAGE_SIZE_IN_BYTES; m++)
-        {
-            page_buf[m] = 255;
-        }
-
-        return (const uint8_t*)page_buf;
-    }
-    else if (size == PAGE_SIZE_IN_BYTES)
-    {
-        return buffer; // Return the source as it is
-    }
-    else
-    {
-        throw NvmFlashCmdError(":(");
-        // We are unlucky. Grab a beer.
-    }
-}
-
 void
-NvmFlash::setup_page_write()
+NvmFlash::writePage(uint32_t page)
 {
+    if (page >= _pages)
+    {
+        throw FlashPageError();
+    }
+
     // Clear page buffer
     executeNvmCommand(CMD_CLEAR_PAGE_BUFFER);
 
@@ -349,83 +312,56 @@ NvmFlash::setup_page_write()
     // irrespective of full page or partial page.
     uint32_t ctrlb_reg = _samba.readWord(NVM_CTRLB_REG);
     _samba.writeWord(NVM_CTRLB_REG, ctrlb_reg | (0x1 << 7));
-}
-
-void
-NvmFlash::loadBuffer(const uint8_t* data, uint16_t bufferSize)
-{
-    _bufferSize = bufferSize;
-    _buffer = data;
-}
-
-// Reference : Atmel ASF nvm_write_buffer
-void
-NvmFlash::writePage(uint32_t page)
-{
-    // loadBuffer is called before this function is called each time.
-
-    if (page >= _pages)
-        throw FlashPageError();
-
-    if (_bufferSize > PAGE_SIZE_IN_BYTES)
-        throw FlashPageError();
-
-    if (!_buffer)
-        throw NvmFlashCmdError("The input buffer is not valid");
-
-    setup_page_write();
 
     // Compute the start address.
-    uint32_t addr = _addr + (page * PAGE_SIZE_IN_BYTES);
+    uint32_t addr = _addr + (page * _size );
     uint32_t addr_cached = addr;
-    uint32_t start = 0;
 
-    // Get a full page. Sometimes the page size might be less than a page size, in which
-    // case we should prepare a complete page by padding 0xff.
-    const uint8_t* page_buf = getCompletePage(_buffer, _bufferSize);
+    // Whole page data has been loaded via Flash::loadBuffer before the call
+    // to this function in Flasher::write
+    _wordCopy.setDstAddr(addr);
+    _wordCopy.setSrcAddr(_onBufferA ? _pageBufferA : _pageBufferB);
+    _onBufferA = !_onBufferA;
+    while (!nvmIsReady());
+    _wordCopy.runv();
 
-    for (uint16_t i=0; i<(PAGE_SIZE_IN_BYTES/SAMBA_API_WORD_SIZE); i++)
-    {
-        start = i * SAMBA_API_WORD_SIZE;
-        uint32_t data = (page_buf[start+3] << 24) |
-                        (page_buf[start+2] << 16) |
-                        (page_buf[start+1] <<  8) |
-                        (page_buf[start]);
-        while (!nvmIsReady())
-            ;
-        _samba.writeWord(addr, data);
-        addr = addr+SAMBA_API_WORD_SIZE;
-    }
-    while (!nvmIsReady())
-        ;
-    _samba.writeWord(NVM_ADDR_REG,addr_cached >> 1);
-    executeNvmCommand(CMD_WRITE_PAGE);
+    while (!nvmIsReady());
+
+    _samba.writeWord(NVM_ADDR_REG, addr_cached >> 1);
     // Reset the buffer, so that subsequent reads are clear
+    executeNvmCommand(CMD_WRITE_PAGE);
 }
 
 void
 NvmFlash::readPage(uint32_t page, uint8_t* buf)
 {
     if (page >= _pages)
+    {
         throw FlashPageError();
+    }
 
-    // Convert page number into physical address. flash_base_address + page.no * page_size
-    uint32_t addr = _addr + (page * PAGE_SIZE_IN_BYTES);
-    _samba.read(addr, buf, PAGE_SIZE_IN_BYTES);
+    // Convert page number into physical address.
+    // The flash base should be defined as starting after bootloader (ie at 0x00002000 => page number 128)
+    // flash_base_address + page.no * page_size
+    uint32_t addr = _addr + (page * pageSize());
+    _samba.read(addr, buf, pageSize());
 }
 
 // Returns the start address of a specified region number
 // based on the flash specifications. The returned address is
 // word address (not byte address).
-
 uint32_t
 NvmFlash::getAddressByRegion(uint32_t region_num)
 {
     if (region_num >= _lockRegions)
+    {
         throw FlashRegionError();
-    uint32_t size_of_region = (PAGE_SIZE_IN_BYTES * numPages()) / _lockRegions; // Flash Size / no of lock regions
+    }
+
+    uint32_t size_of_region = (pageSize() * numPages()) / _lockRegions; // Flash Size / no of lock regions
     uint32_t addr = address() + (region_num * size_of_region);
     addr = addr / 2; // Convert byte address to word address
+
     return addr;
 }
 
@@ -434,13 +370,16 @@ NvmFlash::executeNvmCommand(uint32_t cmd)
 {
     // Wait for the nvm controller to be ready
     while (!nvmIsReady())
-        ;
+    {
+    }
+
     // Send the comamnd to nvm controller.
     _samba.writeWord(NVM_CTRLA_REG, cmd);
 
     // Wait till the operation completes.
     while (!nvmIsReady())
-        ;
+    {
+    }
 
     //TODO : check and return return error status from nvm status flag.
 }
