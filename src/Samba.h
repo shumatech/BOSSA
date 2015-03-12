@@ -75,7 +75,12 @@ public:
 
     void reset(void);
 
+    // Arduino extended functions
+    bool chipErase(uint32_t start_addr);
+    bool isChipEraseAvailable() { return _extChipEraseAvailable; }
+
 private:
+    bool _extChipEraseAvailable;
     bool _debug;
     bool _isUsb;
     SerialPort::Ptr _port;

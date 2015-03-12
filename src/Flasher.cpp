@@ -310,4 +310,6 @@ Flasher::info(Samba& samba)
         printf("BOD          : %s\n", _flash->getBod() ? "true" : "false");
     if (_flash->canBor())
         printf("BOR          : %s\n", _flash->getBor() ? "true" : "false");
+    if (samba.isChipEraseAvailable())
+        printf("Arduino      : FAST_CHIP_ERASE\n");
 }
