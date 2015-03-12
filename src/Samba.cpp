@@ -50,10 +50,13 @@ using namespace std;
 
 #define TIMEOUT_QUICK   100
 #define TIMEOUT_NORMAL  1000
+#define TIMEOUT_LONG    5000
 
 #define min(a, b)   ((a) < (b) ? (a) : (b))
 
-Samba::Samba() : _debug(false), _isUsb(false)
+Samba::Samba() :
+    _extChipEraseAvailable(false),
+    _debug(false), _isUsb(false)
 {
 }
 
@@ -96,6 +99,19 @@ Samba::init()
     cmd[1] = '#';
     _port->write(cmd, 2);
     _port->read(cmd, 2);
+
+    // Read the samba version to detect if extended commands are available
+    std::string ver = version();
+    std::size_t extIndex = ver.find("[Arduino:");
+    if (extIndex != string::npos) {
+        extIndex += 9;
+        while (ver[extIndex] != ']') {
+            switch (ver[extIndex]) {
+                case 'X': _extChipEraseAvailable = true; break;
+            }
+            extIndex++;
+        }
+    }
 
     // Read the chip ID
     try
@@ -630,3 +646,26 @@ Samba::reset(void)
     // sort out things before closing the port.
     usleep(100000);
 }
+
+bool
+Samba::chipErase(uint32_t start_addr)
+{
+    if (!_extChipEraseAvailable)
+        return false;
+
+    uint8_t cmd[64];
+
+    if (_debug)
+        printf("%s(addr=%#x)\n", __FUNCTION__, start_addr);
+
+    int l = snprintf((char*) cmd, sizeof(cmd), "X%08X#", start_addr);
+    if (_port->write(cmd, l) != l)
+        throw SambaError();
+    _port->timeout(TIMEOUT_LONG);
+    _port->read(cmd, 3); // Expects "X\n\r"
+    _port->timeout(TIMEOUT_NORMAL);
+    if (cmd[0] != 'X')
+        throw SambaError();
+    return true;
+}
+
