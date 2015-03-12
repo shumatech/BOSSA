@@ -92,10 +92,6 @@ NvmFlash::NvmFlash(Samba& samba,
     // Upon power up the NVM controller goes through a power up sequence.
     // During this time, access to the NVM controller is halted. Upon power up the
     // the NVM controller is operational without any need for user configuration.
-
-    _flash_page_base=ATSAMD_BOOTLOADER_SIZE/size ;
-    // Calculate the number of rows that samba occupies (should be 32 for 8KB/0x2000bytes).
-    _flash_row_base=_flash_page_base/ATSAMD_FLASH_ROW_PAGES ;
 }
 
 NvmFlash::~NvmFlash()
@@ -108,9 +104,11 @@ NvmFlash::eraseAll()
     // Leave the first 8KB, where bootloader resides, erase the rest.
     // Row is a concept used for convinence. When writing you have to write
     // page(s). When erasing you have to erase row(s).
-    uint32_t total_rows = _pages / ATSAMD_FLASH_ROW_PAGES ;
 
-    // Clear error flags
+    // Calculate the number of rows that samba occupies (should be 32 for 8KB/0x2000bytes).
+    uint32_t _flash_page_base = ATSAMD_BOOTLOADER_SIZE / _size;
+    uint32_t _flash_row_base = _flash_page_base / ATSAMD_FLASH_ROW_PAGES;
+    uint32_t total_rows = _pages / ATSAMD_FLASH_ROW_PAGES;
 
     for (uint32_t row=_flash_row_base; row<total_rows; row++)
     {
