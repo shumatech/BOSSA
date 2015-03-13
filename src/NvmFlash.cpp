@@ -106,13 +106,12 @@ NvmFlash::eraseAll()
     // page(s). When erasing you have to erase row(s).
 
     // Calculate the number of rows that samba occupies (should be 32 for 8KB/0x2000bytes).
-    uint32_t _flash_page_base = ATSAMD_BOOTLOADER_SIZE / _size;
-    uint32_t _flash_row_base = _flash_page_base / ATSAMD_FLASH_ROW_PAGES;
+    uint32_t starting_row = ATSAMD_BOOTLOADER_SIZE / _size / ATSAMD_FLASH_ROW_PAGES;
     uint32_t total_rows = _pages / ATSAMD_FLASH_ROW_PAGES;
 
-    for (uint32_t row=_flash_row_base; row<total_rows; row++)
+    for (uint32_t row=starting_row; row<total_rows; row++)
     {
-        uint32_t addr_in_flash = _addr + (row * ATSAMD_FLASH_ROW_PAGES * pageSize());
+        uint32_t addr_in_flash = (row * ATSAMD_FLASH_ROW_PAGES * pageSize());
         // The address is byte address, so convert it to word address.
         addr_in_flash = addr_in_flash / 2;
 
