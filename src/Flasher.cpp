@@ -71,7 +71,6 @@ Flasher::write(const char* filename)
 {
     FILE* infile;
     uint32_t pageSize = _flash->pageSize();
-    uint8_t buffer[pageSize];
     uint32_t pageNum = 0;
     uint16_t offset = 0;
     uint32_t numPages;
@@ -95,20 +94,47 @@ Flasher::write(const char* filename)
 
         printf("Write %ld bytes to flash (%u pages)\n", fsize, numPages);
 
-        while ((fbytes = fread(buffer, 1, pageSize, infile)) > 0)
-        {
-            // updated from one print per 10 pages to one per 10 percent
-            if (pageNum % (numPages/10) == 0)
-                progressBar(pageNum, numPages);
+        if (_flash->isWriteBufferAvailable()) {
 
-            _flash->loadBuffer(buffer, fbytes);
-            _flash->writePage((offset+pageNum));
+            // If multi-page write is available....
 
-            pageNum++;
-            if (pageNum == numPages || fbytes != pageSize)
-                break;
+            uint8_t buffer[4096];
+            memset(buffer, 0, 4096);
+            while ((fbytes = fread(buffer, 1, 4096, infile)) > 0)
+            {
+                if (fbytes < 4096) {
+                    // Ceil to nearest pagesize
+                    fbytes = (fbytes + pageSize - 1) / pageSize * pageSize;
+                }
+                _flash->loadBuffer(buffer, fbytes);
+                _flash->writeBuffer(offset, fbytes);
+                offset += fbytes;
+                progressBar(offset/pageSize, numPages);
+
+                memset(buffer, 0, 4096);
+            }
+
+        } else {
+
+            // ...otherwise go with the legacy slow method
+
+            uint8_t buffer[pageSize];
+            while ((fbytes = fread(buffer, 1, pageSize, infile)) > 0)
+            {
+                // updated from one print per 10 pages to one per 10 percent
+                if (pageNum % (numPages/10) == 0)
+                    progressBar(pageNum, numPages);
+
+                _flash->loadBuffer(buffer, fbytes);
+                _flash->writePage((offset+pageNum));
+
+                pageNum++;
+                if (pageNum == numPages || fbytes != pageSize)
+                    break;
+            }
+            progressBar(pageNum, numPages);
+
         }
-        progressBar(pageNum, numPages);
         printf("\n");
     }
     catch(...)
@@ -312,4 +338,6 @@ Flasher::info(Samba& samba)
         printf("BOR          : %s\n", _flash->getBor() ? "true" : "false");
     if (samba.isChipEraseAvailable())
         printf("Arduino      : FAST_CHIP_ERASE\n");
+    if (samba.isWriteBufferAvailable())
+        printf("Arduino      : FAST_MULTI_PAGE_WRITE\n");
 }

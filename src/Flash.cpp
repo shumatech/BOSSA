@@ -78,3 +78,10 @@ Flash::loadBuffer(const uint8_t* data, uint16_t bufferSize)
 {
     _samba.write(_onBufferA ? _pageBufferA : _pageBufferB, data, bufferSize);
 }
+
+void
+Flash::writeBuffer(uint32_t dst_addr, uint32_t size)
+{
+    _samba.writeBuffer(_onBufferA ? _pageBufferA : _pageBufferB, dst_addr + _addr, size);
+}
+

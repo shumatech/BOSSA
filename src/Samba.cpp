@@ -56,6 +56,7 @@ using namespace std;
 
 Samba::Samba() :
     _extChipEraseAvailable(false),
+    _extWriteBufferAvailable(false),
     _debug(false), _isUsb(false)
 {
 }
@@ -108,6 +109,7 @@ Samba::init()
         while (ver[extIndex] != ']') {
             switch (ver[extIndex]) {
                 case 'X': _extChipEraseAvailable = true; break;
+                case 'Y': _extWriteBufferAvailable = true; break;
             }
             extIndex++;
         }
@@ -665,6 +667,38 @@ Samba::chipErase(uint32_t start_addr)
     _port->read(cmd, 3); // Expects "X\n\r"
     _port->timeout(TIMEOUT_NORMAL);
     if (cmd[0] != 'X')
+        throw SambaError();
+    return true;
+}
+
+bool
+Samba::writeBuffer(uint32_t src_addr, uint32_t dst_addr, uint32_t size)
+{
+    if (!_extWriteBufferAvailable)
+        return false;
+
+    if (_debug)
+        printf("%s(scr_addr=%#x, dst_addr=%#x, size=%#x)\n", __FUNCTION__, src_addr, dst_addr, size);
+
+    uint8_t cmd[64];
+    int l = snprintf((char*) cmd, sizeof(cmd), "Y%08X,0#", src_addr);
+    if (_port->write(cmd, l) != l)
+        throw SambaError();
+    _port->timeout(TIMEOUT_QUICK);
+    cmd[0] = 0;
+    _port->read(cmd, 3); // Expects "Y\n\r"
+    _port->timeout(TIMEOUT_NORMAL);
+    if (cmd[0] != 'Y')
+        throw SambaError();
+
+    l = snprintf((char*) cmd, sizeof(cmd), "Y%08X,%08X#", dst_addr, size);
+    if (_port->write(cmd, l) != l)
+        throw SambaError();
+    _port->timeout(TIMEOUT_LONG);
+    cmd[0] = 0;
+    _port->read(cmd, 3); // Expects "Y\n\r"
+    _port->timeout(TIMEOUT_NORMAL);
+    if (cmd[0] != 'Y')
         throw SambaError();
     return true;
 }

@@ -79,8 +79,12 @@ public:
     bool chipErase(uint32_t start_addr);
     bool isChipEraseAvailable() { return _extChipEraseAvailable; }
 
+    bool writeBuffer(uint32_t src_addr, uint32_t dst_addr, uint32_t size);
+    bool isWriteBufferAvailable() { return _extWriteBufferAvailable; }
+
 private:
     bool _extChipEraseAvailable;
+    bool _extWriteBufferAvailable;
     bool _debug;
     bool _isUsb;
     SerialPort::Ptr _port;
