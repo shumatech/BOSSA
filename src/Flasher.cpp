@@ -98,11 +98,12 @@ Flasher::write(const char* filename)
 
             // If multi-page write is available....
 
-            uint8_t buffer[4096];
-            memset(buffer, 0, 4096);
-            while ((fbytes = fread(buffer, 1, 4096, infile)) > 0)
+            const uint32_t BLK_SIZE = 4096;
+            uint8_t buffer[BLK_SIZE];
+            memset(buffer, 0, BLK_SIZE);
+            while ((fbytes = fread(buffer, 1, BLK_SIZE, infile)) > 0)
             {
-                if (fbytes < 4096) {
+                if (fbytes < BLK_SIZE) {
                     // Ceil to nearest pagesize
                     fbytes = (fbytes + pageSize - 1) / pageSize * pageSize;
                 }
@@ -111,7 +112,7 @@ Flasher::write(const char* filename)
                 offset += fbytes;
                 progressBar(offset/pageSize, numPages);
 
-                memset(buffer, 0, 4096);
+                memset(buffer, 0, BLK_SIZE);
             }
 
         } else {
