@@ -472,8 +472,14 @@ Samba::readBinary(uint8_t* buffer, int size)
 void
 Samba::writeBinary(const uint8_t* buffer, int size)
 {
-    if (_port->write(buffer, size) != size)
-        throw SambaError();
+    while (size)
+    {
+        int written = _port->write(buffer, size);
+        if (written <= 0)
+            throw SambaError();
+        buffer += written;
+        size -= written;
+    }
 }
 
 void
