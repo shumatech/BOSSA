@@ -72,7 +72,7 @@ Flasher::write(const char* filename)
     FILE* infile;
     uint32_t pageSize = _flash->pageSize();
     uint32_t pageNum = 0;
-    uint16_t offset = 0;
+    uint32_t offset = 0;
     uint32_t numPages;
     long fsize;
     size_t fbytes;
