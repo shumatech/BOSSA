@@ -72,7 +72,6 @@ Flasher::write(const char* filename)
     FILE* infile;
     uint32_t pageSize = _flash->pageSize();
     uint32_t pageNum = 0;
-    uint32_t offset = 0;
     uint32_t numPages;
     long fsize;
     size_t fbytes;
@@ -99,6 +98,7 @@ Flasher::write(const char* filename)
             // If multi-page write is available....
 
             const uint32_t BLK_SIZE = 4096;
+            uint32_t offset = 0;
             uint8_t buffer[BLK_SIZE];
             memset(buffer, 0, BLK_SIZE);
             while ((fbytes = fread(buffer, 1, BLK_SIZE, infile)) > 0)
@@ -127,7 +127,7 @@ Flasher::write(const char* filename)
                     progressBar(pageNum, numPages);
 
                 _flash->loadBuffer(buffer, fbytes);
-                _flash->writePage((offset+pageNum));
+                _flash->writePage(pageNum);
 
                 pageNum++;
                 if (pageNum == numPages || fbytes != pageSize)
@@ -154,7 +154,6 @@ Flasher::verify(const char* filename)
     uint8_t bufferA[pageSize];
     uint8_t bufferB[pageSize];
     uint32_t pageNum = 0;
-    uint16_t offset = 0;
     uint32_t numPages;
     uint32_t byteErrors = 0;
     uint32_t pageErrors = 0;
@@ -185,7 +184,7 @@ Flasher::verify(const char* filename)
             if (pageNum % (numPages/10) == 0)
                 progressBar(pageNum, numPages);
 
-            _flash->readPage((offset+pageNum), bufferB);
+            _flash->readPage(pageNum, bufferB);
 
             byteErrors = 0;
             for (uint32_t i = 0; i < fbytes; i++)
