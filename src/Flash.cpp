@@ -76,5 +76,5 @@ Flash::unlockAll()
 void
 Flash::loadBuffer(const uint8_t* data, uint16_t bufferSize)
 {
-    _samba.write(_onBufferA ? _pageBufferA : _pageBufferB, data, _size);
+    _samba.write(_onBufferA ? _pageBufferA : _pageBufferB, data, bufferSize);
 }

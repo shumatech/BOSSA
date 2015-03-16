@@ -31,7 +31,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
+#include <sys/time.h>
 
 #include "CmdOpts.h"
 #include "Samba.h"
@@ -215,13 +215,28 @@ help(const char* program)
     return 1;
 }
 
+static struct timeval start_time;
+
+void
+timer_start()
+{
+    gettimeofday(&start_time, NULL);
+}
+
+float
+timer_stop()
+{
+    struct timeval end;
+    gettimeofday(&end, NULL);
+    return (end.tv_sec - start_time.tv_sec) + (end.tv_usec - start_time.tv_usec) / 1000000.0;
+}
+
 int
 main(int argc, char* argv[])
 {
     int args;
     char* pos;
     CmdOpts cmd(argc, argv, sizeof(opts) / sizeof(opts[0]), opts);
-    time_t t_start, t_end;
 
     if ((pos = strrchr(argv[0], '/')) || (pos = strrchr(argv[0], '\\')))
         argv[0] = pos + 1;
@@ -343,37 +358,36 @@ main(int argc, char* argv[])
 
         if (config.erase)
         {
-            t_start=time(NULL);
+            timer_start();
             flasher.erase();
-            t_end=time(NULL);
-            printf("Erase done in %ld seconds\n", t_end-t_start);
+            printf("done in %5.3f seconds\n", timer_stop());
         }
 
         if (config.write)
         {
-            t_start=time(NULL);
+            printf("\n");
+            timer_start();
             flasher.write(argv[args]);
-            t_end=time(NULL);
-            printf("Write done in %ld seconds\n", t_end-t_start);
+            printf("done in %5.3f seconds\n", timer_stop());
         }
 
         if (config.verify)
         {
-            t_start=time(NULL);
+            printf("\n");
+            timer_start();
             if (!flasher.verify(argv[args]))
             {
                 return 2;
             }
-            t_end=time(NULL);
-            printf("Verify done in %ld seconds\n", t_end-t_start);
+            printf("done in %5.3f seconds\n", timer_stop());
         }
 
         if (config.read)
         {
-            t_start=time(NULL);
+            printf("\n");
+            timer_start();
             flasher.read(argv[args], config.readArg);
-            t_end=time(NULL);
-            printf("Read done in %ld seconds\n", t_end-t_start);
+            printf("done in %5.3f seconds\n", timer_stop());
         }
 
         if (config.boot)
