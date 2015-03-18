@@ -165,13 +165,57 @@ Flasher::verify(const char* filename)
     if (!infile)
         throw FileOpenError(errno);
 
+    if (fseek(infile, 0, SEEK_END) != 0 || (fsize = ftell(infile)) < 0)
+        throw FileIoError(errno);
+    rewind(infile);
+
+    // If checksum buffer is available, use it...
+    if (_flash->isChecksumBufferAvailable()) {
+
+        bool failed = false;
+        try
+        {
+            printf("Verify %ld bytes of flash with checksum.\n", fsize);
+
+            // Perform checksum every 4096 bytes
+            uint32_t BLK_SIZE = 4096;
+            uint8_t buffer[BLK_SIZE];
+            uint32_t offset = 0;
+            while ((fbytes = fread(buffer, 1, BLK_SIZE, infile)) > 0) {
+                uint32_t i;
+                uint16_t crc = 0;
+                for (i=0; i<fbytes; i++)
+                    crc = _flash->crc16AddByte(buffer[i], crc);
+                uint16_t flashCrc = _flash->checksumBuffer(offset, fbytes);
+                offset += fbytes;
+
+                if (crc != flashCrc) {
+                    failed = true;
+                    break;
+                }
+            }
+        }
+        catch(...)
+        {
+            fclose(infile);
+            throw;
+        }
+        fclose(infile);
+
+        if (failed)
+        {
+            printf("Verify failed\n");
+            return false;
+        }
+
+        printf("Verify successful\n");
+        return true;
+    }
+
+    // ...otherwise go with the slow legacy method...
+
     try
     {
-        if (fseek(infile, 0, SEEK_END) != 0 ||
-            (fsize = ftell(infile)) < 0)
-            throw FileIoError(errno);
-        rewind(infile);
-
         numPages = (fsize + pageSize - 1) / pageSize;
         if (numPages > _flash->numPages())
             throw FileSizeError();
@@ -340,4 +384,6 @@ Flasher::info(Samba& samba)
         printf("Arduino      : FAST_CHIP_ERASE\n");
     if (samba.isWriteBufferAvailable())
         printf("Arduino      : FAST_MULTI_PAGE_WRITE\n");
+    if (samba.isChecksumBufferAvailable())
+        printf("Arduino      : CAN_CHECKSUM_MEMORY_BUFFER\n");
 }

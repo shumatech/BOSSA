@@ -85,3 +85,8 @@ Flash::writeBuffer(uint32_t dst_addr, uint32_t size)
     _samba.writeBuffer(_onBufferA ? _pageBufferA : _pageBufferB, dst_addr + _addr, size);
 }
 
+uint16_t
+Flash::checksumBuffer(uint32_t start_addr, uint32_t size) {
+    return _samba.checksumBuffer(start_addr + _addr, size);
+}
+

@@ -121,12 +121,14 @@ public:
     virtual void loadBuffer(const uint8_t* data, uint16_t size);
     virtual void writePage(uint32_t page) = 0;
     virtual void writeBuffer(uint32_t dst_addr, uint32_t size);
-
+    virtual uint16_t checksumBuffer(uint32_t start_addr, uint32_t size);
+    virtual uint16_t crc16AddByte(uint8_t d, uint16_t crc) { return _samba.crc16AddByte(d, crc); }
     virtual void readPage(uint32_t page, uint8_t* data) = 0;
 
     typedef std::auto_ptr<Flash> Ptr;
 
     bool isWriteBufferAvailable() { return _samba.isWriteBufferAvailable(); }
+    bool isChecksumBufferAvailable() { return _samba.isChecksumBufferAvailable(); }
 
 protected:
     Samba& _samba;
