@@ -20,3 +20,27 @@ RELEASE NOTES
 * Some stability issues have been seen with the OS X USB driver using BOSSA.  When running BOSSA a second time to the same Atmel device, the USB driver can lock up causing BOSSA to freeze.  As a workaround, always disconnect and reconnect the Atmel device before running BOSSA again.
 * The firmware inside of SAM3U devices has a bug where non-word flash reads return zero instead of the real data.  BOSSA implements a transparent workaround for flash operations that copies flash to SRAM before reading.  Direct reads using the BOSSA shell will see the bug.
 * There are reports that the USB controller in some AMD-based systems has difficulty communicating with SAM devices.  The only known workaround is to use a different, preferrably Intel-based, system.
+
+
+How To Compile on Linux (Ubuntu)
+--------------------------------
+Make sure you have the 'build-essentials' package installed.
+```
+sudo apt-get install build-essentials
+```
+
+You will also need libreadline-dev, and the wxWidgets libraries.
+```
+sudo apt-get install libreadline-dev wx2.8-headers libwxgtk2.8-0 libwxgtk2.8-dev
+```
+
+Now, from the top most directory of the BOSSA checkout, run the following in your bash terminal.
+```
+# Compile the 'bossa' CLI source into the bin folder, use up to four jobs while compiling
+make bin/bossac -j4
+```
+
+```
+# Compile the 'bossa' shell source into the bin folder, use up to four jobs while compiling
+make bin/bossash -j4
+```
