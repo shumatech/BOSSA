@@ -57,6 +57,7 @@ using namespace std;
 Samba::Samba() :
     _extChipEraseAvailable(false),
     _extWriteBufferAvailable(false),
+    _extChecksumBufferAvailable(false),
     _debug(false), _isUsb(false)
 {
 }
@@ -123,6 +124,7 @@ Samba::init()
             switch (ver[extIndex]) {
                 case 'X': _extChipEraseAvailable = true; break;
                 case 'Y': _extWriteBufferAvailable = true; break;
+                case 'Z': _extChecksumBufferAvailable = true; break;
             }
             extIndex++;
         }
@@ -716,5 +718,34 @@ Samba::writeBuffer(uint32_t src_addr, uint32_t dst_addr, uint32_t size)
     if (cmd[0] != 'Y')
         throw SambaError();
     return true;
+}
+
+uint16_t
+Samba::checksumBuffer(uint32_t start_addr, uint32_t size)
+{
+    if (!_extChecksumBufferAvailable)
+        throw SambaError();
+
+    if (_debug)
+        printf("%s(start_addr=%#x, size=%#x) = ", __FUNCTION__, start_addr, size);
+
+    uint8_t cmd[64];
+    int l = snprintf((char*) cmd, sizeof(cmd), "Z%08X,%08X#", start_addr, size);
+    if (_port->write(cmd, l) != l)
+        throw SambaError();
+    _port->timeout(TIMEOUT_LONG);
+    cmd[0] = 0;
+    _port->read(cmd, 12); // Expects "Z00000000#\n\r"
+    _port->timeout(TIMEOUT_NORMAL);
+    if (cmd[0] != 'Z')
+        throw SambaError();
+
+    cmd[9] = 0;
+    uint32_t res;// = cmd[1] << 8 | cmd[2];
+    if (sscanf((const char *)(cmd+1), "%x", &res) != 1)
+	throw SambaError();
+    if (_debug)
+        printf("%x\n", res);
+    return res;
 }
 
