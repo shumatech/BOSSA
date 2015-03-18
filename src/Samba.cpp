@@ -101,7 +101,20 @@ Samba::init()
     _port->write(cmd, 2);
     _port->read(cmd, 2);
 
+    // Read the chip ID
+    try
+    {
+        cid = chipId();
+    }
+    catch (SambaError)
+    {
+        return false;
+    }
+
     // Read the samba version to detect if extended commands are available
+    // NOTE: we MUST call version() after chipId(), otherwise sam-ba did not
+    //       answer correctly on some devices when used from UART.
+    //       The reason is unknown.
     std::string ver = version();
     std::size_t extIndex = ver.find("[Arduino:");
     if (extIndex != string::npos) {
@@ -113,16 +126,6 @@ Samba::init()
             }
             extIndex++;
         }
-    }
-
-    // Read the chip ID
-    try
-    {
-        cid = chipId();
-    }
-    catch (SambaError)
-    {
-        return false;
     }
 
     _port->timeout(TIMEOUT_NORMAL);
