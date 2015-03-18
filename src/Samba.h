@@ -82,6 +82,8 @@ public:
     bool writeBuffer(uint32_t src_addr, uint32_t dst_addr, uint32_t size);
     bool isWriteBufferAvailable() { return _extWriteBufferAvailable; }
 
+    uint16_t crc16AddByte(uint8_t c, uint16_t crc);
+
 private:
     bool _extChipEraseAvailable;
     bool _extWriteBufferAvailable;
