@@ -3,7 +3,7 @@
 //
 // Copyright (c) 2011-2012, ShumaTech
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //     * Redistributions of source code must retain the above copyright
@@ -14,7 +14,7 @@
 //     * Neither the name of the <organization> nor the
 //       names of its contributors may be used to endorse or promote products
 //       derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -32,6 +32,9 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <ctype.h>
+#include <unistd.h>
+
+#include "Devices.h"
 
 using namespace std;
 
@@ -65,6 +68,12 @@ Samba::init()
     uint32_t cid;
 
     _port->timeout(TIMEOUT_QUICK);
+
+    // Allows Arduino auto-reset
+    usleep(500000);
+    // Flush garbage
+    uint8_t dummy[1024];
+    _port->read(dummy, 1024);
 
     if (!_isUsb)
     {
@@ -135,6 +144,12 @@ Samba::init()
         if (_debug)
             printf("Unsupported ARM920T architecture\n");
     }
+    // Check for supported M0+ processor
+    // NOTE: 0x1001000a is a ATSAMD21E18A
+	else if (cid == 0x10010000 || cid == 0x10010100 || cid == 0x10010005 || cid == 0x1001000a)
+    {
+        return true;
+    }
     else
     {
         if (_debug)
@@ -145,7 +160,7 @@ Samba::init()
 }
 
 bool
-Samba::connect(SerialPort::Ptr port)
+Samba::connect(SerialPort::Ptr port, int bps)
 {
     _port = port;
 
@@ -160,10 +175,10 @@ Samba::connect(SerialPort::Ptr port)
     _isUsb = false;
 
     // Try the serial port at slower speed
-    if (_port->open(115200) && init())
+    if (_port->open(bps) && init())
     {
         if (_debug)
-            printf("Connected at 115200 baud\n");
+            printf("Connected at %d baud\n", bps);
         return true;
     }
 
@@ -189,6 +204,15 @@ Samba::writeByte(uint32_t addr, uint8_t value)
     snprintf((char*) cmd, sizeof(cmd), "O%08X,%02X#", addr, value);
     if (_port->write(cmd, sizeof(cmd) - 1) != sizeof(cmd) -  1)
         throw SambaError();
+
+    // The SAM firmware has a bug that if the command and binary data
+    // are received in the same USB data packet, then the firmware
+    // gets confused.  Even though the writes are sperated in the code,
+    // USB drivers often do write combining which can put them together
+    // in the same USB data packet.  To avoid this, we call the serial
+    // port object's flush method before writing the data.
+    if (_isUsb)
+        _port->flush();
 }
 
 uint8_t
@@ -211,6 +235,7 @@ Samba::readByte(uint32_t addr)
     return value;
 }
 
+
 void
 Samba::writeWord(uint32_t addr, uint32_t value)
 {
@@ -222,7 +247,17 @@ Samba::writeWord(uint32_t addr, uint32_t value)
     snprintf((char*) cmd, sizeof(cmd), "W%08X,%08X#", addr, value);
     if (_port->write(cmd, sizeof(cmd) - 1) != sizeof(cmd) - 1)
         throw SambaError();
+
+    // The SAM firmware has a bug that if the command and binary data
+    // are received in the same USB data packet, then the firmware
+    // gets confused.  Even though the writes are sperated in the code,
+    // USB drivers often do write combining which can put them together
+    // in the same USB data packet.  To avoid this, we call the serial
+    // port object's flush method before writing the data.
+    if (_isUsb)
+        _port->flush();
 }
+
 
 uint32_t
 Samba::readWord(uint32_t addr)
@@ -337,7 +372,7 @@ Samba::readXmodem(uint8_t* buffer, int size)
 
         _port->put(ACK);
 
-        memcpy(buffer, &blk[3], min(size, BLK_SIZE));
+        memmove(buffer, &blk[3], min(size, BLK_SIZE));
         buffer += BLK_SIZE;
         size -= BLK_SIZE;
         blkNum++;
@@ -377,7 +412,7 @@ Samba::writeXmodem(const uint8_t* buffer, int size)
         blk[0] = SOH;
         blk[1] = (blkNum & 0xff);
         blk[2] = ~(blkNum & 0xff);
-        memcpy(&blk[3], buffer, min(size, BLK_SIZE));
+        memmove(&blk[3], buffer, min(size, BLK_SIZE));
         if (size < BLK_SIZE)
             memset(&blk[3] + size, 0, BLK_SIZE - size);
         crc16Add(blk);
@@ -504,7 +539,7 @@ Samba::go(uint32_t addr)
 std::string
 Samba::version()
 {
-    uint8_t cmd[33];
+    uint8_t cmd[256];
     char* str;
     int size;
     int pos;
@@ -538,18 +573,61 @@ Samba::version()
 uint32_t
 Samba::chipId()
 {
-    uint32_t vector;
-    uint32_t cid;
-
     // Read the ARM reset vector
-    vector = readWord(0x0);
+    uint32_t vector = readWord(0x0);
 
     // If the vector is a ARM7TDMI branch, then assume Atmel SAM7 registers
     if ((vector & 0xff000000) == 0xea000000)
-        cid = readWord(0xfffff240);
-    // Else use the Atmel SAM3 registers
-    else
-        cid = readWord(0x400e0740);
+    {
+        return readWord(0xfffff240);
+    }
 
+    // Else use the Atmel SAM3 or SAM4 or SAMD registers
+
+    // The M0+, M3 and M4 have the CPUID register at a common addresss 0xe000ed00
+    uint32_t cpuid_reg = readWord(0xe000ed00);
+    uint16_t part_no = cpuid_reg & 0x0000fff0;
+    // Check if it is Cortex M0+
+    if (part_no == 0xC600)
+    {
+        return readWord(0x41002018) & ATSAMD_CHIPID_MASK ; // DSU_DID register masked to remove DIE and REV
+    }
+
+    // Else assume M3 or M4
+    uint32_t cid = readWord(0x400e0740);
+    if (cid == 0)
+        cid = readWord(0x400e0940);
     return cid;
+}
+
+void
+Samba::reset(void)
+{
+    printf("CPU reset.\n");
+
+    uint32_t chipId = Samba::chipId();
+
+    switch (chipId)
+    {
+    case ATSAMD21J18A_CHIPID:
+    case ATSAMD21G18A_CHIPID:
+        // http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0484c/index.html
+        writeWord(0xE000ED0C, 0x05FA0004);
+        break;
+
+    // SAM3X8E
+    case 0x285e0a60:
+        writeWord(0x400E1A00, 0xA500000D);
+        break;
+
+    default:
+        printf("Reset not supported for this CPU.\n");
+        return;
+    }
+
+    // Some linux users experienced a lock up if the serial
+    // port is closed while the port itself is being destroyed.
+    // This delay is here to give the time to kernel driver to
+    // sort out things before closing the port.
+    usleep(100000);
 }

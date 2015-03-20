@@ -3,7 +3,7 @@
 //
 // Copyright (c) 2011-2012, ShumaTech
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //     * Redistributions of source code must retain the above copyright
@@ -14,7 +14,7 @@
 //     * Neither the name of the <organization> nor the
 //       names of its contributors may be used to endorse or promote products
 //       derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -31,6 +31,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/time.h>
 
 #include "CmdOpts.h"
 #include "Samba.h"
@@ -50,6 +51,7 @@ public:
     bool write;
     bool read;
     bool verify;
+    bool reset;
     bool port;
     bool boot;
     bool bor;
@@ -60,6 +62,8 @@ public:
     bool info;
     bool debug;
     bool help;
+    bool forceUsb;
+    string forceUsbArg;
 
     int readArg;
     string portArg;
@@ -84,11 +88,14 @@ BossaConfig::BossaConfig()
     security = false;
     info = false;
     help = false;
+    forceUsb = false;
 
     readArg = 0;
     bootArg = 1;
     bodArg = 1;
     borArg = 1;
+
+    reset = false;
 }
 
 static BossaConfig config;
@@ -97,7 +104,7 @@ static Option opts[] =
     {
       'e', "erase", &config.erase,
       { ArgNone },
-      "erase the entire flash"
+      "erase the entire flash (keep the 8KB of bootloader for SAM Dxx)"
     },
     {
       'w', "write", &config.write,
@@ -172,6 +179,16 @@ static Option opts[] =
       'h', "help", &config.help,
       { ArgNone },
       "display this help text"
+    },
+    {
+      'U', "force_usb_port", &config.forceUsb,
+      { ArgRequired, ArgString, "true/false", { &config.forceUsbArg } },
+      "override USB port autodetection"
+    },
+    {
+      'R', "reset", &config.reset,
+      { ArgNone },
+      "reset CPU (if supported)"
     }
 };
 
@@ -196,6 +213,22 @@ help(const char* program)
 {
     fprintf(stderr, "Try '%s -h' or '%s --help' for more information\n", program, program);
     return 1;
+}
+
+static struct timeval start_time;
+
+void
+timer_start()
+{
+    gettimeofday(&start_time, NULL);
+}
+
+float
+timer_stop()
+{
+    struct timeval end;
+    gettimeofday(&end, NULL);
+    return (end.tv_sec - start_time.tv_sec) + (end.tv_usec - start_time.tv_usec) / 1000000.0;
 }
 
 int
@@ -266,9 +299,28 @@ main(int argc, char* argv[])
         if (config.debug)
             samba.setDebug(true);
 
+        bool isUsb = false;
+        if (config.forceUsb)
+        {
+            if (config.forceUsbArg.compare("true")==0)
+                isUsb = true;
+            else if (config.forceUsbArg.compare("false")==0)
+                isUsb = false;
+            else
+            {
+                fprintf(stderr, "Invalid USB value: %s\n", config.forceUsbArg.c_str());
+                return 1;
+            }
+        }
+
         if (config.port)
         {
-            if (!samba.connect(portFactory.create(config.portArg)))
+            bool res;
+            if (config.forceUsb)
+                res = samba.connect(portFactory.create(config.portArg, isUsb));
+            else
+                res = samba.connect(portFactory.create(config.portArg));
+            if (!res)
             {
                 fprintf(stderr, "No device found on %s\n", config.portArg.c_str());
                 return 1;
@@ -287,6 +339,8 @@ main(int argc, char* argv[])
         }
 
         uint32_t chipId = samba.chipId();
+        printf( "Atmel SMART device 0x%08x found\n", chipId ) ;
+
         Flash::Ptr flash = flashFactory.create(samba, chipId);
         if (flash.get() == NULL)
         {
@@ -296,21 +350,45 @@ main(int argc, char* argv[])
 
         Flasher flasher(flash);
 
+        if (config.info)
+            flasher.info(samba);
+
         if (config.unlock)
             flasher.lock(config.unlockArg, false);
 
         if (config.erase)
+        {
+            timer_start();
             flasher.erase();
+            printf("done in %5.3f seconds\n", timer_stop());
+        }
 
         if (config.write)
+        {
+            printf("\n");
+            timer_start();
             flasher.write(argv[args]);
+            printf("done in %5.3f seconds\n", timer_stop());
+        }
 
         if (config.verify)
-            if  (!flasher.verify(argv[args]))
+        {
+            printf("\n");
+            timer_start();
+            if (!flasher.verify(argv[args]))
+            {
                 return 2;
+            }
+            printf("done in %5.3f seconds\n", timer_stop());
+        }
 
         if (config.read)
+        {
+            printf("\n");
+            timer_start();
             flasher.read(argv[args], config.readArg);
+            printf("done in %5.3f seconds\n", timer_stop());
+        }
 
         if (config.boot)
         {
@@ -339,8 +417,8 @@ main(int argc, char* argv[])
         if (config.lock)
             flasher.lock(config.lockArg, true);
 
-        if (config.info)
-            flasher.info(samba);
+        if (config.reset)
+            samba.reset();
     }
     catch (exception& e)
     {

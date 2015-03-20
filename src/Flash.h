@@ -3,7 +3,7 @@
 //
 // Copyright (c) 2011-2012, ShumaTech
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //     * Redistributions of source code must retain the above copyright
@@ -14,7 +14,7 @@
 //     * Neither the name of the <organization> nor the
 //       names of its contributors may be used to endorse or promote products
 //       derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -64,18 +64,26 @@ public:
     const char* what() const throw() { return "Flash command failed"; }
 };
 
+class BootFlashError : public std::exception
+{
+public:
+    BootFlashError() : exception() {};
+    const char* what() const throw() { return "Cannot clear Boot Flash. No ROM boot option available for this device"; }
+
+};
+
 class Flash
 {
 public:
     Flash(Samba& samba,
           const std::string& name,
-          uint32_t addr,
-          uint32_t pages,
-          uint32_t size,
-          uint32_t planes,
-          uint32_t lockRegions,
-          uint32_t user,
-          uint32_t stack);
+          uint32_t addr,                 // Flash base address
+          uint32_t pages,                // Number of pages
+          uint32_t size,                 // Page size in bytes
+          uint32_t planes,               // Number of flash planes
+          uint32_t lockRegions,          // Number of flash lock regions
+          uint32_t user,                 // Address in SRAM where the applet and buffers will be placed
+          uint32_t stack);               // Address in SRAM where the applet stack will be placed
     virtual ~Flash() {}
 
     const std::string& name() { return _name; }
@@ -110,7 +118,7 @@ public:
     virtual void setBootFlash(bool enable) = 0;
     virtual bool canBootFlash() = 0;
 
-    virtual void loadBuffer(const uint8_t* data);
+    virtual void loadBuffer(const uint8_t* data, uint16_t size);
     virtual void writePage(uint32_t page) = 0;
     virtual void readPage(uint32_t page, uint8_t* data) = 0;
 

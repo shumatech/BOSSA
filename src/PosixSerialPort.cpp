@@ -46,7 +46,8 @@
 #endif
 
 PosixSerialPort::PosixSerialPort(const std::string& name, bool isUsb) :
-    SerialPort(name), _devfd(-1), _isUsb(isUsb), _timeout(0)
+    SerialPort(name), _devfd(-1), _isUsb(isUsb), _timeout(0),
+    _autoFlush(false)
 {
 }
 
@@ -247,7 +248,11 @@ PosixSerialPort::write(const uint8_t* buffer, int len)
     if (_devfd == -1)
         return -1;
 
-    return ::write(_devfd, buffer, len);
+    int res = ::write(_devfd, buffer, len);
+    // Used on macos to avoid upload errors
+    if (_autoFlush)
+        flush();
+    return res;
 }
 
 int
@@ -289,3 +294,8 @@ PosixSerialPort::timeout(int millisecs)
     return true;
 }
 
+void
+PosixSerialPort::setAutoFlush(bool autoflush)
+{
+    _autoFlush = autoflush;
+}

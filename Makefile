@@ -1,14 +1,15 @@
 .DEFAULT_GOAL := all
 
-# 
+#
 # Version
 #
-VERSION=1.2.1
+VERSION=1.5-arduino
+WXVERSION=3.0
 
 #
 # Source files
 #
-COMMON_SRCS=Samba.cpp Flash.cpp EfcFlash.cpp EefcFlash.cpp FlashFactory.cpp Applet.cpp WordCopyApplet.cpp Flasher.cpp
+COMMON_SRCS=Samba.cpp Flash.cpp NvmFlash.cpp EfcFlash.cpp EefcFlash.cpp FlashFactory.cpp Applet.cpp WordCopyApplet.cpp Flasher.cpp
 APPLET_SRCS=WordCopyArm.asm
 BOSSA_SRCS=BossaForm.cpp BossaWindow.cpp BossaAbout.cpp BossaApp.cpp BossaBitmaps.cpp BossaInfo.cpp BossaThread.cpp BossaProgress.cpp
 BOSSA_BMPS=BossaLogo.bmp BossaIcon.bmp ShumaTechLogo.bmp
@@ -27,16 +28,16 @@ INSTALLDIR=install
 #
 # Determine OS
 #
-OS:=$(shell uname -s)
+OS:=$(shell uname -s | cut -c -7)
 
 #
 # Windows rules
 #
-ifeq ($(OS),MINGW32_NT-6.1)
+ifeq ($(OS),MINGW32)
 EXE=.exe
 COMMON_SRCS+=WinSerialPort.cpp WinPortFactory.cpp
 COMMON_LDFLAGS=-Wl,--enable-auto-import -static -static-libstdc++ -static-libgcc
-COMMON_LIBS=-Wl,--as-needed -lsetupapi -ltermcap
+COMMON_LIBS=-Wl,--as-needed -lsetupapi
 BOSSA_RC=BossaRes.rc
 WIXDIR="C:\Program Files (x86)\Windows Installer XML v3.5\bin"
 
@@ -78,8 +79,8 @@ endif
 #
 ifeq ($(OS),Darwin)
 COMMON_SRCS+=PosixSerialPort.cpp OSXPortFactory.cpp
-COMMON_CXXFLAGS=-arch i386
-COMMON_LDFLAGS=-arch i386
+COMMON_CXXFLAGS=-arch i386 -arch x86_64 -mmacosx-version-min=10.5
+COMMON_LDFLAGS=-arch i386 -arch x86_64 -mmacosx-version-min=10.5
 APP=BOSSA.app
 DMG=bossa-$(VERSION).dmg
 VOLUME=BOSSA
@@ -102,7 +103,7 @@ install: strip app
 	ln -s /usr/bin /Volumes/$(VOLUME)/bin
 	mkdir /Volumes/$(VOLUME)/.background
 	cp $(BACKGROUND) /Volumes/$(VOLUME)/.background
-	osascript < $(INSTALLDIR)/dmgwin.osa 
+	osascript < $(INSTALLDIR)/dmgwin.osa
 	hdiutil detach /Volumes/$(VOLUME)/
 	hdiutil convert -format UDBZ -o $(BINDIR)/tmp$(DMG) $(BINDIR)/$(DMG)
 	mv -f $(BINDIR)/tmp$(DMG) $(BINDIR)/$(DMG)
@@ -123,11 +124,11 @@ BOSSASH_OBJS=$(APPLET_OBJS) $(COMMON_OBJS) $(foreach src,$(BOSSASH_SRCS),$(OBJDI
 #
 # Dependencies
 #
-DEPENDS=$(COMMON_SRCS:%.cpp=$(OBJDIR)/%.d) 
-DEPENDS+=$(APPLET_SRCS:%.asm=$(OBJDIR)/%.d) 
-DEPENDS+=$(BOSSA_SRCS:%.cpp=$(OBJDIR)/%.d) 
-DEPENDS+=$(BOSSAC_SRCS:%.cpp=$(OBJDIR)/%.d) 
-DEPENDS+=$(BOSSASH_SRCS:%.cpp=$(OBJDIR)/%.d) 
+DEPENDS=$(COMMON_SRCS:%.cpp=$(OBJDIR)/%.d)
+DEPENDS+=$(APPLET_SRCS:%.asm=$(OBJDIR)/%.d)
+DEPENDS+=$(BOSSA_SRCS:%.cpp=$(OBJDIR)/%.d)
+DEPENDS+=$(BOSSAC_SRCS:%.cpp=$(OBJDIR)/%.d)
+DEPENDS+=$(BOSSASH_SRCS:%.cpp=$(OBJDIR)/%.d)
 
 #
 # Tools
@@ -142,8 +143,8 @@ ARMOBJCOPY=$(ARM)objcopy
 # CXX Flags
 #
 COMMON_CXXFLAGS+=-Wall -Werror -MT $@ -MD -MP -MF $(@:%.o=%.d) -DVERSION=\"$(VERSION)\" -g -O2
-WX_CXXFLAGS:=$(shell wx-config --cxxflags) -DWX_PRECOMP -Wno-ctor-dtor-privacy -O2 -fno-strict-aliasing
-BOSSA_CXXFLAGS=$(COMMON_CXXFLAGS) $(WX_CXXFLAGS) 
+WX_CXXFLAGS:=$(shell wx-config --cxxflags --version=$(WXVERSION)) -DWX_PRECOMP -Wno-ctor-dtor-privacy -O2 -fno-strict-aliasing
+BOSSA_CXXFLAGS=$(COMMON_CXXFLAGS) $(WX_CXXFLAGS)
 BOSSAC_CXXFLAGS=$(COMMON_CXXFLAGS)
 BOSSASH_CXXFLAGS=$(COMMON_CXXFLAGS)
 
@@ -159,7 +160,7 @@ BOSSASH_LDFLAGS=$(COMMON_LDFLAGS)
 # Libs
 #
 COMMON_LIBS+=
-WX_LIBS:=$(shell wx-config --libs) $(WX_LIBS)
+WX_LIBS:=$(shell wx-config --libs --version=$(WXVERSION)) $(WX_LIBS)
 BOSSA_LIBS=$(COMMON_LIBS) $(WX_LIBS)
 BOSSAC_LIBS=$(COMMON_LIBS)
 BOSSASH_LIBS=-lreadline $(COMMON_LIBS)
@@ -174,7 +175,7 @@ all: $(BINDIR)/bossa$(EXE) $(BINDIR)/bossac$(EXE) $(BINDIR)/bossash$(EXE)
 #
 define common_obj
 $(OBJDIR)/$(1:%.cpp=%.o): $(SRCDIR)/$(1)
-	@echo CPP $$<
+	@echo CPP COMMON $$<
 	$$(Q)$$(CXX) $$(COMMON_CXXFLAGS) -c -o $$@ $$<
 endef
 $(foreach src,$(COMMON_SRCS),$(eval $(call common_obj,$(src))))
@@ -189,7 +190,7 @@ $(SRCDIR)/$(1:%.asm=%.cpp): $(SRCDIR)/$(1)
 	$$(Q)$$(ARMOBJCOPY) -O binary $$(@:%.o=%.obj) $$(@:%.o=%.bin)
 	$$(Q)appletgen $(1:%.asm=%) $(SRCDIR) $(OBJDIR)
 $(OBJDIR)/$(1:%.asm=%.o): $(SRCDIR)/$(1:%.asm=%.cpp)
-	@echo CPP $$<
+	@echo CPP APPLET $$<
 	$$(Q)$$(CXX) $$(COMMON_CXXFLAGS) -c -o $$(@) $$(<:%.asm=%.cpp)
 endef
 $(foreach src,$(APPLET_SRCS),$(eval $(call applet_obj,$(src))))
@@ -199,7 +200,7 @@ $(foreach src,$(APPLET_SRCS),$(eval $(call applet_obj,$(src))))
 #
 define bossa_obj
 $(OBJDIR)/$(1:%.cpp=%.o): $(SRCDIR)/$(1)
-	@echo CPP $$<
+	@echo CPP BOSSA $$<
 	$$(Q)$$(CXX) $$(BOSSA_CXXFLAGS) -c -o $$@ $$<
 endef
 $(foreach src,$(BOSSA_SRCS),$(eval $(call bossa_obj,$(src))))
@@ -207,10 +208,10 @@ $(foreach src,$(BOSSA_SRCS),$(eval $(call bossa_obj,$(src))))
 #
 # Resource rules
 #
-ifeq ($(OS),MINGW32_NT-6.1)
+ifeq ($(OS),MINGW32)
 $(OBJDIR)/$(BOSSA_RC:%.rc=%.o): $(RESDIR)/$(BOSSA_RC)
 	@echo RC $<
-	$(Q)`wx-config --rescomp` -o $@ $<
+	$(Q)`wx-config --rescomp --version=$(WXVERSION)` -o $@ $<
 endif
 
 #
@@ -218,7 +219,7 @@ endif
 #
 define bossac_obj
 $(OBJDIR)/$(1:%.cpp=%.o): $(SRCDIR)/$(1)
-	@echo CPP $$<
+	@echo CPP BOSSAC $$<
 	$$(Q)$$(CXX) $$(BOSSAC_CXXFLAGS) -c -o $$@ $$<
 endef
 $(foreach src,$(BOSSAC_SRCS),$(eval $(call bossac_obj,$(src))))
@@ -228,7 +229,7 @@ $(foreach src,$(BOSSAC_SRCS),$(eval $(call bossac_obj,$(src))))
 #
 define bossash_obj
 $(OBJDIR)/$(1:%.cpp=%.o): $(SRCDIR)/$(1)
-	@echo CPP $$<
+	@echo CPP BOSSASH $$<
 	$$(Q)$$(CXX) $$(BOSSASH_CXXFLAGS) -c -o $$@ $$<
 endef
 $(foreach src,$(BOSSASH_SRCS),$(eval $(call bossash_obj,$(src))))
@@ -248,7 +249,7 @@ $(foreach bmp,$(BOSSA_BMPS),$(eval $(call bossa_bmp,$(bmp))))
 #
 $(OBJDIR):
 	@mkdir $@
-    
+
 $(BINDIR):
 	@mkdir $@
 

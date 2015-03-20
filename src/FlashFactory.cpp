@@ -3,7 +3,7 @@
 //
 // Copyright (c) 2011-2012, ShumaTech
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //     * Redistributions of source code must retain the above copyright
@@ -14,7 +14,7 @@
 //     * Neither the name of the <organization> nor the
 //       names of its contributors may be used to endorse or promote products
 //       derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -28,8 +28,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include "FlashFactory.h"
 
+#include "Devices.h"
 #include "EfcFlash.h"
 #include "EefcFlash.h"
+#include "NvmFlash.h"
 
 FlashFactory::FlashFactory()
 {
@@ -44,8 +46,29 @@ FlashFactory::create(Samba& samba, uint32_t chipId)
 {
     Flash* flash;
 
-    switch (chipId & 0x7fffffe0)
+    switch (chipId)
     {
+    //
+    // SAMD21
+    //
+    case ATSAMD21J18A_CHIPID:
+        flash = new NvmFlash( samba, ATSAMD21J18A_NAME, ATSAMD21J18A_FLASH_BASE, ATSAMD21J18A_FLASH_PAGES, ATSAMD21J18A_FLASH_PAGE_SIZE,
+                              ATSAMD21J18A_FLASH_PLANES, ATSAMD21J18A_FLASH_LOCK_REGIONS,
+                              ATSAMD21J18A_BUFFER_ADDR, ATSAMD21J18A_STACK_ADDR, ATSAMD21J18A_NVMCTRL_BASE, /*canBrownout*/true ) ;
+        break ;
+
+    case ATSAMD21G18A_CHIPID:
+        flash = new NvmFlash( samba, ATSAMD21G18A_NAME, ATSAMD21G18A_FLASH_BASE, ATSAMD21G18A_FLASH_PAGES, ATSAMD21G18A_FLASH_PAGE_SIZE,
+                              ATSAMD21G18A_FLASH_PLANES, ATSAMD21G18A_FLASH_LOCK_REGIONS,
+                              ATSAMD21G18A_BUFFER_ADDR, ATSAMD21G18A_STACK_ADDR, ATSAMD21G18A_NVMCTRL_BASE, /*canBrownout*/true ) ;
+        break ;
+
+    case ATSAMD21E18A_CHIPID:
+        flash = new NvmFlash( samba, ATSAMD21E18A_NAME, ATSAMD21E18A_FLASH_BASE, ATSAMD21E18A_FLASH_PAGES, ATSAMD21E18A_FLASH_PAGE_SIZE,
+                              ATSAMD21E18A_FLASH_PLANES, ATSAMD21E18A_FLASH_LOCK_REGIONS,
+                              ATSAMD21E18A_BUFFER_ADDR, ATSAMD21E18A_STACK_ADDR, ATSAMD21E18A_NVMCTRL_BASE, /*canBrownout*/true ) ;
+        break ;
+
     //
     // SAM7SE
     //
@@ -56,7 +79,7 @@ FlashFactory::create(Samba& samba, uint32_t chipId)
         flash = new EfcFlash(samba, "AT91SAM7SE256", 0x100000, 1024, 256, 1, 16, 0x202000, 0x208000, true);
         break;
     case 0x272a0340:
-        flash = new EfcFlash(samba, "AT91SAM7SE32", 0x100000, 256, 128, 1, 8, 0x201000, 0x202000, true);
+        flash = new EfcFlash(samba, "AT91SAM7SE32", 0x100000, 256, 128, 1, 8, 0x201400, 0x201C00, true);
         break;
     //
     // SAM7S
@@ -104,6 +127,19 @@ FlashFactory::create(Samba& samba, uint32_t chipId)
         break;
     case 0x275a0740:
         flash = new EfcFlash(samba, "AT91SAMX128", 0x100000, 512, 256, 1, 8, 0x202000, 0x208000, true);
+        break;
+    //
+    // SAM4S
+    //
+    case 0x288c0ce0 : // A
+    case 0x289c0ce0 : // B
+    case 0x28ac0ce0 : // C
+        flash = new EefcFlash(samba, "ATSAM4S16", 0x400000, 2048, 512, 1, 128, 0x20001000, 0x20020000, 0x400e0a00, false);
+        break;
+    case 0x288c0ae0 : // A
+    case 0x289c0ae0 : // B
+    case 0x28ac0ae0 : // C
+        flash = new EefcFlash(samba, "ATSAM4S8", 0x400000, 1024, 512, 1, 64, 0x20001000, 0x20020000, 0x400e0a00, false);
         break;
     //
     // SAM3N
@@ -157,6 +193,27 @@ FlashFactory::create(Samba& samba, uint32_t chipId)
         flash = new EefcFlash(samba, "ATSAM3U1", 0x80000, 256, 256, 1, 8, 0x20001000, 0x20002000, 0x400e0800, false);
         break;
     //
+    // SAM3X
+    //
+    case 0x286e0a60 : // 8H
+    case 0x285e0a60 : // 8E
+    case 0x284e0a60 : // 8C
+        flash = new EefcFlash(samba, "ATSAM3X8", 0x80000, 2048, 256, 2, 32, 0x20001000, 0x20010000, 0x400e0a00, false);
+        break;
+    case 0x285b0960 : // 4E
+    case 0x284b0960 : // 4C
+        flash = new EefcFlash(samba, "ATSAM3X4", 0x80000, 1024, 256, 2, 16, 0x20001000, 0x20008000, 0x400e0a00, false);
+        break;
+    //
+    // SAM3A
+    //
+    case 0x283e0A60 : // 8C
+        flash = new EefcFlash(samba, "ATSAM3A8", 0x80000, 2048, 256, 2, 32, 0x20001000, 0x20010000, 0x400e0a00, false);
+        break;
+    case 0x283b0960 : // 4C
+        flash = new EefcFlash(samba, "ATSAM3A4", 0x80000, 1024, 256, 2, 16, 0x20001000, 0x20008000, 0x400e0a00, false);
+        break;
+    //
     // SAM7L
     //
     case 0x27330740 :
@@ -169,14 +226,15 @@ FlashFactory::create(Samba& samba, uint32_t chipId)
     // SAM9XE
     //
     case 0x329aa3a0 :
-        flash = new EefcFlash(samba, "ATSAM9XE512", 0x200000, 1024, 512, 1, 32, 0x300000, 0x307000, 0xfffffa00, false);
+        flash = new EefcFlash(samba, "ATSAM9XE512", 0x200000, 1024, 512, 1, 32, 0x300000, 0x307000, 0xfffffa00, true);
         break;
     case 0x329a93a0 :
-        flash = new EefcFlash(samba, "ATSAM9XE256", 0x200000, 512, 512, 1, 16, 0x300000, 0x307000, 0xfffffa00, false);
+        flash = new EefcFlash(samba, "ATSAM9XE256", 0x200000, 512, 512, 1, 16, 0x300000, 0x307000, 0xfffffa00, true);
         break;
     case 0x329973a0 :
-        flash = new EefcFlash(samba, "ATSAM9XE128", 0x200000, 256, 512, 1, 8, 0x300000, 0x303000, 0xfffffa00, false);
+        flash = new EefcFlash(samba, "ATSAM9XE128", 0x200000, 256, 512, 1, 8, 0x300000, 0x303000, 0xfffffa00, true);
         break;
+
     default:
         flash = NULL;
         break;

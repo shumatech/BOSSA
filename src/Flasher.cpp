@@ -3,7 +3,7 @@
 //
 // Copyright (c) 2011-2012, ShumaTech
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //     * Redistributions of source code must retain the above copyright
@@ -14,7 +14,7 @@
 //     * Neither the name of the <organization> nor the
 //       names of its contributors may be used to endorse or promote products
 //       derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -73,6 +73,7 @@ Flasher::write(const char* filename)
     uint32_t pageSize = _flash->pageSize();
     uint8_t buffer[pageSize];
     uint32_t pageNum = 0;
+    uint16_t offset = 0;
     uint32_t numPages;
     long fsize;
     size_t fbytes;
@@ -92,22 +93,21 @@ Flasher::write(const char* filename)
         if (numPages > _flash->numPages())
             throw FileSizeError();
 
-        printf("Write %ld bytes to flash\n", fsize);
+        printf("Write %ld bytes to flash (%u pages)\n", fsize, numPages);
 
         while ((fbytes = fread(buffer, 1, pageSize, infile)) > 0)
         {
-            if (pageNum % 10 == 0)
+            // updated from one print per 10 pages to one per 10 percent
+            if (pageNum % (numPages/10) == 0)
                 progressBar(pageNum, numPages);
 
-            _flash->loadBuffer(buffer);
-            _flash->writePage(pageNum);
+            _flash->loadBuffer(buffer, fbytes);
+            _flash->writePage((offset+pageNum));
 
             pageNum++;
             if (pageNum == numPages || fbytes != pageSize)
                 break;
         }
-        if (fbytes < 0)
-            throw FileIoError(errno);
         progressBar(pageNum, numPages);
         printf("\n");
     }
@@ -127,6 +127,7 @@ Flasher::verify(const char* filename)
     uint8_t bufferA[pageSize];
     uint8_t bufferB[pageSize];
     uint32_t pageNum = 0;
+    uint16_t offset = 0;
     uint32_t numPages;
     uint32_t byteErrors = 0;
     uint32_t pageErrors = 0;
@@ -153,10 +154,11 @@ Flasher::verify(const char* filename)
 
         while ((fbytes = fread(bufferA, 1, pageSize, infile)) > 0)
         {
-            if (pageNum % 10 == 0)
+            // updated from one print per 10 pages to one per 10 percent
+            if (pageNum % (numPages/10) == 0)
                 progressBar(pageNum, numPages);
 
-            _flash->readPage(pageNum, bufferB);
+            _flash->readPage((offset+pageNum), bufferB);
 
             byteErrors = 0;
             for (uint32_t i = 0; i < fbytes; i++)
@@ -174,8 +176,6 @@ Flasher::verify(const char* filename)
             if (pageNum == numPages || fbytes != pageSize)
                 break;
         }
-        if (fbytes < 0)
-            throw FileIoError(errno);
         progressBar(pageNum, numPages);
         printf("\n");
     }
@@ -225,7 +225,8 @@ Flasher::read(const char* filename, long fsize)
 
         for (pageNum = 0; pageNum < numPages; pageNum++)
         {
-            if (pageNum % 10 == 0)
+            // updated from one print per 10 pages to one per 10 percent
+            if (pageNum % (numPages/10) == 0)
                 progressBar(pageNum, numPages);
 
             _flash->readPage(pageNum, buffer);
@@ -233,8 +234,6 @@ Flasher::read(const char* filename, long fsize)
             if (pageNum == numPages - 1 && fsize % pageSize > 0)
                 pageSize = fsize % pageSize;
             fbytes = fwrite(buffer, 1, pageSize, outfile);
-            if (fbytes < 0)
-                throw FileIoError(errno);
             if (fbytes != pageSize)
                 throw FileShortError();
         }
@@ -270,7 +269,7 @@ Flasher::lock(string& regionArg, bool enable)
         do
         {
             delim = regionArg.find(',', pos);
-            sub = regionArg.substr(pos, delim < 0 ? -1 : delim - pos);
+            sub = regionArg.substr(pos, delim - pos);
             region = strtol(sub.c_str(), NULL, 0);
             printf("%s region %d\n", enable ? "Lock" : "Unlock", region);
             _flash->setLockRegion(region, enable);
