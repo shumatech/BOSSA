@@ -71,9 +71,7 @@ Flasher::write(const char* filename)
 {
     FILE* infile;
     uint32_t pageSize = _flash->pageSize();
-    uint8_t buffer[pageSize];
     uint32_t pageNum = 0;
-    uint16_t offset = 0;
     uint32_t numPages;
     long fsize;
     size_t fbytes;
@@ -95,20 +93,49 @@ Flasher::write(const char* filename)
 
         printf("Write %ld bytes to flash (%u pages)\n", fsize, numPages);
 
-        while ((fbytes = fread(buffer, 1, pageSize, infile)) > 0)
-        {
-            // updated from one print per 10 pages to one per 10 percent
-            if (pageNum % (numPages/10) == 0)
-                progressBar(pageNum, numPages);
+        if (_flash->isWriteBufferAvailable()) {
 
-            _flash->loadBuffer(buffer, fbytes);
-            _flash->writePage((offset+pageNum));
+            // If multi-page write is available....
 
-            pageNum++;
-            if (pageNum == numPages || fbytes != pageSize)
-                break;
+            const uint32_t BLK_SIZE = 4096;
+            uint32_t offset = 0;
+            uint8_t buffer[BLK_SIZE];
+            memset(buffer, 0, BLK_SIZE);
+            while ((fbytes = fread(buffer, 1, BLK_SIZE, infile)) > 0)
+            {
+                if (fbytes < BLK_SIZE) {
+                    // Ceil to nearest pagesize
+                    fbytes = (fbytes + pageSize - 1) / pageSize * pageSize;
+                }
+                _flash->loadBuffer(buffer, fbytes);
+                _flash->writeBuffer(offset, fbytes);
+                offset += fbytes;
+                progressBar(offset/pageSize, numPages);
+
+                memset(buffer, 0, BLK_SIZE);
+            }
+
+        } else {
+
+            // ...otherwise go with the legacy slow method
+
+            uint8_t buffer[pageSize];
+            while ((fbytes = fread(buffer, 1, pageSize, infile)) > 0)
+            {
+                // updated from one print per 10 pages to one per 10 percent
+                if (pageNum % (numPages/10) == 0)
+                    progressBar(pageNum, numPages);
+
+                _flash->loadBuffer(buffer, fbytes);
+                _flash->writePage(pageNum);
+
+                pageNum++;
+                if (pageNum == numPages || fbytes != pageSize)
+                    break;
+            }
+            progressBar(pageNum, numPages);
+
         }
-        progressBar(pageNum, numPages);
         printf("\n");
     }
     catch(...)
@@ -127,7 +154,6 @@ Flasher::verify(const char* filename)
     uint8_t bufferA[pageSize];
     uint8_t bufferB[pageSize];
     uint32_t pageNum = 0;
-    uint16_t offset = 0;
     uint32_t numPages;
     uint32_t byteErrors = 0;
     uint32_t pageErrors = 0;
@@ -139,13 +165,57 @@ Flasher::verify(const char* filename)
     if (!infile)
         throw FileOpenError(errno);
 
+    if (fseek(infile, 0, SEEK_END) != 0 || (fsize = ftell(infile)) < 0)
+        throw FileIoError(errno);
+    rewind(infile);
+
+    // If checksum buffer is available, use it...
+    if (_flash->isChecksumBufferAvailable()) {
+
+        bool failed = false;
+        try
+        {
+            printf("Verify %ld bytes of flash with checksum.\n", fsize);
+
+            // Perform checksum every 4096 bytes
+            uint32_t BLK_SIZE = 4096;
+            uint8_t buffer[BLK_SIZE];
+            uint32_t offset = 0;
+            while ((fbytes = fread(buffer, 1, BLK_SIZE, infile)) > 0) {
+                uint32_t i;
+                uint16_t crc = 0;
+                for (i=0; i<fbytes; i++)
+                    crc = _flash->crc16AddByte(buffer[i], crc);
+                uint16_t flashCrc = _flash->checksumBuffer(offset, fbytes);
+                offset += fbytes;
+
+                if (crc != flashCrc) {
+                    failed = true;
+                    break;
+                }
+            }
+        }
+        catch(...)
+        {
+            fclose(infile);
+            throw;
+        }
+        fclose(infile);
+
+        if (failed)
+        {
+            printf("Verify failed\n");
+            return false;
+        }
+
+        printf("Verify successful\n");
+        return true;
+    }
+
+    // ...otherwise go with the slow legacy method...
+
     try
     {
-        if (fseek(infile, 0, SEEK_END) != 0 ||
-            (fsize = ftell(infile)) < 0)
-            throw FileIoError(errno);
-        rewind(infile);
-
         numPages = (fsize + pageSize - 1) / pageSize;
         if (numPages > _flash->numPages())
             throw FileSizeError();
@@ -158,7 +228,7 @@ Flasher::verify(const char* filename)
             if (pageNum % (numPages/10) == 0)
                 progressBar(pageNum, numPages);
 
-            _flash->readPage((offset+pageNum), bufferB);
+            _flash->readPage(pageNum, bufferB);
 
             byteErrors = 0;
             for (uint32_t i = 0; i < fbytes; i++)
@@ -310,4 +380,10 @@ Flasher::info(Samba& samba)
         printf("BOD          : %s\n", _flash->getBod() ? "true" : "false");
     if (_flash->canBor())
         printf("BOR          : %s\n", _flash->getBor() ? "true" : "false");
+    if (samba.isChipEraseAvailable())
+        printf("Arduino      : FAST_CHIP_ERASE\n");
+    if (samba.isWriteBufferAvailable())
+        printf("Arduino      : FAST_MULTI_PAGE_WRITE\n");
+    if (samba.isChecksumBufferAvailable())
+        printf("Arduino      : CAN_CHECKSUM_MEMORY_BUFFER\n");
 }

@@ -75,7 +75,22 @@ public:
 
     void reset(void);
 
+    // Arduino extended functions
+    bool chipErase(uint32_t start_addr);
+    bool isChipEraseAvailable() { return _extChipEraseAvailable; }
+
+    bool writeBuffer(uint32_t src_addr, uint32_t dst_addr, uint32_t size);
+    bool isWriteBufferAvailable() { return _extWriteBufferAvailable; }
+
+    uint16_t checksumBuffer(uint32_t start_addr, uint32_t size);
+    bool isChecksumBufferAvailable() { return _extChecksumBufferAvailable; }
+
+    uint16_t crc16AddByte(uint8_t c, uint16_t crc);
+
 private:
+    bool _extChipEraseAvailable;
+    bool _extWriteBufferAvailable;
+    bool _extChecksumBufferAvailable;
     bool _debug;
     bool _isUsb;
     SerialPort::Ptr _port;
