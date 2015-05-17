@@ -64,7 +64,7 @@ public:
     bool help;
     bool forceUsb;
     string forceUsbArg;
-	bool arduinoErase;
+    bool arduinoErase;
 
     int readArg;
     string portArg;
@@ -90,7 +90,7 @@ BossaConfig::BossaConfig()
     info = false;
     help = false;
     forceUsb = false;
-	arduinoErase = false;
+    arduinoErase = false;
 
     readArg = 0;
     bootArg = 1;
@@ -191,12 +191,12 @@ static Option opts[] =
       'R', "reset", &config.reset,
       { ArgNone },
       "reset CPU (if supported)"
-	},
-	{
-	  'a', "arduino_erase", &config.arduinoErase,
-	  { ArgNone },
-	  "erase and reset via Arduino 1200 baud hack (cannot be used with port autodetection)"
-	}
+    },
+    {
+      'a', "arduino_erase", &config.arduinoErase,
+      { ArgNone },
+      "erase and reset via Arduino 1200 baud hack (cannot be used with port autodetection)"
+    }
 };
 
 bool
@@ -264,11 +264,11 @@ main(int argc, char* argv[])
         return help(argv[0]);
     }
 
-	if (config.arduinoErase && !config.port)
-	{
-		fprintf(stderr, "%s: port must be specified for Arduino erase hack\n", argv[0]);
-		return help(argv[0]);
-	}
+    if (config.arduinoErase && !config.port)
+    {
+        fprintf(stderr, "%s: port must be specified for Arduino erase hack\n", argv[0]);
+        return help(argv[0]);
+    }
 
     if (config.read || config.write || config.verify)
     {
@@ -326,18 +326,18 @@ main(int argc, char* argv[])
             }
         }
 
-		// Arduino 1200 baud erase hack (just open and close port at 1200 baud).
-		if (config.arduinoErase)
-		{
-			SerialPort::Ptr port;
-			if (config.forceUsb)
-				port = portFactory.create(config.portArg, isUsb);
-			else
-				port = portFactory.create(config.portArg);
+        // Arduino 1200 baud erase hack (just open and close port at 1200 baud).
+        if (config.arduinoErase)
+        {
+            SerialPort::Ptr port;
+            if (config.forceUsb)
+                port = portFactory.create(config.portArg, isUsb);
+            else
+                port = portFactory.create(config.portArg);
 
-			port->open(1200);
-			port->close();
-		}
+            port->open(1200);
+            port->close();
+        }
 
         if (config.port)
         {
