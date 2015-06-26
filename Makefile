@@ -110,6 +110,30 @@ install: strip app
 endif
 
 #
+# OpenBSD rules
+# (This is likely to work without changes, but not tested, on other BSDs)
+#
+ifeq ($(OS),OpenBSD)
+
+COMMON_SRCS+=PosixSerialPort.cpp BSDPortFactory.cpp
+
+# This is only needed for bossash, but we can't add it to BOSSASH_LIBS here
+# because that one is redefined later.
+COMMON_LIBS+=-ltermcap
+
+# As of 5.7, OpenBSD packages WxWidgets 2.8
+# bossa builds, runs, and appears to play nicely with this version,
+# but fails to do anything useful on systems that don't have hardware
+# serial ports because of USB detection problems.
+# (The SAM's USB programming port doesn't get recognized as a ucom
+# device, and a USB serial adaptor attached to the UART gets detected
+# by bossa as a USB interface and doesn't fall back to the serial
+# programming protocol.)
+WXVERSION=2.8
+
+endif
+
+#
 # Object files
 #
 COMMON_OBJS=$(foreach src,$(COMMON_SRCS),$(OBJDIR)/$(src:%.cpp=%.o))

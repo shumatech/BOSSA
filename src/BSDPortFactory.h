@@ -26,42 +26,33 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef _PORTFACTORY_H
-#define _PORTFACTORY_H
-
-#include <string>
+#ifndef _BSDPORTFACTORY_H
+#define _BSDPORTFACTORY_H
 
 #include "SerialPort.h"
 
-class PortFactoryBase
+#include <sys/types.h>
+#include <dirent.h>
+
+#include <string>
+
+
+class BSDPortFactory
 {
 public:
-    PortFactoryBase() {}
-    virtual ~PortFactoryBase() {}
+    BSDPortFactory();
+    virtual ~BSDPortFactory();
 
-    virtual std::string begin() = 0;
-    virtual std::string end() = 0;
-    virtual std::string next() = 0;
+    virtual std::string begin();
+    virtual std::string end();
+    virtual std::string next();
 
-    virtual SerialPort::Ptr create(const std::string& name) = 0;
-    virtual SerialPort::Ptr create(const std::string& name, bool isUsb) = 0;
+    virtual SerialPort::Ptr create(const std::string& name);
+    virtual SerialPort::Ptr create(const std::string& name, bool isUsb);
+
+private:
+    std::string _empty;
+    DIR* _dir;
 };
 
-#if defined(__WIN32__)
-#include "WinPortFactory.h"
-typedef WinPortFactory PortFactory;
-#elif defined(__linux__)
-#include "LinuxPortFactory.h"
-typedef LinuxPortFactory PortFactory;
-#elif defined(__APPLE__)
-#include "OSXPortFactory.h"
-typedef OSXPortFactory PortFactory;
-#elif defined(__OpenBSD__)
-// This is likely to work (but not tested) for the other BSDs as well
-#include "BSDPortFactory.h"
-typedef BSDPortFactory PortFactory;
-#else
-#error "Platform is not supported"
-#endif
-
-#endif // _PORTFACTORY_H
+#endif // _BSDPORTFACTORY_H
