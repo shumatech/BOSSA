@@ -27,7 +27,6 @@
 #include "Samba.h"
 #include "WordCopyApplet.h"
 #include "NvmFlash.h"
-#include "Devices.h"
 
 // System control brown out register.
 // SYSCTRL base address + BOD33 reg offset
@@ -365,7 +364,7 @@ NvmFlash::getAddressByRegion(uint32_t region_num)
         throw FlashRegionError();
     }
 
-    uint32_t size_of_region = (pageSize() * numPages()) / _lockRegions; // Flash Size / no of lock regions
+    uint32_t size_of_region = (pageSize() * _pages) / _lockRegions; // Flash Size / no of lock regions
     uint32_t addr = address() + (region_num * size_of_region);
     addr = addr / 2; // Convert byte address to word address
 

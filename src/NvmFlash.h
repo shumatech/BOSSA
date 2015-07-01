@@ -24,6 +24,7 @@
 #include <exception>
 
 #include "Flash.h"
+#include "Devices.h"
 
 class NvmFlashCmdError : public std::exception
 {
@@ -50,6 +51,8 @@ public:
              bool canBrownout);
 
     virtual ~NvmFlash();
+
+    virtual uint32_t numPages() { return _pages - ATSAMD_BOOTLOADER_SIZE / pageSize(); }
 
     void eraseAll();
     void eraseAuto(bool enable);
