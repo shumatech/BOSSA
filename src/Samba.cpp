@@ -189,11 +189,18 @@ Samba::connect(SerialPort::Ptr port, int bps)
 
     // Try to connect at a high speed if USB
     _isUsb = _port->isUsb();
-    if (_isUsb && _port->open(921600) && init())
+    if (_isUsb)
     {
-        if (_debug)
-            printf("Connected at 921600 baud\n");
-        return true;
+        if (_port->open(921600) && init())
+        {
+            if (_debug)
+                printf("Connected at 921600 baud\n");
+            return true;
+        }
+        else
+        {
+            _port->close();
+        }
     }
     _isUsb = false;
 
