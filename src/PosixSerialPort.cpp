@@ -175,7 +175,7 @@ PosixSerialPort::open(int baud,
 
     // Raw input
     options.c_iflag &= ~(BRKINT | ICRNL);
-    options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+    options.c_lflag &= ~(ICANON | IEXTEN | ECHO | ECHOE | ISIG);
 
     // Raw output
     options.c_oflag &= ~OPOST;
