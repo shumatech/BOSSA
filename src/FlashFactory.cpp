@@ -139,14 +139,36 @@ FlashFactory::create(Samba& samba, uint32_t chipId)
     case 0x288c0ce0 : // A
     case 0x289c0ce0 : // B
     case 0x28ac0ce0 : // C
+    case 0x288c0ce1 : // A
+    case 0x289c0ce1 : // B
+    case 0x28ac0ce1 : // C
         flash = new EefcFlash(samba, "ATSAM4S16", 0x400000, 2048, 512, 1, 128, 0x20001000, 0x20020000, 0x400e0a00, false);
         break;
     case 0x288c0ae0 : // A
     case 0x289c0ae0 : // B
     case 0x28ac0ae0 : // C
+    case 0x288c0ae1 : // A
+    case 0x289c0ae1 : // B
+    case 0x28ac0ae1 : // C
         flash = new EefcFlash(samba, "ATSAM4S8", 0x400000, 1024, 512, 1, 64, 0x20001000, 0x20020000, 0x400e0a00, false);
         break;
-    //
+    case 0x288b09e0 : // A
+    case 0x288b09e1 : // A
+    case 0x289b09e0 : // B
+    case 0x289b09e1 : // B
+    case 0x28ab09e0 : // C
+    case 0x28ab09e1 : // C
+        flash = new EefcFlash(samba, "ATSAM4S4", 0x400000, 512, 512, 1, 16, 0x20001000, 0x20010000, 0x400e0a00, false);
+		break;
+    case 0x288b07e0 : // A
+    case 0x288b07e1 : // A
+    case 0x289b07e0 : // B
+    case 0x289b07e1 : // B
+    case 0x28ab07e0 : // C
+    case 0x28ab07e1 : // C
+        flash = new EefcFlash(samba, "ATSAM4S2", 0x400000, 256, 512, 1, 16, 0x20001000, 0x20010000, 0x400e0a00, false);
+		break;
+	//
     // SAM3N
     //
     case 0x29340960 : // A

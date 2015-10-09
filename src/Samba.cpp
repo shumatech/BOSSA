@@ -158,6 +158,15 @@ Samba::init()
         if (_debug)
             printf("Unsupported Cortex-M3 architecture\n");
     }
+    // Check for Cortex-M4 processor
+    else if (eproc == 7)
+    {
+        // Check for SAM4 architecture
+        if (arch >= 0x88 && arch <= 0x8a)
+            return true;
+        if (_debug)
+            printf("Unsupported Cortex-M4 architecture\n");
+    }
     // Check for ARM920T processor
     else if (eproc == 4)
     {
