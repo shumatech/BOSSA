@@ -47,7 +47,7 @@
 
 PosixSerialPort::PosixSerialPort(const std::string& name, bool isUsb) :
     SerialPort(name), _devfd(-1), _isUsb(isUsb), _timeout(0),
-    _autoFlush(false), _original_settings_saved(false)
+    _autoFlush(false)
 {
 }
 
@@ -76,11 +76,6 @@ PosixSerialPort::open(int baud,
     {
         close();
         return false;
-    }
-
-    if (_original_settings_saved == false){
-        memcpy(&_original_settings, &options, sizeof(struct termios));
-        _original_settings_saved = true;
     }
 
     switch (baud)
@@ -202,8 +197,6 @@ void
 PosixSerialPort::close()
 {
     if (_devfd >= 0)
-        if (_original_settings_saved == true)
-            tcsetattr(_devfd, TCSANOW, &_original_settings);
         ::close(_devfd);
     _devfd = -1;
 }

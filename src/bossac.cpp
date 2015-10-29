@@ -419,8 +419,6 @@ main(int argc, char* argv[])
 
         if (config.reset)
             samba.reset();
-
-        samba.disconnect();
     }
     catch (exception& e)
     {

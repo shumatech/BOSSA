@@ -29,7 +29,6 @@
 #ifndef _POSIXSERIALPORT_H
 #define _POSIXSERIALPORT_H
 
-#include <termios.h>
 #include "SerialPort.h"
 
 class PosixSerialPort : public SerialPort
@@ -60,8 +59,6 @@ private:
     bool _isUsb;
     int _timeout;
     bool _autoFlush;
-    struct termios _original_settings;
-    bool _original_settings_saved;
 };
 
 #endif // _POSIXSERIALPORT_H
