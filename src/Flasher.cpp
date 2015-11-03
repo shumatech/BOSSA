@@ -122,8 +122,8 @@ Flasher::write(const char* filename)
             uint8_t buffer[pageSize];
             while ((fbytes = fread(buffer, 1, pageSize, infile)) > 0)
             {
-                // updated from one print per 10 pages to one per 10 percent
-                if ((pageNum < 10) || (pageNum % (numPages/10) == 0))
+                // print once every 10%
+                if ((pageNum % (numPages/10)) == 0)
                     progressBar(pageNum, numPages);
 
                 _flash->loadBuffer(buffer, fbytes);
@@ -224,8 +224,8 @@ Flasher::verify(const char* filename)
 
         while ((fbytes = fread(bufferA, 1, pageSize, infile)) > 0)
         {
-            // updated from one print per 10 pages to one per 10 percent
-            if ((pageNum < 10) || (pageNum % (numPages/10) == 0))
+            // print once every 10%
+            if ((pageNum % (numPages/10)) == 0)
                 progressBar(pageNum, numPages);
 
             _flash->readPage(pageNum, bufferB);
