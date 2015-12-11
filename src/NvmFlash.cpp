@@ -27,7 +27,6 @@
 #include "Samba.h"
 #include "WordCopyApplet.h"
 #include "NvmFlash.h"
-#include "Devices.h"
 
 // System control brown out register.
 // SYSCTRL base address + BOD33 reg offset
@@ -104,6 +103,16 @@ NvmFlash::eraseAll()
     // Leave the first 8KB, where bootloader resides, erase the rest.
     // Row is a concept used for convinence. When writing you have to write
     // page(s). When erasing you have to erase row(s).
+
+    if (_samba.isChipEraseAvailable())
+    {
+        // If extended chip erase is available...
+
+        _samba.chipErase(_addr);
+        return;
+    }
+
+    // ...otherwise go with the legacy slow erase...
 
     // Calculate the number of rows that samba occupies (should be 32 for 8KB/0x2000bytes).
     uint32_t starting_row = ATSAMD_BOOTLOADER_SIZE / _size / ATSAMD_FLASH_ROW_PAGES;
@@ -355,7 +364,7 @@ NvmFlash::getAddressByRegion(uint32_t region_num)
         throw FlashRegionError();
     }
 
-    uint32_t size_of_region = (pageSize() * numPages()) / _lockRegions; // Flash Size / no of lock regions
+    uint32_t size_of_region = (pageSize() * _pages) / _lockRegions; // Flash Size / no of lock regions
     uint32_t addr = address() + (region_num * size_of_region);
     addr = addr / 2; // Convert byte address to word address
 

@@ -50,10 +50,15 @@ using namespace std;
 
 #define TIMEOUT_QUICK   100
 #define TIMEOUT_NORMAL  1000
+#define TIMEOUT_LONG    5000
 
 #define min(a, b)   ((a) < (b) ? (a) : (b))
 
-Samba::Samba() : _debug(false), _isUsb(false)
+Samba::Samba() :
+    _extChipEraseAvailable(false),
+    _extWriteBufferAvailable(false),
+    _extChecksumBufferAvailable(false),
+    _debug(false), _isUsb(false)
 {
 }
 
@@ -107,6 +112,24 @@ Samba::init()
         return false;
     }
 
+    // Read the samba version to detect if extended commands are available
+    // NOTE: we MUST call version() after chipId(), otherwise sam-ba did not
+    //       answer correctly on some devices when used from UART.
+    //       The reason is unknown.
+    std::string ver = version();
+    std::size_t extIndex = ver.find("[Arduino:");
+    if (extIndex != string::npos) {
+        extIndex += 9;
+        while (ver[extIndex] != ']') {
+            switch (ver[extIndex]) {
+                case 'X': _extChipEraseAvailable = true; break;
+                case 'Y': _extWriteBufferAvailable = true; break;
+                case 'Z': _extChecksumBufferAvailable = true; break;
+            }
+            extIndex++;
+        }
+    }
+
     _port->timeout(TIMEOUT_NORMAL);
 
     if (_debug)
@@ -135,6 +158,15 @@ Samba::init()
         if (_debug)
             printf("Unsupported Cortex-M3 architecture\n");
     }
+    // Check for Cortex-M4 processor
+    else if (eproc == 7)
+    {
+        // Check for SAM4 architecture
+        if (arch >= 0x88 && arch <= 0x8a)
+            return true;
+        if (_debug)
+            printf("Unsupported Cortex-M4 architecture\n");
+    }
     // Check for ARM920T processor
     else if (eproc == 4)
     {
@@ -145,8 +177,8 @@ Samba::init()
             printf("Unsupported ARM920T architecture\n");
     }
     // Check for supported M0+ processor
-    // NOTE: 0x1001000a is a ATSAMD21E18A
-	else if (cid == 0x10010000 || cid == 0x10010100 || cid == 0x10010005 || cid == 0x1001000a)
+    // NOTE: 0x1001000a is a ATSAMD21E18A, 0x1001001c is ATSAMR21E18A
+	else if (cid == 0x10010000 || cid == 0x10010100 || cid == 0x10010005 || cid == 0x1001000a || cid == 0x1001001c)
     {
         return true;
     }
@@ -166,11 +198,18 @@ Samba::connect(SerialPort::Ptr port, int bps)
 
     // Try to connect at a high speed if USB
     _isUsb = _port->isUsb();
-    if (_isUsb && _port->open(921600) && init())
+    if (_isUsb)
     {
-        if (_debug)
-            printf("Connected at 921600 baud\n");
-        return true;
+        if (_port->open(921600) && init())
+        {
+            if (_debug)
+                printf("Connected at 921600 baud\n");
+            return true;
+        }
+        else
+        {
+            _port->close();
+        }
     }
     _isUsb = false;
 
@@ -279,43 +318,44 @@ Samba::readWord(uint32_t addr)
     return value;
 }
 
+static const uint16_t crc16Table[256] = {
+    0x0000,0x1021,0x2042,0x3063,0x4084,0x50a5,0x60c6,0x70e7,
+    0x8108,0x9129,0xa14a,0xb16b,0xc18c,0xd1ad,0xe1ce,0xf1ef,
+    0x1231,0x0210,0x3273,0x2252,0x52b5,0x4294,0x72f7,0x62d6,
+    0x9339,0x8318,0xb37b,0xa35a,0xd3bd,0xc39c,0xf3ff,0xe3de,
+    0x2462,0x3443,0x0420,0x1401,0x64e6,0x74c7,0x44a4,0x5485,
+    0xa56a,0xb54b,0x8528,0x9509,0xe5ee,0xf5cf,0xc5ac,0xd58d,
+    0x3653,0x2672,0x1611,0x0630,0x76d7,0x66f6,0x5695,0x46b4,
+    0xb75b,0xa77a,0x9719,0x8738,0xf7df,0xe7fe,0xd79d,0xc7bc,
+    0x48c4,0x58e5,0x6886,0x78a7,0x0840,0x1861,0x2802,0x3823,
+    0xc9cc,0xd9ed,0xe98e,0xf9af,0x8948,0x9969,0xa90a,0xb92b,
+    0x5af5,0x4ad4,0x7ab7,0x6a96,0x1a71,0x0a50,0x3a33,0x2a12,
+    0xdbfd,0xcbdc,0xfbbf,0xeb9e,0x9b79,0x8b58,0xbb3b,0xab1a,
+    0x6ca6,0x7c87,0x4ce4,0x5cc5,0x2c22,0x3c03,0x0c60,0x1c41,
+    0xedae,0xfd8f,0xcdec,0xddcd,0xad2a,0xbd0b,0x8d68,0x9d49,
+    0x7e97,0x6eb6,0x5ed5,0x4ef4,0x3e13,0x2e32,0x1e51,0x0e70,
+    0xff9f,0xefbe,0xdfdd,0xcffc,0xbf1b,0xaf3a,0x9f59,0x8f78,
+    0x9188,0x81a9,0xb1ca,0xa1eb,0xd10c,0xc12d,0xf14e,0xe16f,
+    0x1080,0x00a1,0x30c2,0x20e3,0x5004,0x4025,0x7046,0x6067,
+    0x83b9,0x9398,0xa3fb,0xb3da,0xc33d,0xd31c,0xe37f,0xf35e,
+    0x02b1,0x1290,0x22f3,0x32d2,0x4235,0x5214,0x6277,0x7256,
+    0xb5ea,0xa5cb,0x95a8,0x8589,0xf56e,0xe54f,0xd52c,0xc50d,
+    0x34e2,0x24c3,0x14a0,0x0481,0x7466,0x6447,0x5424,0x4405,
+    0xa7db,0xb7fa,0x8799,0x97b8,0xe75f,0xf77e,0xc71d,0xd73c,
+    0x26d3,0x36f2,0x0691,0x16b0,0x6657,0x7676,0x4615,0x5634,
+    0xd94c,0xc96d,0xf90e,0xe92f,0x99c8,0x89e9,0xb98a,0xa9ab,
+    0x5844,0x4865,0x7806,0x6827,0x18c0,0x08e1,0x3882,0x28a3,
+    0xcb7d,0xdb5c,0xeb3f,0xfb1e,0x8bf9,0x9bd8,0xabbb,0xbb9a,
+    0x4a75,0x5a54,0x6a37,0x7a16,0x0af1,0x1ad0,0x2ab3,0x3a92,
+    0xfd2e,0xed0f,0xdd6c,0xcd4d,0xbdaa,0xad8b,0x9de8,0x8dc9,
+    0x7c26,0x6c07,0x5c64,0x4c45,0x3ca2,0x2c83,0x1ce0,0x0cc1,
+    0xef1f,0xff3e,0xcf5d,0xdf7c,0xaf9b,0xbfba,0x8fd9,0x9ff8,
+    0x6e17,0x7e36,0x4e55,0x5e74,0x2e93,0x3eb2,0x0ed1,0x1ef0
+};
+
 uint16_t
 Samba::crc16Calc(const uint8_t *data, int len)
 {
-    static const uint16_t crc16Table[256] = {
-        0x0000,0x1021,0x2042,0x3063,0x4084,0x50a5,0x60c6,0x70e7,
-        0x8108,0x9129,0xa14a,0xb16b,0xc18c,0xd1ad,0xe1ce,0xf1ef,
-        0x1231,0x0210,0x3273,0x2252,0x52b5,0x4294,0x72f7,0x62d6,
-        0x9339,0x8318,0xb37b,0xa35a,0xd3bd,0xc39c,0xf3ff,0xe3de,
-        0x2462,0x3443,0x0420,0x1401,0x64e6,0x74c7,0x44a4,0x5485,
-        0xa56a,0xb54b,0x8528,0x9509,0xe5ee,0xf5cf,0xc5ac,0xd58d,
-        0x3653,0x2672,0x1611,0x0630,0x76d7,0x66f6,0x5695,0x46b4,
-        0xb75b,0xa77a,0x9719,0x8738,0xf7df,0xe7fe,0xd79d,0xc7bc,
-        0x48c4,0x58e5,0x6886,0x78a7,0x0840,0x1861,0x2802,0x3823,
-        0xc9cc,0xd9ed,0xe98e,0xf9af,0x8948,0x9969,0xa90a,0xb92b,
-        0x5af5,0x4ad4,0x7ab7,0x6a96,0x1a71,0x0a50,0x3a33,0x2a12,
-        0xdbfd,0xcbdc,0xfbbf,0xeb9e,0x9b79,0x8b58,0xbb3b,0xab1a,
-        0x6ca6,0x7c87,0x4ce4,0x5cc5,0x2c22,0x3c03,0x0c60,0x1c41,
-        0xedae,0xfd8f,0xcdec,0xddcd,0xad2a,0xbd0b,0x8d68,0x9d49,
-        0x7e97,0x6eb6,0x5ed5,0x4ef4,0x3e13,0x2e32,0x1e51,0x0e70,
-        0xff9f,0xefbe,0xdfdd,0xcffc,0xbf1b,0xaf3a,0x9f59,0x8f78,
-        0x9188,0x81a9,0xb1ca,0xa1eb,0xd10c,0xc12d,0xf14e,0xe16f,
-        0x1080,0x00a1,0x30c2,0x20e3,0x5004,0x4025,0x7046,0x6067,
-        0x83b9,0x9398,0xa3fb,0xb3da,0xc33d,0xd31c,0xe37f,0xf35e,
-        0x02b1,0x1290,0x22f3,0x32d2,0x4235,0x5214,0x6277,0x7256,
-        0xb5ea,0xa5cb,0x95a8,0x8589,0xf56e,0xe54f,0xd52c,0xc50d,
-        0x34e2,0x24c3,0x14a0,0x0481,0x7466,0x6447,0x5424,0x4405,
-        0xa7db,0xb7fa,0x8799,0x97b8,0xe75f,0xf77e,0xc71d,0xd73c,
-        0x26d3,0x36f2,0x0691,0x16b0,0x6657,0x7676,0x4615,0x5634,
-        0xd94c,0xc96d,0xf90e,0xe92f,0x99c8,0x89e9,0xb98a,0xa9ab,
-        0x5844,0x4865,0x7806,0x6827,0x18c0,0x08e1,0x3882,0x28a3,
-        0xcb7d,0xdb5c,0xeb3f,0xfb1e,0x8bf9,0x9bd8,0xabbb,0xbb9a,
-        0x4a75,0x5a54,0x6a37,0x7a16,0x0af1,0x1ad0,0x2ab3,0x3a92,
-        0xfd2e,0xed0f,0xdd6c,0xcd4d,0xbdaa,0xad8b,0x9de8,0x8dc9,
-        0x7c26,0x6c07,0x5c64,0x4c45,0x3ca2,0x2c83,0x1ce0,0x0cc1,
-        0xef1f,0xff3e,0xcf5d,0xdf7c,0xaf9b,0xbfba,0x8fd9,0x9ff8,
-        0x6e17,0x7e36,0x4e55,0x5e74,0x2e93,0x3eb2,0x0ed1,0x1ef0
-    };
     uint16_t crc16 = 0;
 
     while (len-- > 0)
@@ -340,6 +380,11 @@ Samba::crc16Add(uint8_t *blk)
     crc16 = crc16Calc(&blk[3], BLK_SIZE);
     blk[BLK_SIZE + 3] = (crc16 >> 8) & 0xff;
     blk[BLK_SIZE + 4] = crc16 & 0xff;
+}
+
+uint16_t
+Samba::crc16AddByte(uint8_t data, uint16_t crc16) {
+    return (crc16 << 8) ^ crc16Table[((crc16 >> 8) ^ data) & 0xff];
 }
 
 void
@@ -455,8 +500,14 @@ Samba::readBinary(uint8_t* buffer, int size)
 void
 Samba::writeBinary(const uint8_t* buffer, int size)
 {
-    if (_port->write(buffer, size) != size)
-        throw SambaError();
+    while (size)
+    {
+        int written = _port->write(buffer, size);
+        if (written <= 0)
+            throw SambaError();
+        buffer += written;
+        size -= written;
+    }
 }
 
 void
@@ -611,6 +662,8 @@ Samba::reset(void)
     {
     case ATSAMD21J18A_CHIPID:
     case ATSAMD21G18A_CHIPID:
+    case ATSAMD21E18A_CHIPID:
+    case ATSAMR21E18A_CHIPID:
         // http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0484c/index.html
         writeWord(0xE000ED0C, 0x05FA0004);
         break;
@@ -631,3 +684,87 @@ Samba::reset(void)
     // sort out things before closing the port.
     usleep(100000);
 }
+
+bool
+Samba::chipErase(uint32_t start_addr)
+{
+    if (!_extChipEraseAvailable)
+        return false;
+
+    uint8_t cmd[64];
+
+    if (_debug)
+        printf("%s(addr=%#x)\n", __FUNCTION__, start_addr);
+
+    int l = snprintf((char*) cmd, sizeof(cmd), "X%08X#", start_addr);
+    if (_port->write(cmd, l) != l)
+        throw SambaError();
+    _port->timeout(TIMEOUT_LONG);
+    _port->read(cmd, 3); // Expects "X\n\r"
+    _port->timeout(TIMEOUT_NORMAL);
+    if (cmd[0] != 'X')
+        throw SambaError();
+    return true;
+}
+
+bool
+Samba::writeBuffer(uint32_t src_addr, uint32_t dst_addr, uint32_t size)
+{
+    if (!_extWriteBufferAvailable)
+        return false;
+
+    if (_debug)
+        printf("%s(scr_addr=%#x, dst_addr=%#x, size=%#x)\n", __FUNCTION__, src_addr, dst_addr, size);
+
+    uint8_t cmd[64];
+    int l = snprintf((char*) cmd, sizeof(cmd), "Y%08X,0#", src_addr);
+    if (_port->write(cmd, l) != l)
+        throw SambaError();
+    _port->timeout(TIMEOUT_QUICK);
+    cmd[0] = 0;
+    _port->read(cmd, 3); // Expects "Y\n\r"
+    _port->timeout(TIMEOUT_NORMAL);
+    if (cmd[0] != 'Y')
+        throw SambaError();
+
+    l = snprintf((char*) cmd, sizeof(cmd), "Y%08X,%08X#", dst_addr, size);
+    if (_port->write(cmd, l) != l)
+        throw SambaError();
+    _port->timeout(TIMEOUT_LONG);
+    cmd[0] = 0;
+    _port->read(cmd, 3); // Expects "Y\n\r"
+    _port->timeout(TIMEOUT_NORMAL);
+    if (cmd[0] != 'Y')
+        throw SambaError();
+    return true;
+}
+
+uint16_t
+Samba::checksumBuffer(uint32_t start_addr, uint32_t size)
+{
+    if (!_extChecksumBufferAvailable)
+        throw SambaError();
+
+    if (_debug)
+        printf("%s(start_addr=%#x, size=%#x) = ", __FUNCTION__, start_addr, size);
+
+    uint8_t cmd[64];
+    int l = snprintf((char*) cmd, sizeof(cmd), "Z%08X,%08X#", start_addr, size);
+    if (_port->write(cmd, l) != l)
+        throw SambaError();
+    _port->timeout(TIMEOUT_LONG);
+    cmd[0] = 0;
+    _port->read(cmd, 12); // Expects "Z00000000#\n\r"
+    _port->timeout(TIMEOUT_NORMAL);
+    if (cmd[0] != 'Z')
+        throw SambaError();
+
+    cmd[9] = 0;
+    uint32_t res;// = cmd[1] << 8 | cmd[2];
+    if (sscanf((const char *)(cmd+1), "%x", &res) != 1)
+	throw SambaError();
+    if (_debug)
+        printf("%x\n", res);
+    return res;
+}
+

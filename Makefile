@@ -3,7 +3,7 @@
 #
 # Version
 #
-VERSION=1.5-arduino
+VERSION=1.6.1-arduino
 WXVERSION=3.0
 
 #
@@ -110,6 +110,30 @@ install: strip app
 endif
 
 #
+# OpenBSD rules
+# (This is likely to work without changes, but not tested, on other BSDs)
+#
+ifeq ($(OS),OpenBSD)
+
+COMMON_SRCS+=PosixSerialPort.cpp BSDPortFactory.cpp
+
+# This is only needed for bossash, but we can't add it to BOSSASH_LIBS here
+# because that one is redefined later.
+COMMON_LIBS+=-ltermcap
+
+# As of 5.7, OpenBSD packages WxWidgets 2.8
+# bossa builds, runs, and appears to play nicely with this version,
+# but fails to do anything useful on systems that don't have hardware
+# serial ports because of USB detection problems.
+# (The SAM's USB programming port doesn't get recognized as a ucom
+# device, and a USB serial adaptor attached to the UART gets detected
+# by bossa as a USB interface and doesn't fall back to the serial
+# programming protocol.)
+WXVERSION=2.8
+
+endif
+
+#
 # Object files
 #
 COMMON_OBJS=$(foreach src,$(COMMON_SRCS),$(OBJDIR)/$(src:%.cpp=%.o))
@@ -142,7 +166,8 @@ ARMOBJCOPY=$(ARM)objcopy
 #
 # CXX Flags
 #
-COMMON_CXXFLAGS+=-Wall -Werror -MT $@ -MD -MP -MF $(@:%.o=%.d) -DVERSION=\"$(VERSION)\" -g -O2
+# COMMON_CXXFLAGS+=-Wall -Werror -MT $@ -MD -MP -MF $(@:%.o=%.d) -DVERSION=\"$(VERSION)\" -g -O2
+COMMON_CXXFLAGS+=-Wall -MT $@ -MD -MP -MF $(@:%.o=%.d) -DVERSION=\"$(VERSION)\" -g -O2
 WX_CXXFLAGS:=$(shell wx-config --cxxflags --version=$(WXVERSION)) -DWX_PRECOMP -Wno-ctor-dtor-privacy -O2 -fno-strict-aliasing
 BOSSA_CXXFLAGS=$(COMMON_CXXFLAGS) $(WX_CXXFLAGS)
 BOSSAC_CXXFLAGS=$(COMMON_CXXFLAGS)

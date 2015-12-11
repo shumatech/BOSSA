@@ -26,42 +26,75 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef _PORTFACTORY_H
-#define _PORTFACTORY_H
+#include "BSDPortFactory.h"
+#include "PosixSerialPort.h"
+
+#include <string.h>
+#include <stdio.h>
 
 #include <string>
 
-#include "SerialPort.h"
-
-class PortFactoryBase
+BSDPortFactory::BSDPortFactory()
 {
-public:
-    PortFactoryBase() {}
-    virtual ~PortFactoryBase() {}
+    _dir = opendir("/dev");
+}
 
-    virtual std::string begin() = 0;
-    virtual std::string end() = 0;
-    virtual std::string next() = 0;
+BSDPortFactory::~BSDPortFactory()
+{
+    if (_dir)
+        closedir(_dir);
+}
 
-    virtual SerialPort::Ptr create(const std::string& name) = 0;
-    virtual SerialPort::Ptr create(const std::string& name, bool isUsb) = 0;
-};
+SerialPort::Ptr
+BSDPortFactory::create(const std::string& name)
+{
+    bool isUsb = false;
 
-#if defined(__WIN32__)
-#include "WinPortFactory.h"
-typedef WinPortFactory PortFactory;
-#elif defined(__linux__)
-#include "LinuxPortFactory.h"
-typedef LinuxPortFactory PortFactory;
-#elif defined(__APPLE__)
-#include "OSXPortFactory.h"
-typedef OSXPortFactory PortFactory;
-#elif defined(__OpenBSD__)
-// This is likely to work (but not tested) for the other BSDs as well
-#include "BSDPortFactory.h"
-typedef BSDPortFactory PortFactory;
-#else
-#error "Platform is not supported"
-#endif
+    if (name.find("U") != std::string::npos)
+        isUsb = true;
 
-#endif // _PORTFACTORY_H
+    return create(name, isUsb);
+}
+
+SerialPort::Ptr
+BSDPortFactory::create(const std::string& name, bool isUsb)
+{
+    PosixSerialPort *p = new PosixSerialPort(name, isUsb);
+    // Needed to avoid upload errors
+    p->setAutoFlush(true);
+    return SerialPort::Ptr(p);
+}
+
+std::string
+BSDPortFactory::begin()
+{
+    if (!_dir)
+        return end();
+
+    rewinddir(_dir);
+
+    return next();
+}
+
+std::string
+BSDPortFactory::next()
+{
+    struct dirent* entry;
+
+    if (!_dir)
+        return end();
+
+    while ((entry = readdir(_dir)))
+    {
+        if (strncmp("cua", entry->d_name, sizeof("cua") - 1) == 0)
+            return std::string(entry->d_name);
+    }
+
+    return end();
+}
+
+std::string
+BSDPortFactory::end()
+{
+    return std::string();
+}
