@@ -882,6 +882,19 @@ CommandPio::invoke(char* argv[], int argc)
             }
         }
     }
+   // Check for Cortex-M7 SAM S70, E70, V70, V71
+   else if (eproc == 0 && arch >= 0x10 && arch <= 0x13)
+   {
+       switch (port)
+       {
+       case 'a': addr = 0x400e0e00; break;
+       case 'b': addr = 0x400e1000; break;
+       case 'c': addr = 0x400e1200; break;
+       case 'd': addr = 0x400e1400; break;
+       case 'e': addr = 0x400e1600; break;
+       }
+   }
+
     else
     {
         switch (port)

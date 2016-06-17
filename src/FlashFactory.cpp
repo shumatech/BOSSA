@@ -75,6 +75,29 @@ FlashFactory::create(Samba& samba, uint32_t chipId)
                               ATSAMR21E18A_BUFFER_ADDR, ATSAMR21E18A_STACK_ADDR, ATSAMR21E18A_NVMCTRL_BASE, /*canBrownout*/true ) ;
         break;
     //
+    // SAM E70, S70, V70, V71
+    //
+    case 0xA1020C00: // E70
+    case 0xA1120C00: // S70
+    case 0xA1220C00: // V71
+    case 0xA1320C00: // V70
+        flash = new EefcFlash(samba, "ATSAM(SEV)70x20", 0x400000, 2048, 512, 1,  64, 0x20401000, 0x20420000, 0x400e0c00, false);
+        break;
+
+    case 0xA1020E00: // E70
+    case 0xA1120E00: // S70
+    case 0xA1220E00: // V71
+    // NB. there is no V70x21
+        flash = new EefcFlash(samba, "ATSAM(SEV)70x21", 0x400000, 4096, 512, 1, 128, 0x20401000, 0x20420000, 0x400e0c00, false);
+        break;
+
+    case 0xA10D0A00: // E70
+    case 0xA11D0A00: // S70
+    case 0xA12D0A00: // V71
+    case 0xA13D0A00: // V70
+        flash = new EefcFlash(samba, "ATSAM(SEV)70x19", 0x400000, 1024, 512, 1,  32, 0x20401000, 0x20420000, 0x400e0c00, false);
+        break;
+    //
     // SAM7SE
     //
     case 0x272a0a40:
