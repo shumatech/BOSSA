@@ -123,7 +123,7 @@ Flasher::write(const char* filename)
             while ((fbytes = fread(buffer, 1, pageSize, infile)) > 0)
             {
                 // print once every 10%
-                if ((pageNum % (numPages/10)) == 0)
+                if ( numPages >= 10 && (pageNum % (numPages/10)) == 0)
                     progressBar(pageNum, numPages);
 
                 _flash->loadBuffer(buffer, fbytes);
@@ -225,7 +225,7 @@ Flasher::verify(const char* filename)
         while ((fbytes = fread(bufferA, 1, pageSize, infile)) > 0)
         {
             // print once every 10%
-            if ((pageNum % (numPages/10)) == 0)
+            if ( numPages >= 10 && (pageNum % (numPages/10)) == 0)
                 progressBar(pageNum, numPages);
 
             _flash->readPage(pageNum, bufferB);
