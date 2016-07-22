@@ -166,7 +166,7 @@ DEPENDS+=$(BOSSASH_SRCS:%.cpp=$(OBJDIR)/%.d)
 # Tools
 #
 #Q=@
-CXX=g++
+CXX?=g++
 ARM=arm-none-eabi-
 ARMAS=$(ARM)as
 ARMOBJCOPY=$(ARM)objcopy
