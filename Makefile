@@ -133,6 +133,14 @@ WXVERSION=2.8
 
 endif
 
+ifeq (${OS},FreeBSD)
+
+# This is only needed for bossash, but we can't add it to BOSSASH_LIBS here
+# because that one is redefined later.
+COMMON_SRCS+=PosixSerialPort.cpp BSDPortFactory.cpp
+
+endif
+
 #
 # Object files
 #
