@@ -34,7 +34,7 @@
 
 #define ATSAMD_CHIPID_MASK                   (0xFFFF00FFul)  // mask for DIE & REV bitfields removal in Samba::chipId()
 #define ATSAMD_BOOTLOADER_SIZE               (0x00002000ul)  // 8192 bytes
-#define ATSAMR_BOOTLOADER_SIZE               (0x00001000ul) // 4096 bytes, USB-CDC only
+#define ATSAMR_BOOTLOADER_SIZE               (0x00002000ul) // 8192 bytes, USB-CDC only
 #define ATSAMD_FLASH_ROW_PAGES               (4ul)           // 4 pages per row
 
 #define ATSAMD21J18A_NAME                    "ATSAMD21J18A"
