@@ -70,7 +70,7 @@
 #define ATSAMD21E18A_STACK_ADDR              (0x20008000ul)
 #define ATSAMD21E18A_NVMCTRL_BASE            (0x41004000ul)
 
-#define ATSAMR21E18A_NAME                    "ATSAMDR1E18A"
+#define ATSAMR21E18A_NAME                    "ATSAMR1E18A"
 #define ATSAMR21E18A_CHIPID                  (0x1001001cul)  // DIE & REV bitfields masked in Samba::chipId()
 #define ATSAMR21E18A_FLASH_BASE              (0x00000000ul + ATSAMR_BOOTLOADER_SIZE)
 #define ATSAMR21E18A_FLASH_PAGE_SIZE         (64ul)
