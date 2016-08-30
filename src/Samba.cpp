@@ -182,6 +182,14 @@ Samba::init()
     {
         return true;
     }
+    // Check for Cortex-M7 processor
+    else if (eproc == 0)
+    {
+        if( arch >= 0x10 && arch <= 0x13 )
+            return true;
+        if (_debug)
+            printf("Unsupported ARM Cortex-M7 architecture\n");
+    }
     else
     {
         if (_debug)
