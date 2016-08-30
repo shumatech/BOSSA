@@ -56,7 +56,7 @@ typedef LinuxPortFactory PortFactory;
 #elif defined(__APPLE__)
 #include "OSXPortFactory.h"
 typedef OSXPortFactory PortFactory;
-#elif defined(__OpenBSD__)
+#elif defined(__OpenBSD__) || defined(__FreeBSD__)
 // This is likely to work (but not tested) for the other BSDs as well
 #include "BSDPortFactory.h"
 typedef BSDPortFactory PortFactory;
