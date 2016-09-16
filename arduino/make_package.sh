@@ -20,7 +20,7 @@ then
 elif [[ x$OS == xMINGW32 ]];
 then
 	# Windows
-	make bin/bossac.exe -j4
+	make bin/bossac.exe
 	strip --strip-all bin/bossac.exe
 	GCC_ARCH=`gcc -v 2>&1 | awk '/Target/ { print $2 }'`
 else
