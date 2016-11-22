@@ -1,3 +1,8 @@
+BOSSA 1.7.0-etherkit-1
+
+* Added support for SAMD21G16A.
+* Changed flash block transfer size from 4096 bytes to 2048 bytes to support chips with less RAM.
+
 BOSSA 1.7.0
 
 * Mainline BOSSA has been merged again with Arduino version
@@ -39,4 +44,3 @@ NEW IN THIS RELEASE
 * Some stability issues have been seen with the OS X USB driver using BOSSA.  When running BOSSA a second time to the same Atmel device, the USB driver can lock up causing BOSSA to freeze.  As a workaround, always disconnect and reconnect the Atmel device before running BOSSA again.
 * The firmware inside of SAM3U devices has a bug where non-word flash reads return zero instead of the real data.  BOSSA implements a transparent workaround for flash operations that copies flash to SRAM before reading.  Direct reads using the BOSSA shell will see the bug.
 * There are reports that the USB controller in some AMD-based systems has difficulty communicating with SAM devices.  The only known workaround is to use a different, preferrably Intel-based, system.
-

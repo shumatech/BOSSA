@@ -115,7 +115,7 @@ NvmFlash::eraseAll()
     // ...otherwise go with the legacy slow erase...
 
     // Calculate the number of rows that samba occupies (should be 32 for 8KB/0x2000bytes).
-    uint32_t starting_row = ATSAMD_BOOTLOADER_SIZE / _size / ATSAMD_FLASH_ROW_PAGES;
+    uint32_t starting_row = _addr / _size / ATSAMD_FLASH_ROW_PAGES;
     uint32_t total_rows = _pages / ATSAMD_FLASH_ROW_PAGES;
 
     for (uint32_t row=starting_row; row<total_rows; row++)

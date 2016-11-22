@@ -177,10 +177,24 @@ Samba::init()
             printf("Unsupported ARM920T architecture\n");
     }
     // Check for supported M0+ processor
-    // NOTE: 0x1001000a is a ATSAMD21E18A, 0x1001001c is ATSAMR21E18A
-	else if (cid == 0x10010000 || cid == 0x10010100 || cid == 0x10010005 || cid == 0x1001000a || cid == 0x1001001c)
+    else if ((cid & 0xFFFF0000) == 0x10010000 || (cid & 0xFFFF0000) == 0x10030000 || (cid & 0xFFFF0000) == 0x11010000 || (cid & 0xFFFF0000) == 0x10810000)
     {
-        return true;
+	    // Check for SAM M0+ architecture
+	    switch (cid)
+	    {
+		    case ATSAMD21J18A_CHIPID:
+		    case ATSAMD21G18A_CHIPID:
+		    case ATSAMD21G16A_CHIPID:
+		    case ATSAMD21E18A_CHIPID:
+		    case ATSAMR21E18A_CHIPID:
+
+			return true;
+		    break;
+
+		    default:
+			if (_debug)
+				printf("Unsupported SAM M0+ architecture\n");
+	    }
     }
     else
     {
@@ -662,6 +676,7 @@ Samba::reset(void)
     {
     case ATSAMD21J18A_CHIPID:
     case ATSAMD21G18A_CHIPID:
+    case ATSAMD21G16A_CHIPID:
     case ATSAMD21E18A_CHIPID:
     case ATSAMR21E18A_CHIPID:
         // http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0484c/index.html
@@ -767,4 +782,3 @@ Samba::checksumBuffer(uint32_t start_addr, uint32_t size)
         printf("%x\n", res);
     return res;
 }
-

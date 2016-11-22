@@ -1,4 +1,5 @@
-BOSSA 1.7.0
+BOSSA 1.7.0-etherkit-1
+----------------------
 
 BOSSA is a flash programming utility for Atmel's SAM family of flash-based ARM microcontrollers.
 The motivation behind BOSSA is to create a simple, easy-to-use, open source utility to replace Atmel's SAM-BA software.
@@ -7,7 +8,7 @@ BOSSA is an acronym for Basic Open Source SAM-BA Application to reflect that goa
 The software has been originally created by Scott Shumate and improved over time by Arduino LLC and many
 other [contributors](https://github.com/shumatech/BOSSA/graphs/contributors).
 
-the software is released under the terms of the BSD license as specificed in the LICENSE file.
+The software is released under the terms of the BSD license as specificed in the LICENSE file.
 
 How To Compile on Linux (Ubuntu)
 --------------------------------
