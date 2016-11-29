@@ -177,8 +177,8 @@ Samba::init()
             printf("Unsupported ARM920T architecture\n");
     }
     // Check for supported M0+ processor
-    // NOTE: 0x1001000a is a ATSAMD21E18A, 0x1001001c is ATSAMR21E18A
-	else if (cid == 0x10010000 || cid == 0x10010100 || cid == 0x10010005 || cid == 0x1001000a || cid == 0x1001001c)
+    // NOTE: 0x1001000a is a ATSAMD21E18A, 0x1001001c is ATSAMR21E18A, 0x10010026 is ATSAMD21E16
+	else if (cid == 0x10010000 || cid == 0x10010100 || cid == 0x10010005 || cid == 0x1001000a || cid == 0x1001001c || cid == 0x10010026)
     {
         return true;
     }
@@ -664,6 +664,7 @@ Samba::reset(void)
     case ATSAMD21G18A_CHIPID:
     case ATSAMD21E18A_CHIPID:
     case ATSAMR21E18A_CHIPID:
+    case ATSAMD21E16A_CHIPID:
         // http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0484c/index.html
         writeWord(0xE000ED0C, 0x05FA0004);
         break;

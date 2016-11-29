@@ -96,8 +96,8 @@ Flasher::write(const char* filename)
         if (_flash->isWriteBufferAvailable()) {
 
             // If multi-page write is available....
-
-            const uint32_t BLK_SIZE = 4096;
+            const uint32_t BLK_SIZE = 1024; // A2E
+//            const uint32_t BLK_SIZE = 4096;
             uint32_t offset = 0;
             uint8_t buffer[BLK_SIZE];
             memset(buffer, 0, BLK_SIZE);
@@ -107,6 +107,7 @@ Flasher::write(const char* filename)
                     // Ceil to nearest pagesize
                     fbytes = (fbytes + pageSize - 1) / pageSize * pageSize;
                 }
+                printf("fbytes=%x pageSize=%x\n", fbytes, pageSize);      //A2E
                 _flash->loadBuffer(buffer, fbytes);
                 _flash->writeBuffer(offset, fbytes);
                 offset += fbytes;
