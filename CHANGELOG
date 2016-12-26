@@ -1,6 +1,6 @@
 BOSSA 1.7.0-etherkit-1
 
-* Added support for SAMD21G16A.
+* Added support for SAMD21G16A, SAMD21G16B.
 * Changed flash block transfer size from 4096 bytes to 2048 bytes to support chips with less RAM.
 
 BOSSA 1.7.0

@@ -185,6 +185,7 @@ Samba::init()
 		    case ATSAMD21J18A_CHIPID:
 		    case ATSAMD21G18A_CHIPID:
 		    case ATSAMD21G16A_CHIPID:
+				case ATSAMD21G16B_CHIPID:
 		    case ATSAMD21E18A_CHIPID:
 		    case ATSAMR21E18A_CHIPID:
 
@@ -677,6 +678,7 @@ Samba::reset(void)
     case ATSAMD21J18A_CHIPID:
     case ATSAMD21G18A_CHIPID:
     case ATSAMD21G16A_CHIPID:
+		case ATSAMD21G16B_CHIPID:
     case ATSAMD21E18A_CHIPID:
     case ATSAMR21E18A_CHIPID:
         // http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0484c/index.html
