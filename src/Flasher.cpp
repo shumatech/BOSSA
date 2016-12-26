@@ -97,7 +97,7 @@ Flasher::write(const char* filename)
 
             // If multi-page write is available....
 
-            const uint32_t BLK_SIZE = 4096;
+            const uint32_t BLK_SIZE = 0x0800;
             uint32_t offset = 0;
             uint8_t buffer[BLK_SIZE];
             memset(buffer, 0, BLK_SIZE);
@@ -177,8 +177,8 @@ Flasher::verify(const char* filename)
         {
             printf("Verify %ld bytes of flash with checksum.\n", fsize);
 
-            // Perform checksum every 4096 bytes
-            uint32_t BLK_SIZE = 4096;
+            // Perform checksum every 2048 bytes
+            uint32_t BLK_SIZE = 0x0800;
             uint8_t buffer[BLK_SIZE];
             uint32_t offset = 0;
             while ((fbytes = fread(buffer, 1, BLK_SIZE, infile)) > 0) {

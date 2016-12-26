@@ -63,6 +63,18 @@ FlashFactory::create(Samba& samba, uint32_t chipId)
                               ATSAMD21G18A_BUFFER_ADDR, ATSAMD21G18A_STACK_ADDR, ATSAMD21G18A_NVMCTRL_BASE, /*canBrownout*/true ) ;
         break ;
 
+    case ATSAMD21G16A_CHIPID:
+        flash = new NvmFlash( samba, ATSAMD21G16A_NAME, ATSAMD21G16A_FLASH_BASE, ATSAMD21G16A_FLASH_PAGES, ATSAMD21G16A_FLASH_PAGE_SIZE,
+                              ATSAMD21G16A_FLASH_PLANES, ATSAMD21G16A_FLASH_LOCK_REGIONS,
+                              ATSAMD21G16A_BUFFER_ADDR, ATSAMD21G16A_STACK_ADDR, ATSAMD21G16A_NVMCTRL_BASE, /*canBrownout*/true ) ;
+        break ;
+
+		case ATSAMD21G16B_CHIPID:
+        flash = new NvmFlash( samba, ATSAMD21G16B_NAME, ATSAMD21G16B_FLASH_BASE, ATSAMD21G16B_FLASH_PAGES, ATSAMD21G16B_FLASH_PAGE_SIZE,
+                              ATSAMD21G16B_FLASH_PLANES, ATSAMD21G16B_FLASH_LOCK_REGIONS,
+                              ATSAMD21G16B_BUFFER_ADDR, ATSAMD21G16B_STACK_ADDR, ATSAMD21G16B_NVMCTRL_BASE, /*canBrownout*/true ) ;
+        break ;
+
     case ATSAMD21E18A_CHIPID:
         flash = new NvmFlash( samba, ATSAMD21E18A_NAME, ATSAMD21E18A_FLASH_BASE, ATSAMD21E18A_FLASH_PAGES, ATSAMD21E18A_FLASH_PAGE_SIZE,
                               ATSAMD21E18A_FLASH_PLANES, ATSAMD21E18A_FLASH_LOCK_REGIONS,
@@ -269,4 +281,3 @@ FlashFactory::create(Samba& samba, uint32_t chipId)
 
     return Flash::Ptr(flash);
 }
-

@@ -52,7 +52,7 @@ public:
 
     virtual ~NvmFlash();
 
-    virtual uint32_t numPages() { return _pages - ATSAMD_BOOTLOADER_SIZE / pageSize(); }
+    virtual uint32_t numPages() { return _pages - _addr / pageSize(); }
 
     void eraseAll();
     void eraseAuto(bool enable);
