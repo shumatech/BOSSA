@@ -261,11 +261,20 @@ FlashFactory::create(Samba& samba, uint32_t chipId)
     case 0x329973a0 :
         flash = new EefcFlash(samba, "ATSAM9XE128", 0x200000, 256, 512, 1, 8, 0x300000, 0x303000, 0xfffffa00, true);
         break;
+    //
+    // SAML21
+    //
+    case 0x10810019:
+        flash = new NvmFlash( samba, "ATSAML21E18B", ATSAMD21E18A_FLASH_BASE, ATSAMD21E18A_FLASH_PAGES, ATSAMD21E18A_FLASH_PAGE_SIZE,
+                              ATSAMD21E18A_FLASH_PLANES, ATSAMD21E18A_FLASH_LOCK_REGIONS,
+                              ATSAMD21E18A_BUFFER_ADDR, ATSAMD21E18A_STACK_ADDR, ATSAMD21E18A_NVMCTRL_BASE, /*canBrownout*/true ) ;
+        break ;
 
     default:
         flash = NULL;
         break;
     }
+
 
     return Flash::Ptr(flash);
 }
