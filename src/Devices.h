@@ -34,7 +34,8 @@
 
 #define ATSAMD_CHIPID_MASK                   (0xFFFF00FFul)  // mask for DIE & REV bitfields removal in Samba::chipId()
 #define ATSAMD_BOOTLOADER_SIZE               (0x00002000ul)  // 8192 bytes
-#define ATSAMR_BOOTLOADER_SIZE               (0x00002000ul) // 8192 bytes, USB-CDC only
+#define ATSAMR_BOOTLOADER_SIZE               (0x00002000ul)  // 8192 bytes, USB-CDC only
+#define ATSAML_BOOTLOADER_SIZE               (0x00006000ul)  // 24kb
 #define ATSAMD_FLASH_ROW_PAGES               (4ul)           // 4 pages per row
 
 #define ATSAMD21J18A_NAME                    "ATSAMD21J18A"
@@ -81,5 +82,15 @@
 #define ATSAMR21E18A_STACK_ADDR              (0x20008000ul)
 #define ATSAMR21E18A_NVMCTRL_BASE            (0x41004000ul)
 
+#define ATSAML21E18B_NAME                    "ATSAML21E18B"
+#define ATSAML21E18B_CHIPID                  (0x10810019)  // DIE & REV bitfields masked in Samba::chipId()
+#define ATSAML21E18B_FLASH_BASE              (0x00000000ul + ATSAML_BOOTLOADER_SIZE)
+#define ATSAML21E18B_FLASH_PAGE_SIZE         (64ul)
+#define ATSAML21E18B_FLASH_PAGES             (4096ul)
+#define ATSAML21E18B_FLASH_PLANES            (1ul)
+#define ATSAML21E18B_FLASH_LOCK_REGIONS      (16ul)
+#define ATSAML21E18B_BUFFER_ADDR             (0x20004000ul)
+#define ATSAML21E18B_STACK_ADDR              (0x20008000ul)
+#define ATSAML21E18B_NVMCTRL_BASE            (0x41004000ul)
 
 #endif // _DEVICES_H_
