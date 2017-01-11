@@ -84,9 +84,10 @@ NvmFlash::NvmFlash(Samba& samba,
                    uint32_t user,
                    uint32_t stack,
                    uint32_t regs,
+                   uint32_t bootloader_size,
                    bool canBrownout)
     : Flash(samba, name, addr, pages, size, planes, lockRegions, user, stack),
-      _regs(regs), _canBrownout(canBrownout)
+      _regs(regs), _bootloader_size(bootloader_size), _canBrownout(canBrownout)
 {
     // Upon power up the NVM controller goes through a power up sequence.
     // During this time, access to the NVM controller is halted. Upon power up the
@@ -115,7 +116,7 @@ NvmFlash::eraseAll()
     // ...otherwise go with the legacy slow erase...
 
     // Calculate the number of rows that samba occupies (should be 32 for 8KB/0x2000bytes).
-    uint32_t starting_row = ATSAMD_BOOTLOADER_SIZE / _size / ATSAMD_FLASH_ROW_PAGES;
+    uint32_t starting_row = _bootloader_size / _size / ATSAMD_FLASH_ROW_PAGES;
     uint32_t total_rows = _pages / ATSAMD_FLASH_ROW_PAGES;
 
     for (uint32_t row=starting_row; row<total_rows; row++)

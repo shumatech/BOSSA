@@ -48,11 +48,12 @@ public:
              uint32_t user,
              uint32_t stack,
              uint32_t regs,
+             uint32_t bootloader_size,
              bool canBrownout);
 
     virtual ~NvmFlash();
 
-    virtual uint32_t numPages() { return _pages - ATSAMD_BOOTLOADER_SIZE / pageSize(); }
+    virtual uint32_t numPages() { return _pages - _bootloader_size / pageSize(); }
 
     void eraseAll();
     void eraseAuto(bool enable);
@@ -81,6 +82,7 @@ public:
 
 private:
     uint32_t _regs;
+    uint32_t _bootloader_size;
     bool _canBrownout;
 
     uint32_t getAddressByRegion(uint32_t region);
