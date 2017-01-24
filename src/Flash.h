@@ -130,6 +130,8 @@ public:
     bool isWriteBufferAvailable() { return _samba.isWriteBufferAvailable(); }
     bool isChecksumBufferAvailable() { return _samba.isChecksumBufferAvailable(); }
 
+    static const int appletMaxSize;
+    
 protected:
     Samba& _samba;
     std::string _name;
