@@ -125,7 +125,7 @@ public:
     virtual uint16_t crc16AddByte(uint8_t d, uint16_t crc) { return _samba.crc16AddByte(d, crc); }
     virtual void readPage(uint32_t page, uint8_t* data) = 0;
 
-    typedef std::auto_ptr<Flash> Ptr;
+    typedef std::unique_ptr<Flash> Ptr;
 
     bool isWriteBufferAvailable() { return _samba.isWriteBufferAvailable(); }
     bool isChecksumBufferAvailable() { return _samba.isChecksumBufferAvailable(); }

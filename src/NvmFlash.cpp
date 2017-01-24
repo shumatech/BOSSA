@@ -97,6 +97,12 @@ NvmFlash::~NvmFlash()
 {
 }
 
+const int
+NvmFlash::bootloaderSize = 0x2000;
+
+const int
+NvmFlash::flashRowPages = 4;
+
 void
 NvmFlash::eraseAll()
 {
@@ -115,12 +121,12 @@ NvmFlash::eraseAll()
     // ...otherwise go with the legacy slow erase...
 
     // Calculate the number of rows that samba occupies (should be 32 for 8KB/0x2000bytes).
-    uint32_t starting_row = ATSAMD_BOOTLOADER_SIZE / _size / ATSAMD_FLASH_ROW_PAGES;
-    uint32_t total_rows = _pages / ATSAMD_FLASH_ROW_PAGES;
+    uint32_t starting_row = bootloaderSize / _size / flashRowPages;
+    uint32_t total_rows = _pages / flashRowPages;
 
     for (uint32_t row=starting_row; row<total_rows; row++)
     {
-        uint32_t addr_in_flash = (row * ATSAMD_FLASH_ROW_PAGES * pageSize());
+        uint32_t addr_in_flash = (row * flashRowPages * pageSize());
         // The address is byte address, so convert it to word address.
         addr_in_flash = addr_in_flash / 2;
 

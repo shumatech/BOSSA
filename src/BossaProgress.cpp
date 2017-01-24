@@ -28,7 +28,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include "BossaProgress.h"
 
-DEFINE_EVENT_TYPE(wxEVT_PROGRESS_CANCEL)
+DEFINE_LOCAL_EVENT_TYPE(wxEVT_PROGRESS_CANCEL)
 
 BossaProgress::BossaProgress(wxWindow* parent) : ProgressDialog(parent), _parent(parent)
 {

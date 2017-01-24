@@ -31,7 +31,7 @@
 
 #include "BossaForm.h"
 
-DECLARE_EVENT_TYPE(wxEVT_PROGRESS_CANCEL, wxID_ANY)
+DECLARE_LOCAL_EVENT_TYPE(wxEVT_PROGRESS_CANCEL, wxID_ANY)
 
 class BossaProgress : public ProgressDialog
 {

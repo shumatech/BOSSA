@@ -21,7 +21,7 @@ MainFrame::MainFrame( wxWindow* parent, wxWindowID id, const wxString& title, co
 	_titleBoxSizer = new wxBoxSizer( wxHORIZONTAL );
 	
 	_bossaBitmap = new wxStaticBitmap( this, wxID_ANY, wxNullBitmap, wxDefaultPosition, wxDefaultSize, 0 );
-	_titleBoxSizer->Add( _bossaBitmap, 0, wxALIGN_BOTTOM|wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+	_titleBoxSizer->Add( _bossaBitmap, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
 	_titleText = new wxStaticText( this, wxID_ANY, wxT("Flash Programmer for Atmel SAM Devices"), wxDefaultPosition, wxDefaultSize, 0 );
 	_titleText->Wrap( -1 );

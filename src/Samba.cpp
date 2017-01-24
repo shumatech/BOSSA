@@ -34,8 +34,6 @@
 #include <ctype.h>
 #include <unistd.h>
 
-#include "Devices.h"
-
 using namespace std;
 
 // XMODEM definitions
@@ -194,7 +192,7 @@ Samba::init()
 bool
 Samba::connect(SerialPort::Ptr port, int bps)
 {
-    _port = port;
+    _port = move(port);
 
     // Try to connect at a high speed if USB
     _isUsb = _port->isUsb();
@@ -641,7 +639,7 @@ Samba::chipId()
     // Check if it is Cortex M0+
     if (part_no == 0xC600)
     {
-        return readWord(0x41002018) & ATSAMD_CHIPID_MASK ; // DSU_DID register masked to remove DIE and REV
+        return readWord(0x41002018) & 0xFFFF00FF ; // DSU_DID register masked to remove DIE and REV
     }
 
     // Else assume M3 or M4
@@ -660,10 +658,10 @@ Samba::reset(void)
 
     switch (chipId)
     {
-    case ATSAMD21J18A_CHIPID:
-    case ATSAMD21G18A_CHIPID:
-    case ATSAMD21E18A_CHIPID:
-    case ATSAMR21E18A_CHIPID:
+    case 0x10010000:
+    case 0x10010005:
+    case 0x1001000a:
+    case 0x1001001c:
         // http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0484c/index.html
         writeWord(0xE000ED0C, 0x05FA0004);
         break;

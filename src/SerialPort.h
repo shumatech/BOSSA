@@ -71,7 +71,7 @@ public:
 
     virtual std::string name() const { return _name; }
 
-    typedef std::auto_ptr<SerialPort> Ptr;
+    typedef std::unique_ptr<SerialPort> Ptr;
 
 protected:
     std::string _name;

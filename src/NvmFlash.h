@@ -24,7 +24,6 @@
 #include <exception>
 
 #include "Flash.h"
-#include "Devices.h"
 
 class NvmFlashCmdError : public std::exception
 {
@@ -52,7 +51,7 @@ public:
 
     virtual ~NvmFlash();
 
-    virtual uint32_t numPages() { return _pages - ATSAMD_BOOTLOADER_SIZE / pageSize(); }
+    virtual uint32_t numPages() { return _pages - bootloaderSize / pageSize(); }
 
     void eraseAll();
     void eraseAuto(bool enable);
@@ -78,6 +77,9 @@ public:
 
     void writePage(uint32_t page);
     void readPage(uint32_t page, uint8_t* data);
+
+    static const int bootloaderSize;
+    static const int flashRowPages;
 
 private:
     uint32_t _regs;
