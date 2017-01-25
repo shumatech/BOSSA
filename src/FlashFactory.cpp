@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BOSSA
 //
-// Copyright (c) 2011-2012, ShumaTech
+// Copyright (c) 2011-2017, ShumaTech
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without

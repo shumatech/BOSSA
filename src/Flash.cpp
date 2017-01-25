@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BOSSA
 //
-// Copyright (c) 2011-2012, ShumaTech
+// Copyright (c) 2011-2017, ShumaTech
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -42,8 +42,6 @@ Flash::Flash(Samba& samba,
     : _samba(samba), _name(name), _addr(addr), _pages(pages), _size(size),
       _planes(planes), _lockRegions(lockRegions), _user(user), _wordCopy(samba, user)
 {
-//  printf( "Flash pages %u, page size %u, lockregions %u", pages, size, lockRegions) ;
-
     assert((size & (size - 1)) == 0);
 //  assert((pages & (pages - 1)) == 0); we have to remove this test as it will be false for SAMD because of bootloader pages removed from total
     assert((lockRegions & (lockRegions - 1)) == 0);
@@ -54,12 +52,9 @@ Flash::Flash(Samba& samba,
     _onBufferA = true;
 
     // page buffers will have the size of a physical page and will be situated right after the applet
-    _pageBufferA = _user + appletMaxSize ; //_wordCopy.size(); -> we need to avoid non 32bits aligned access on Cortex-M0+
+    _pageBufferA = _user + ((_wordCopy.size() + 3) / 4) * 4; // we need to avoid non 32bits aligned access on Cortex-M0+
     _pageBufferB = _pageBufferA + size;
 }
-
-const int 
-Flash::appletMaxSize = 0x1000;
 
 void
 Flash::lockAll()
@@ -85,10 +80,5 @@ void
 Flash::writeBuffer(uint32_t dst_addr, uint32_t size)
 {
     _samba.writeBuffer(_onBufferA ? _pageBufferA : _pageBufferB, dst_addr + _addr, size);
-}
-
-uint16_t
-Flash::checksumBuffer(uint32_t start_addr, uint32_t size) {
-    return _samba.checksumBuffer(start_addr + _addr, size);
 }
 

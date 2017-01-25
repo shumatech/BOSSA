@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BOSSA
 //
-// Copyright (c) 2011-2012, ShumaTech
+// Copyright (c) 2011-2017, ShumaTech
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without
@@ -45,8 +45,15 @@ public:
 class FileOpenError : public FileError
 {
 public:
+    FileOpenError() : FileError(), _errnum(0) {};
     FileOpenError(int errnum) : FileError(), _errnum(errnum) {};
-    const char* what() const throw() { return strerror(_errnum); }
+    const char* what() const throw()
+    {
+        if (_errnum == 0)
+            return "Unable to open file";
+        else
+            return strerror(_errnum);
+    }
 private:
     int _errnum;
 };
@@ -54,8 +61,15 @@ private:
 class FileIoError : public FileError
 {
 public:
+    FileIoError() : FileError(), _errnum(0) {};
     FileIoError(int errnum) : FileError(), _errnum(errnum) {};
-    const char* what() const throw() { return strerror(_errnum); }
+    const char* what() const throw()
+    {
+        if (_errnum == 0)
+            return "File I/O operation failed";
+        else
+            return strerror(_errnum);
+    }
 private:
     int _errnum;
 };
@@ -64,7 +78,17 @@ class FileShortError : public FileError
 {
 public:
     FileShortError() : FileError() {};
-    const char* what() const throw() { return "short write"; }
+    const char* what() const throw()
+    {
+        return "Operation ended with a short write";
+    }
+};
+
+class FileSizeError : public FileError
+{
+public:
+    FileSizeError() {};
+    const char* what() const throw() { return "File operation exceeds flash size"; }
 };
 
 #endif // _FILEERROR_H

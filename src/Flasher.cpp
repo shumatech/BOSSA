@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BOSSA
 //
-// Copyright (c) 2011-2012, ShumaTech
+// Copyright (c) 2011-2017, ShumaTech
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -38,36 +38,53 @@
 using namespace std;
 
 void
-Flasher::progressBar(int num, int div)
+FlasherInfo::print()
 {
-    int ticks;
-    int bars = 30;
+    bool first;
 
-    printf("\r[");
-    ticks = num * bars / div;
-    while (ticks-- > 0)
+    printf("Device       : %s\n", name.c_str());
+    printf("Chip ID      : %08x\n", chipId);
+    printf("Version      : %s\n", version.c_str());
+    printf("Address      : %d\n", address);
+    printf("Pages        : %d\n", numPages);
+    printf("Page Size    : %d bytes\n", pageSize);
+    printf("Total Size   : %dKB\n", totalSize / 1024);
+    printf("Planes       : %d\n", numPlanes);
+    printf("Lock Regions : %d\n", lockRegions.size());
+    printf("Locked       : ");
+    first = true;
+    for (bool region : lockRegions)
     {
-        putchar('=');
-        bars--;
+        printf("%s%d", first ? "" : ",", region ? 1 : 0);
+        first = false;
     }
-    while (bars-- > 0)
-    {
-        putchar(' ');
-    }
-    printf("] %d%% (%d/%d pages)", num * 100 / div, num, div);
-    fflush(stdout);
+    printf("%s\n", first ? "none" : "");
+    printf("Security     : %s\n", security ? "true" : "false");
+    if (canBootFlash)
+        printf("Boot Flash   : %s\n", bootFlash ? "true" : "false");
+    if (canBod)
+        printf("BOD          : %s\n", bod ? "true" : "false");
+    if (canBor)
+        printf("BOR          : %s\n", bor ? "true" : "false");
+    
+    if (canChipErase)
+        printf("Chip Erase   : true\n");
+    if (canWriteBuffer)
+        printf("Fast Write   : true\n");
+    if (canChecksumBuffer)
+        printf("Fast Verify  : true\n");
 }
 
 void
 Flasher::erase()
 {
-    printf("Erase flash\n");
+    _observer.onStatus("Erase flash\n");
     _flash->eraseAll();
     _flash->eraseAuto(false);
 }
 
 void
-Flasher::write(const char* filename)
+Flasher::write(const char* filename, uint32_t foffset)
 {
     FILE* infile;
     uint32_t pageSize = _flash->pageSize();
@@ -76,78 +93,79 @@ Flasher::write(const char* filename)
     long fsize;
     size_t fbytes;
 
+    if (foffset % pageSize != 0 || foffset >= _flash->totalSize())
+        throw FlashOffsetError();
+    
     infile = fopen(filename, "rb");
     if (!infile)
         throw FileOpenError(errno);
 
     try
     {
-        if (fseek(infile, 0, SEEK_END) != 0 ||
-            (fsize = ftell(infile)) < 0)
+        if (fseek(infile, 0, SEEK_END) != 0 || (fsize = ftell(infile)) < 0)
             throw FileIoError(errno);
+        
         rewind(infile);
 
         numPages = (fsize + pageSize - 1) / pageSize;
         if (numPages > _flash->numPages())
             throw FileSizeError();
 
-        printf("Write %ld bytes to flash (%u pages)\n", fsize, numPages);
+        _observer.onStatus("Write %ld bytes to flash (%u pages)\n", fsize, numPages);
 
-        if (_flash->isWriteBufferAvailable()) {
-
-            // If multi-page write is available....
-
-            const uint32_t BLK_SIZE = 4096;
+        if (_samba.canWriteBuffer())
+        {
             uint32_t offset = 0;
-            uint8_t buffer[BLK_SIZE];
-            memset(buffer, 0, BLK_SIZE);
-            while ((fbytes = fread(buffer, 1, BLK_SIZE, infile)) > 0)
+            uint32_t bufferSize = _samba.writeBufferSize();
+            uint8_t buffer[bufferSize];
+            
+            while ((fbytes = fread(buffer, 1, bufferSize, infile)) > 0)
             {
-                if (fbytes < BLK_SIZE) {
-                    // Ceil to nearest pagesize
+                _observer.onProgress(offset / pageSize, numPages);
+                
+                if (fbytes < bufferSize)
+                {
+                    memset(buffer + fbytes, 0, bufferSize - fbytes);
                     fbytes = (fbytes + pageSize - 1) / pageSize * pageSize;
                 }
+                
                 _flash->loadBuffer(buffer, fbytes);
-                _flash->writeBuffer(offset, fbytes);
-                offset += fbytes;
-                progressBar(offset/pageSize, numPages);
-
-                memset(buffer, 0, BLK_SIZE);
+                _flash->writeBuffer(foffset + offset, fbytes);
+                offset += fbytes;                
             }
 
-        } else {
-
-            // ...otherwise go with the legacy slow method
-
+        }
+        else
+        {
             uint8_t buffer[pageSize];
-            const uint32_t divisor = (numPages / 10) ? (numPages / 10) : 1;
+            uint32_t pageOffset = foffset / pageSize;
+
             while ((fbytes = fread(buffer, 1, pageSize, infile)) > 0)
             {
-                if ((pageNum % divisor) == 0)
-                    progressBar(pageNum, numPages);
+                _observer.onProgress(pageNum, numPages);
 
                 _flash->loadBuffer(buffer, fbytes);
-                _flash->writePage(pageNum);
+                _flash->writePage(pageOffset + pageNum);
 
                 pageNum++;
                 if (pageNum == numPages || fbytes != pageSize)
                     break;
             }
-            progressBar(pageNum, numPages);
 
         }
-        printf("\n");
     }
     catch(...)
     {
         fclose(infile);
         throw;
     }
+    
     fclose(infile);
+    _observer.onProgress(numPages, numPages);
 }
 
 bool
-Flasher::verify(const char* filename)
+Flasher::verify(const char* filename, uint32_t& pageErrors, uint32_t& totalErrors, uint32_t foffset)
 {
     FILE* infile;
     uint32_t pageSize = _flash->pageSize();
@@ -155,87 +173,73 @@ Flasher::verify(const char* filename)
     uint8_t bufferB[pageSize];
     uint32_t pageNum = 0;
     uint32_t numPages;
+    uint32_t pageOffset;
     uint32_t byteErrors = 0;
-    uint32_t pageErrors = 0;
-    uint32_t totalErrors = 0;
+    uint16_t calcCrc = 0;
+    uint16_t flashCrc;
     long fsize;
     size_t fbytes;
 
+    pageErrors = 0;
+    totalErrors = 0;
+
+    if (foffset % pageSize != 0 || foffset >= _flash->totalSize())
+        throw FlashOffsetError();
+    
+    pageOffset = foffset / pageSize;
+    
     infile = fopen(filename, "rb");
     if (!infile)
         throw FileOpenError(errno);
 
-    if (fseek(infile, 0, SEEK_END) != 0 || (fsize = ftell(infile)) < 0)
-        throw FileIoError(errno);
-    rewind(infile);
-
-    // If checksum buffer is available, use it...
-    if (_flash->isChecksumBufferAvailable()) {
-
-        bool failed = false;
-        try
-        {
-            printf("Verify %ld bytes of flash with checksum.\n", fsize);
-
-            // Perform checksum every 4096 bytes
-            uint32_t BLK_SIZE = 4096;
-            uint8_t buffer[BLK_SIZE];
-            uint32_t offset = 0;
-            while ((fbytes = fread(buffer, 1, BLK_SIZE, infile)) > 0) {
-                uint32_t i;
-                uint16_t crc = 0;
-                for (i=0; i<fbytes; i++)
-                    crc = _flash->crc16AddByte(buffer[i], crc);
-                uint16_t flashCrc = _flash->checksumBuffer(offset, fbytes);
-                offset += fbytes;
-
-                if (crc != flashCrc) {
-                    failed = true;
-                    break;
-                }
-            }
-        }
-        catch(...)
-        {
-            fclose(infile);
-            throw;
-        }
-        fclose(infile);
-
-        if (failed)
-        {
-            printf("Verify failed\n");
-            return false;
-        }
-
-        printf("Verify successful\n");
-        return true;
-    }
-
-    // ...otherwise go with the slow legacy method...
-
     try
     {
+        if (fseek(infile, 0, SEEK_END) != 0 || (fsize = ftell(infile)) < 0)
+            throw FileIoError(errno);
+        
+        rewind(infile);
+
         numPages = (fsize + pageSize - 1) / pageSize;
         if (numPages > _flash->numPages())
             throw FileSizeError();
 
-        printf("Verify %ld bytes of flash\n", fsize);
+        _observer.onStatus("Verify %ld bytes of flash\n", fsize);
 
-        const uint32_t divisor = (numPages / 10) ? (numPages / 10) : 1;
         while ((fbytes = fread(bufferA, 1, pageSize, infile)) > 0)
         {
-            if ((pageNum % divisor) == 0)
-                progressBar(pageNum, numPages);
-
-            _flash->readPage(pageNum, bufferB);
-
             byteErrors = 0;
-            for (uint32_t i = 0; i < fbytes; i++)
+            
+            _observer.onProgress(pageNum, numPages);
+
+            if (_samba.canChecksumBuffer())
             {
-                if (bufferA[i] != bufferB[i])
-                    byteErrors++;
+                for (uint32_t i = 0; i < fbytes; i++)
+                    calcCrc = _samba.checksumCalc(bufferA[i], calcCrc);
+                
+                flashCrc = _samba.checksumBuffer((pageOffset + pageNum) * pageSize, fbytes);
+                
+                if (flashCrc != calcCrc)
+                {
+                    _flash->readPage(pageOffset + pageNum, bufferB);
+
+                    for (uint32_t i = 0; i < fbytes; i++)
+                    {
+                        if (bufferA[i] != bufferB[i])
+                            byteErrors++;
+                    }
+                }
             }
+            else
+            {
+                _flash->readPage(pageOffset + pageNum, bufferB);
+
+                for (uint32_t i = 0; i < fbytes; i++)
+                {
+                    if (bufferA[i] != bufferB[i])
+                        byteErrors++;
+                }
+            }
+            
             if (byteErrors != 0)
             {
                 pageErrors++;
@@ -246,60 +250,59 @@ Flasher::verify(const char* filename)
             if (pageNum == numPages || fbytes != pageSize)
                 break;
         }
-        progressBar(pageNum, numPages);
-        printf("\n");
     }
     catch(...)
     {
         fclose(infile);
         throw;
     }
+    
     fclose(infile);
 
-    if (byteErrors != 0)
-    {
-        printf("Verify failed\n");
-        printf("Page errors: %d\n", pageErrors);
-        printf("Byte errors: %d\n", totalErrors);
+     _observer.onProgress(numPages, numPages);
+    
+    if (pageErrors != 0)
         return false;
-    }
 
-    printf("Verify successful\n");
     return true;
 }
 
 void
-Flasher::read(const char* filename, long fsize)
+Flasher::read(const char* filename, uint32_t fsize, uint32_t foffset)
 {
     FILE* outfile;
     uint32_t pageSize = _flash->pageSize();
     uint8_t buffer[pageSize];
     uint32_t pageNum = 0;
+    uint32_t pageOffset;
     uint32_t numPages;
     size_t fbytes;
 
     if (fsize == 0)
         fsize = pageSize * _flash->numPages();
+    
+    if (foffset % pageSize != 0 || foffset >= _flash->totalSize())
+        throw FlashOffsetError();
+        
+    pageOffset = foffset / pageSize;
 
+    numPages = (fsize + pageSize - 1) / pageSize;
+    if (pageOffset + numPages > _flash->numPages())
+        throw FileSizeError();
+    
     outfile = fopen(filename, "wb");
     if (!outfile)
         throw FileOpenError(errno);
-
+    
+    _observer.onStatus("Read %d bytes from flash\n", fsize);
+    
     try
     {
-        numPages = (fsize + pageSize - 1) / pageSize;
-        if (numPages > _flash->numPages())
-            throw FileSizeError();
-
-        printf("Read %ld bytes from flash\n", fsize);
-
         for (pageNum = 0; pageNum < numPages; pageNum++)
         {
-            // updated from one print per 10 pages to one per 10 percent
-            if ((pageNum < 10) || (pageNum % (numPages/10) == 0))
-                progressBar(pageNum, numPages);
+            _observer.onProgress(pageNum, numPages);
 
-            _flash->readPage(pageNum, buffer);
+            _flash->readPage(pageOffset + pageNum, buffer);
 
             if (pageNum == numPages - 1 && fsize % pageSize > 0)
                 pageSize = fsize % pageSize;
@@ -307,14 +310,15 @@ Flasher::read(const char* filename, long fsize)
             if (fbytes != pageSize)
                 throw FileShortError();
         }
-        progressBar(pageNum, numPages);
-        printf("\n");
     }
     catch(...)
     {
         fclose(outfile);
         throw;
     }
+    
+    _observer.onProgress(numPages, numPages);
+    
     fclose(outfile);
 }
 
@@ -323,7 +327,7 @@ Flasher::lock(string& regionArg, bool enable)
 {
     if (regionArg.empty())
     {
-        printf("%s all regions\n", enable ? "Lock" : "Unlock");
+        _observer.onStatus("%s all regions\n", enable ? "Lock" : "Unlock");
         if (enable)
             _flash->lockAll();
         else
@@ -341,7 +345,7 @@ Flasher::lock(string& regionArg, bool enable)
             delim = regionArg.find(',', pos);
             sub = regionArg.substr(pos, delim - pos);
             region = strtol(sub.c_str(), NULL, 0);
-            printf("%s region %d\n", enable ? "Lock" : "Unlock", region);
+            _observer.onStatus("%s region %d\n", enable ? "Lock" : "Unlock", region);
             _flash->setLockRegion(region, enable);
             pos = delim + 1;
         } while (delim != string::npos);
@@ -349,41 +353,31 @@ Flasher::lock(string& regionArg, bool enable)
 }
 
 void
-Flasher::info(Samba& samba)
+Flasher::info(FlasherInfo& info)
 {
-    bool first;
-
-    printf("Device       : %s\n", _flash->name().c_str());
-    printf("Chip ID      : %08x\n", samba.chipId());
-    printf("Version      : %s\n", samba.version().c_str());
-    printf("Address      : %d\n", _flash->address());
-    printf("Pages        : %d\n", _flash->numPages());
-    printf("Page Size    : %d bytes\n", _flash->pageSize());
-    printf("Total Size   : %dKB\n", _flash->numPages() * _flash->pageSize() / 1024);
-    printf("Planes       : %d\n", _flash->numPlanes());
-    printf("Lock Regions : %d\n", _flash->lockRegions());
-    printf("Locked       : ");
-    first = true;
+    info.name = _flash->name();
+    info.chipId = _samba.chipId();
+    info.version = _samba.version();
+    info.address = _flash->address();
+    info.numPages = _flash->numPages();
+    info.pageSize = _flash->pageSize();
+    info.totalSize = _flash->numPages() * _flash->pageSize();
+    info.numPlanes = _flash->numPlanes();
+    info.security = _flash->getSecurity();
+    info.bootFlash = _flash->getBootFlash();
+    info.bod = _flash->getBod();
+    info.bor = _flash->getBor();
+    
+    info.canBootFlash = _flash->canBootFlash();
+    info.canBod = _flash->canBod();
+    info.canBor = _flash->canBor();
+    info.canChipErase = _samba.canChipErase();
+    info.canWriteBuffer = _samba.canWriteBuffer();
+    info.canChecksumBuffer = _samba.canChecksumBuffer();
+    
+    info.lockRegions.resize(_flash->lockRegions());    
     for (uint32_t region = 0; region < _flash->lockRegions(); region++)
     {
-        if (_flash->getLockRegion(region))
-        {
-            printf("%s%d", first ? "" : ",", region);
-            first = false;
-        }
+        info.lockRegions[region] = _flash->getLockRegion(region);
     }
-    printf("%s\n", first ? "none" : "");
-    printf("Security     : %s\n", _flash->getSecurity() ? "true" : "false");
-    if (_flash->canBootFlash())
-        printf("Boot Flash   : %s\n", _flash->getBootFlash() ? "true" : "false");
-    if (_flash->canBod())
-        printf("BOD          : %s\n", _flash->getBod() ? "true" : "false");
-    if (_flash->canBor())
-        printf("BOR          : %s\n", _flash->getBor() ? "true" : "false");
-    if (samba.isChipEraseAvailable())
-        printf("Arduino      : FAST_CHIP_ERASE\n");
-    if (samba.isWriteBufferAvailable())
-        printf("Arduino      : FAST_MULTI_PAGE_WRITE\n");
-    if (samba.isChecksumBufferAvailable())
-        printf("Arduino      : CAN_CHECKSUM_MEMORY_BUFFER\n");
 }

@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BOSSA
 //
-// Copyright (c) 2011-2012, ShumaTech
+// Copyright (c) 2011-2017, ShumaTech
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without
@@ -31,35 +31,78 @@
 
 #include <string>
 #include <exception>
+#include <vector>
 
 #include "Flash.h"
 #include "Samba.h"
 #include "FileError.h"
 
-class FileSizeError : public FileError
+class FlashOffsetError : public std::exception
 {
 public:
-    FileSizeError() : FileError() {};
-    virtual const char* what() const throw() { return "file operation exceeds flash size"; }
+    FlashOffsetError() : std::exception() {};
+    virtual const char* what() const throw() { return "Flash offset is invalid"; }
+};
+
+class FlasherObserver
+{
+public:
+    FlasherObserver() {}
+    virtual ~FlasherObserver() {}
+    
+    virtual void onStatus(const char *message, ...) = 0;
+    virtual void onProgress(int num, int div) = 0;
+};
+
+class FlasherInfo
+{
+public:
+    FlasherInfo() {}
+    virtual ~FlasherInfo() {}
+    
+    void print();
+    
+    std::string name;
+    uint32_t    chipId;
+    std::string version;
+    uint32_t    address;
+    uint32_t    numPages;
+    uint32_t    pageSize;
+    uint32_t    totalSize;
+    uint32_t    numPlanes;
+    
+    bool        security;
+    bool        bootFlash;
+    bool        bod;
+    bool        bor;
+    
+    bool        canBootFlash;
+    bool        canBod;
+    bool        canBor;
+    bool        canChipErase;
+    bool        canWriteBuffer;
+    bool        canChecksumBuffer;
+    
+    std::vector<uint32_t> lockRegions;
 };
 
 class Flasher
 {
 public:
-    Flasher(Flash::Ptr& flash) : _flash(flash) {}
+    Flasher(Samba& samba, Flash::Ptr& flash, FlasherObserver& observer) : _samba(samba), _flash(flash), _observer(observer) {}
     virtual ~Flasher() {}
 
     void erase();
-    void write(const char* filename);
-    bool verify(const char* filename);
-    void read(const char* filename, long fsize);
+    void write(const char* filename, uint32_t foffset = 0);
+    bool verify(const char* filename, uint32_t& pageErrors, uint32_t& totalErrors, uint32_t foffset = 0);
+    void read(const char* filename, uint32_t fsize, uint32_t foffset = 0);
     void lock(std::string& regionArg, bool enable);
-    void info(Samba& samba);
+    void info(FlasherInfo& info);
 
 private:
-    void progressBar(int num, int div);
-
+    Samba& _samba;
     Flash::Ptr& _flash;
+    FlasherObserver& _observer;
 };
 
 #endif // _FLASHER_H

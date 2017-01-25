@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BOSSA
 //
-// Copyright (c) 2011-2012, ShumaTech
+// Copyright (c) 2011-2017, ShumaTech
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -92,6 +92,7 @@ public:
     virtual uint32_t pageSize() { return _size; }
     virtual uint32_t numPages() { return _pages; }
     virtual uint32_t numPlanes() { return _planes; }
+    virtual uint32_t totalSize() { return _size * _pages; }
 
     virtual void eraseAll() = 0;
     virtual void eraseAuto(bool enable) = 0;
@@ -118,20 +119,14 @@ public:
     virtual void setBootFlash(bool enable) = 0;
     virtual bool canBootFlash() = 0;
 
-    virtual void loadBuffer(const uint8_t* data, uint16_t size);
-    virtual void writePage(uint32_t page) = 0;
-    virtual void writeBuffer(uint32_t dst_addr, uint32_t size);
-    virtual uint16_t checksumBuffer(uint32_t start_addr, uint32_t size);
-    virtual uint16_t crc16AddByte(uint8_t d, uint16_t crc) { return _samba.crc16AddByte(d, crc); }
+    virtual void writePage(uint32_t page) = 0;    
     virtual void readPage(uint32_t page, uint8_t* data) = 0;
+
+    virtual void writeBuffer(uint32_t dst_addr, uint32_t size);
+    virtual void loadBuffer(const uint8_t* data, uint16_t size);
 
     typedef std::unique_ptr<Flash> Ptr;
 
-    bool isWriteBufferAvailable() { return _samba.isWriteBufferAvailable(); }
-    bool isChecksumBufferAvailable() { return _samba.isChecksumBufferAvailable(); }
-
-    static const int appletMaxSize;
-    
 protected:
     Samba& _samba;
     std::string _name;

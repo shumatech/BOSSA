@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BOSSA
 //
-// Copyright (c) 2011-2012, ShumaTech
+// Copyright (c) 2011-2017, ShumaTech
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,18 @@
 #include "FlashFactory.h"
 #include "Flasher.h"
 
+class CommandObserver : public FlasherObserver
+{
+public:
+    CommandObserver() : _lastTicks(-1) {}
+    virtual ~CommandObserver() {}
+    
+    virtual void onStatus(const char *message, ...);
+    virtual void onProgress(int num, int div);
+private:
+    int _lastTicks;
+};
+
 class Command
 {
 public:
@@ -60,6 +72,7 @@ protected:
     static FlashFactory _flashFactory;
     static Flash::Ptr _flash;
     static Flasher _flasher;
+    static CommandObserver _observer;
     static bool _connected;
 
     bool error(const char* fmt, ...);

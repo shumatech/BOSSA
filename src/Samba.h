@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BOSSA
 //
-// Copyright (c) 2011-2012, ShumaTech
+// Copyright (c) 2011-2017, ShumaTech
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -51,7 +51,7 @@ public:
     Samba();
     virtual ~Samba();
 
-    bool connect(SerialPort::Ptr port, int bps=115200);
+    bool connect(SerialPort::Ptr port, int bps = 115200);
     void disconnect();
 
     void writeByte(uint32_t addr, uint8_t value);
@@ -75,22 +75,23 @@ public:
 
     void reset(void);
 
-    // Arduino extended functions
+    // Extended SAM-BA functions
+    bool canChipErase() { return _canChipErase; }
     bool chipErase(uint32_t start_addr);
-    bool isChipEraseAvailable() { return _extChipEraseAvailable; }
 
-    bool writeBuffer(uint32_t src_addr, uint32_t dst_addr, uint32_t size);
-    bool isWriteBufferAvailable() { return _extWriteBufferAvailable; }
-
+    bool canWriteBuffer() { return _canWriteBuffer; }
+    void writeBuffer(uint32_t src_addr, uint32_t dst_addr, uint32_t size);
+    uint32_t writeBufferSize() { return 4096; }
+    
+    bool canChecksumBuffer() { return _canChecksumBuffer; }
     uint16_t checksumBuffer(uint32_t start_addr, uint32_t size);
-    bool isChecksumBufferAvailable() { return _extChecksumBufferAvailable; }
-
-    uint16_t crc16AddByte(uint8_t c, uint16_t crc);
+    uint32_t checksumBufferSize() { return 4096; }
+    uint16_t checksumCalc(uint8_t c, uint16_t crc);
 
 private:
-    bool _extChipEraseAvailable;
-    bool _extWriteBufferAvailable;
-    bool _extChecksumBufferAvailable;
+    bool _canChipErase;
+    bool _canWriteBuffer;
+    bool _canChecksumBuffer;
     bool _debug;
     bool _isUsb;
     SerialPort::Ptr _port;

@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BOSSA
 //
-// Copyright (c) 2011-2012, ShumaTech
+// Copyright (c) 2011-2017, ShumaTech
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -40,27 +40,6 @@ DEFINE_LOCAL_EVENT_TYPE(wxEVT_THREAD_SUCCESS)
 DEFINE_LOCAL_EVENT_TYPE(wxEVT_THREAD_WARNING)
 DEFINE_LOCAL_EVENT_TYPE(wxEVT_THREAD_ERROR)
 
-class FileOpenError : public exception
-{
-public:
-    FileOpenError() : exception() {};
-    const char* what() const throw() { return "Unable to open file"; }
-};
-
-class FileIoError : public exception
-{
-public:
-    FileIoError() : exception() {};
-    const char* what() const throw() { return "File I/O operation failed"; }
-};
-
-class FileSizeError : public exception
-{
-public:
-    FileSizeError() : exception() {};
-    const char* what() const throw() { return "File operation exceeds flash size"; }
-};
-
 BossaThread::BossaThread(wxEvtHandler* parent) : wxThread(), _parent(parent), _stopped(false)
 {
 }
@@ -98,6 +77,23 @@ BossaThread::Error(const wxString& message)
     _parent->AddPendingEvent(event);
 }
 
+void
+ThreadObserver::onStatus(const char *message, ...)
+{
+}
+
+void
+ThreadObserver::onProgress(int num, int div)
+{
+    int percent = num * 100 / div;
+    
+    if (percent != _lastPercent)
+    {
+        _thread->Progress(wxString::Format(wxT("%s page %d (%d%%)"), _operation.mb_str(), num, percent), percent);
+        _lastPercent = percent;
+    }    
+}
+
 WriteThread::WriteThread(wxEvtHandler* parent,
                          const wxString& filename,
                          bool eraseAll,
@@ -105,9 +101,10 @@ WriteThread::WriteThread(wxEvtHandler* parent,
                          bool bod,
                          bool bor,
                          bool lock,
-                         bool security) :
+                         bool security,
+                         uint32_t offset) :
     BossaThread(parent), _filename(filename), _eraseAll(eraseAll),
-    _bootFlash(bootFlash), _bod(bod), _bor(bor), _lock(lock), _security(security)
+    _bootFlash(bootFlash), _bod(bod), _bor(bor), _lock(lock), _security(security), _offset(offset)
 
 {
 }
@@ -115,182 +112,77 @@ WriteThread::WriteThread(wxEvtHandler* parent,
 wxThread::ExitCode
 WriteThread::Entry()
 {
-    FILE* infile = NULL;
-    Flash& flash = *wxGetApp().flash;
-    uint32_t pageSize = flash.pageSize();
-    uint8_t buffer[pageSize];
-    uint32_t pageNum = 0;
-    uint32_t numPages;
-    long fsize;
-    size_t fbytes;
-
+    Flash::Ptr& flash = wxGetApp().flash;
+    Samba& samba = wxGetApp().samba;
+    
     try
     {
+        ThreadObserver observer(this, "Writing");
+        Flasher flasher(samba, flash, observer);
+        
         if (_eraseAll)
         {
-            flash.eraseAll();
-            flash.eraseAuto(false);
+            flash->eraseAll();
+            flash->eraseAuto(false);
         }
         else
         {
-            flash.eraseAuto(true);
-        }
+            flash->eraseAuto(true);
+        }    
+        
+        flasher.write(_filename.mb_str(), _offset);
 
-        infile = fopen(_filename.mb_str(), "rb");
-        if (!infile)
-            throw FileOpenError();
-
-        if (fseek(infile, 0, SEEK_END) != 0 ||
-            (fsize = ftell(infile)) < 0)
-            throw FileIoError();
-        rewind(infile);
-
-        numPages = (fsize + pageSize - 1) / pageSize;
-        if (numPages > flash.numPages())
-            throw FileSizeError();
-
-        while ((fbytes = fread(buffer, 1, pageSize, infile)) > 0)
-        {
-            if (_stopped)
-            {
-                fclose(infile);
-                Warning(wxT("Write stopped"));
-                return 0;
-            }
-
-            if (pageNum % 10 == 0 || pageNum == numPages - 1)
-            {
-                uint32_t percent = (pageNum + 1) * 100 / numPages;
-                Progress(wxString::Format(wxT("Writing page %d (%d%%)"), pageNum, percent),
-                         percent);
-            }
-
-            flash.loadBuffer(buffer, fbytes);
-            flash.writePage(pageNum);
-
-            pageNum++;
-            if (pageNum == numPages)
-                break;
-            if (fbytes != pageSize)
-                throw FileIoError();
-        }
-        if (fbytes <= 0)
-            throw FileIoError();
-
-        flash.setBootFlash(_bootFlash);
-        flash.setBod(_bod);
-        flash.setBor(_bor);
+        flash->setBootFlash(_bootFlash);
+        flash->setBod(_bod);
+        flash->setBor(_bor);
         if (_lock)
-            flash.lockAll();
+            flash->lockAll();
         if (_security)
-            flash.setSecurity();
-
-        fclose(infile);
+            flash->setSecurity();
     }
     catch(exception& e)
     {
-        if (infile)
-            fclose(infile);
         Error(wxString(e.what(), wxConvUTF8));
         return 0;
     }
 
     Success(_("Write completed successfully"));
+    
     return 0;
 }
 
-VerifyThread::VerifyThread(wxEvtHandler* parent, const wxString& filename) :
-    BossaThread(parent), _filename(filename)
+VerifyThread::VerifyThread(wxEvtHandler* parent, const wxString& filename, uint32_t offset) :
+    BossaThread(parent), _filename(filename), _offset(offset)
 {
 }
 
 wxThread::ExitCode
 VerifyThread::Entry()
 {
-    FILE* infile = NULL;
-    Flash& flash = *wxGetApp().flash;
-    uint32_t pageSize = flash.pageSize();
-    uint8_t bufferA[pageSize];
-    uint8_t bufferB[pageSize];
-    uint32_t pageNum = 0;
-    uint32_t numPages;
-    uint32_t byteErrors = 0;
-    uint32_t pageErrors = 0;
-    uint32_t totalErrors = 0;
-    long fsize;
-    size_t fbytes;
-
+    Flash::Ptr& flash = wxGetApp().flash;
+    Samba& samba = wxGetApp().samba;
+    uint32_t pageErrors;
+    uint32_t totalErrors;
+    
     try
     {
-        infile = fopen(_filename.mb_str(), "rb");
-        if (!infile)
-            throw FileOpenError();
-
-        if (fseek(infile, 0, SEEK_END) != 0 ||
-            (fsize = ftell(infile)) < 0)
-            throw FileIoError();
-        rewind(infile);
-
-        numPages = (fsize + pageSize - 1) / pageSize;
-        if (numPages > flash.numPages())
-            throw FileSizeError();
-
-        while ((fbytes = fread(bufferA, 1, pageSize, infile)) > 0)
+        ThreadObserver observer(this, "Verifying");
+        Flasher flasher(samba, flash, observer);
+        
+        if (!flasher.verify(_filename.mb_str(), pageErrors, totalErrors, _offset))
         {
-            if (_stopped)
-            {
-                fclose(infile);
-                Warning(wxT("Verify stopped"));
-                return 0;
-            }
-
-            if (pageNum % 10 == 0 || pageNum == numPages - 1)
-            {
-                uint32_t percent = (pageNum + 1) * 100 / numPages;
-                Progress(wxString::Format(wxT("Verifying page %d (%d%%)"), pageNum, percent),
-                         percent);
-            }
-
-            flash.readPage(pageNum, bufferB);
-
-            byteErrors = 0;
-            for (uint32_t i = 0; i < fbytes; i++)
-            {
-                if (bufferA[i] != bufferB[i])
-                    byteErrors++;
-            }
-            if (byteErrors != 0)
-            {
-                pageErrors++;
-                totalErrors += byteErrors;
-            }
-
-            pageNum++;
-            if (pageNum == numPages)
-                break;
-            if (fbytes != pageSize)
-                throw FileIoError();
+            Warning(wxString::Format(_(
+                "Verify failed\n"
+                "Page errors: %d\n"
+                "Byte errors: %d\n"),
+                pageErrors, totalErrors));
+            return 0;
         }
-        if (fbytes <= 0)
-            throw FileIoError();
-
-        fclose(infile);
+        
     }
     catch(exception& e)
     {
-        if (infile)
-            fclose(infile);
         Error(wxString(e.what(), wxConvUTF8));
-        return 0;
-    }
-
-    if (byteErrors != 0)
-    {
-        Warning(wxString::Format(_(
-            "Verify failed\n"
-            "Page errors: %d\n"
-            "Byte errors: %d\n"),
-            pageErrors, totalErrors));
         return 0;
     }
 
@@ -299,68 +191,32 @@ VerifyThread::Entry()
     return 0;
 }
 
-ReadThread::ReadThread(wxEvtHandler* parent, const wxString& filename, size_t size) :
-    BossaThread(parent), _filename(filename), _size(size)
+ReadThread::ReadThread(wxEvtHandler* parent, const wxString& filename, size_t size, uint32_t offset) :
+    BossaThread(parent), _filename(filename), _size(size), _offset(offset)
 {
 }
 
 wxThread::ExitCode
 ReadThread::Entry()
 {
-    FILE* outfile = NULL;
-    Flash& flash = *wxGetApp().flash;
-    uint32_t pageSize = flash.pageSize();
-    uint8_t buffer[pageSize];
-    uint32_t pageNum = 0;
-    uint32_t numPages;
-
-    if (_size == 0)
-        _size = pageSize * flash.numPages();
-
-    outfile = fopen(_filename.mb_str(), "wb");
-    if (!outfile)
-        throw FileOpenError();
-
+    Flash::Ptr& flash = wxGetApp().flash;
+    Samba& samba = wxGetApp().samba;
+    
     try
     {
-        numPages = (_size + pageSize - 1) / pageSize;
-        if (numPages > flash.numPages())
-            throw FileSizeError();
-
-        for (pageNum = 0; pageNum < numPages; pageNum++)
-        {
-            if (_stopped)
-            {
-                fclose(outfile);
-                Warning(wxT("Read stopped"));
-                return 0;
-            }
-
-            if (pageNum % 10 == 0 || pageNum == numPages - 1)
-            {
-                uint32_t percent = (pageNum + 1) * 100 / numPages;
-                Progress(wxString::Format(wxT("Reading page %d (%d%%)"), pageNum, percent),
-                         percent);
-            }
-
-            flash.readPage(pageNum, buffer);
-
-            if (pageNum == numPages - 1 && _size % pageSize > 0)
-                pageSize = _size % pageSize;
-            if (fwrite(buffer, 1, pageSize, outfile) != pageSize)
-                throw FileIoError();
-        }
-        fclose(outfile);
+        ThreadObserver observer(this, "Reading");
+        Flasher flasher(samba, flash, observer);
+        
+        flasher.read(_filename.mb_str(), _size, _offset);
+        
     }
     catch(exception& e)
     {
-        if (outfile)
-            fclose(outfile);
         Error(wxString(e.what(), wxConvUTF8));
         return 0;
     }
 
     Success(_("Read completed successfully"));
+
     return 0;
 }
-

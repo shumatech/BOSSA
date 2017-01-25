@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////
-// C++ code generated with wxFormBuilder (version Nov 17 2010)
+// C++ code generated with wxFormBuilder (version Jun 17 2015)
 // http://www.wxformbuilder.org/
 //
 // PLEASE DO "NOT" EDIT THIS FILE!
@@ -35,15 +35,16 @@ MainFrame::MainFrame( wxWindow* parent, wxWindowID id, const wxString& title, co
 	
 	_titleBoxSizer->Add( _aboutButton, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
+	
 	_topBoxSizer->Add( _titleBoxSizer, 0, wxALL|wxEXPAND, 5 );
 	
 	wxStaticBoxSizer* _portBoxSizer;
 	_portBoxSizer = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, wxT("Serial Port") ), wxHORIZONTAL );
 	
-	_portComboBox = new wxComboBox( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, wxCB_READONLY ); 
+	_portComboBox = new wxComboBox( _portBoxSizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, wxCB_READONLY ); 
 	_portBoxSizer->Add( _portComboBox, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
-	_refreshButton = new wxButton( this, wxID_ANY, wxT("Refresh"), wxDefaultPosition, wxDefaultSize, 0 );
+	_refreshButton = new wxButton( _portBoxSizer->GetStaticBox(), wxID_ANY, wxT("Refresh"), wxDefaultPosition, wxDefaultSize, 0 );
 	_refreshButton->SetToolTip( wxT("Refresh the list of available serial ports") );
 	
 	_portBoxSizer->Add( _refreshButton, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
@@ -51,20 +52,22 @@ MainFrame::MainFrame( wxWindow* parent, wxWindowID id, const wxString& title, co
 	
 	_portBoxSizer->Add( 0, 0, 1, wxEXPAND, 5 );
 	
-	_autoScanButton = new wxButton( this, wxID_ANY, wxT("Auto-Scan"), wxDefaultPosition, wxDefaultSize, 0 );
+	_autoScanButton = new wxButton( _portBoxSizer->GetStaticBox(), wxID_ANY, wxT("Auto-Scan"), wxDefaultPosition, wxDefaultSize, 0 );
 	_autoScanButton->SetToolTip( wxT("Scan all serial ports for a processor") );
 	
 	_portBoxSizer->Add( _autoScanButton, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+	
 	
 	_topBoxSizer->Add( _portBoxSizer, 3, wxALL|wxEXPAND, 5 );
 	
 	wxStaticBoxSizer* _fileBoxSizer;
 	_fileBoxSizer = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, wxT("File") ), wxHORIZONTAL );
 	
-	_filePicker = new wxFilePickerCtrl( this, wxID_ANY, wxEmptyString, wxT("Select a file"), wxT("*.*"), wxDefaultPosition, wxDefaultSize, wxFLP_OPEN|wxFLP_USE_TEXTCTRL );
+	_filePicker = new wxFilePickerCtrl( _fileBoxSizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxT("Select a file"), wxT("*.*"), wxDefaultPosition, wxDefaultSize, wxFLP_OPEN|wxFLP_USE_TEXTCTRL );
 	_filePicker->SetToolTip( wxT("Select the file to use for write/verify/read operations") );
 	
 	_fileBoxSizer->Add( _filePicker, 1, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+	
 	
 	_topBoxSizer->Add( _fileBoxSizer, 3, wxALL|wxEXPAND, 5 );
 	
@@ -75,41 +78,41 @@ MainFrame::MainFrame( wxWindow* parent, wxWindowID id, const wxString& title, co
 	_writeBoxSizer = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, wxT("Write Options") ), wxHORIZONTAL );
 	
 	wxGridSizer* _writeGridSizer;
-	_writeGridSizer = new wxGridSizer( 2, 3, 0, 0 );
+	_writeGridSizer = new wxGridSizer( 3, 2, 0, 0 );
 	
-	_eraseCheckBox = new wxCheckBox( this, wxID_ANY, wxT("Erase all"), wxDefaultPosition, wxDefaultSize, 0 );
-	_eraseCheckBox->SetValue(true); 
+	_eraseCheckBox = new wxCheckBox( _writeBoxSizer->GetStaticBox(), wxID_ANY, wxT("Erase all"), wxDefaultPosition, wxDefaultSize, 0 );
 	_eraseCheckBox->SetToolTip( wxT("Erase entire flash before writing (recommended)") );
 	
 	_writeGridSizer->Add( _eraseCheckBox, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
-	_bodCheckBox = new wxCheckBox( this, wxID_ANY, wxT("Brownout detect"), wxDefaultPosition, wxDefaultSize, 0 );
-	_bodCheckBox->SetToolTip( wxT("Enable the brownout detection circuitry") );
-	
-	_writeGridSizer->Add( _bodCheckBox, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
-	
-	_lockCheckBox = new wxCheckBox( this, wxID_ANY, wxT("Lock"), wxDefaultPosition, wxDefaultSize, 0 );
-	_lockCheckBox->SetToolTip( wxT("Lock access to the flash") );
-	
-	_writeGridSizer->Add( _lockCheckBox, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
-	
-	_bootCheckBox = new wxCheckBox( this, wxID_ANY, wxT("Boot to flash"), wxDefaultPosition, wxDefaultSize, 0 );
-	_bootCheckBox->SetValue(true); 
+	_bootCheckBox = new wxCheckBox( _writeBoxSizer->GetStaticBox(), wxID_ANY, wxT("Boot to flash"), wxDefaultPosition, wxDefaultSize, 0 );
 	_bootCheckBox->SetToolTip( wxT("Boot processor to flash instead of SAM-BA (if supported)") );
 	
 	_writeGridSizer->Add( _bootCheckBox, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
-	_borCheckBox = new wxCheckBox( this, wxID_ANY, wxT("Brownout reset"), wxDefaultPosition, wxDefaultSize, 0 );
+	_bodCheckBox = new wxCheckBox( _writeBoxSizer->GetStaticBox(), wxID_ANY, wxT("Brownout detect"), wxDefaultPosition, wxDefaultSize, 0 );
+	_bodCheckBox->SetToolTip( wxT("Enable the brownout detection circuitry") );
+	
+	_writeGridSizer->Add( _bodCheckBox, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+	
+	_borCheckBox = new wxCheckBox( _writeBoxSizer->GetStaticBox(), wxID_ANY, wxT("Brownout reset"), wxDefaultPosition, wxDefaultSize, 0 );
 	_borCheckBox->SetToolTip( wxT("Enable processor reset on brownout detect") );
 	
 	_writeGridSizer->Add( _borCheckBox, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
-	_securityCheckBox = new wxCheckBox( this, wxID_ANY, wxT("Security"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox = new wxCheckBox( _writeBoxSizer->GetStaticBox(), wxID_ANY, wxT("Lock"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox->SetToolTip( wxT("Lock access to the flash") );
+	
+	_writeGridSizer->Add( _lockCheckBox, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+	
+	_securityCheckBox = new wxCheckBox( _writeBoxSizer->GetStaticBox(), wxID_ANY, wxT("Security"), wxDefaultPosition, wxDefaultSize, 0 );
 	_securityCheckBox->SetToolTip( wxT("Set the security bit") );
 	
 	_writeGridSizer->Add( _securityCheckBox, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
+	
 	_writeBoxSizer->Add( _writeGridSizer, 1, wxEXPAND, 5 );
+	
 	
 	_optionsBoxSizer->Add( _writeBoxSizer, 1, wxALL|wxEXPAND, 5 );
 	
@@ -119,18 +122,44 @@ MainFrame::MainFrame( wxWindow* parent, wxWindowID id, const wxString& title, co
 	wxBoxSizer* _sizeBoxSizer;
 	_sizeBoxSizer = new wxBoxSizer( wxVERTICAL );
 	
-	_sizeStaticText = new wxStaticText( this, wxID_ANY, wxT("Size:"), wxDefaultPosition, wxDefaultSize, 0 );
+	_sizeStaticText = new wxStaticText( _readBoxSizer->GetStaticBox(), wxID_ANY, wxT("Size:"), wxDefaultPosition, wxDefaultSize, 0 );
 	_sizeStaticText->Wrap( -1 );
 	_sizeBoxSizer->Add( _sizeStaticText, 0, wxALL, 5 );
 	
-	_sizeTextCtrl = new wxTextCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	_sizeTextCtrl = new wxTextCtrl( _readBoxSizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	_sizeTextCtrl->SetMaxLength( 0 ); 
 	_sizeTextCtrl->SetToolTip( wxT("Specify the amount of flash to read") );
 	
 	_sizeBoxSizer->Add( _sizeTextCtrl, 0, wxALL, 5 );
 	
+	
 	_readBoxSizer->Add( _sizeBoxSizer, 1, wxEXPAND, 5 );
 	
+	
 	_optionsBoxSizer->Add( _readBoxSizer, 0, wxALL|wxEXPAND, 5 );
+	
+	wxStaticBoxSizer* _generalBoxSizer;
+	_generalBoxSizer = new wxStaticBoxSizer( new wxStaticBox( this, wxID_ANY, wxT("General Options") ), wxVERTICAL );
+	
+	wxBoxSizer* _offsetBoxSizer;
+	_offsetBoxSizer = new wxBoxSizer( wxVERTICAL );
+	
+	_offsetStaticText = new wxStaticText( _generalBoxSizer->GetStaticBox(), wxID_ANY, wxT("Flash Offset:"), wxDefaultPosition, wxDefaultSize, 0 );
+	_offsetStaticText->Wrap( -1 );
+	_offsetBoxSizer->Add( _offsetStaticText, 0, wxALL, 5 );
+	
+	_offsetTextCtrl = new wxTextCtrl( _generalBoxSizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	_offsetTextCtrl->SetMaxLength( 0 ); 
+	_offsetTextCtrl->SetToolTip( wxT("Specify the offset into the flash for operations") );
+	
+	_offsetBoxSizer->Add( _offsetTextCtrl, 0, wxALL, 5 );
+	
+	
+	_generalBoxSizer->Add( _offsetBoxSizer, 1, wxEXPAND, 5 );
+	
+	
+	_optionsBoxSizer->Add( _generalBoxSizer, 0, wxALL|wxEXPAND, 5 );
+	
 	
 	_topBoxSizer->Add( _optionsBoxSizer, 4, wxEXPAND, 5 );
 	
@@ -180,7 +209,9 @@ MainFrame::MainFrame( wxWindow* parent, wxWindowID id, const wxString& title, co
 	
 	_buttonBoxSizer->Add( 0, 0, 1, wxEXPAND, 5 );
 	
+	
 	_topBoxSizer->Add( _buttonBoxSizer, 0, wxALL|wxEXPAND, 5 );
+	
 	
 	this->SetSizer( _topBoxSizer );
 	this->Layout();
@@ -219,10 +250,12 @@ ProgressDialog::ProgressDialog( wxWindow* parent, wxWindowID id, const wxString&
 	_sdbSizerCancel = new wxButton( this, wxID_CANCEL );
 	_sdbSizer->AddButton( _sdbSizerCancel );
 	_sdbSizer->Realize();
+	
 	_progressBoxSizer->Add( _sdbSizer, 0, wxALIGN_CENTER|wxALL, 5 );
 	
 	
 	_progressBoxSizer->Add( 0, 0, 1, wxEXPAND, 5 );
+	
 	
 	this->SetSizer( _progressBoxSizer );
 	this->Layout();
@@ -263,7 +296,7 @@ AboutDialog::AboutDialog( wxWindow* parent, wxWindowID id, const wxString& title
 	_shumatechBitmap = new wxStaticBitmap( this, wxID_ANY, wxNullBitmap, wxDefaultPosition, wxDefaultSize, 0 );
 	_topBoxSizer->Add( _shumatechBitmap, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5 );
 	
-	_copyrightStaticText = new wxStaticText( this, wxID_ANY, wxT("(c) 2011-2012 ShumaTech. All rights reserved."), wxDefaultPosition, wxDefaultSize, 0 );
+	_copyrightStaticText = new wxStaticText( this, wxID_ANY, wxT("(c) 2011-2017 ShumaTech. All rights reserved."), wxDefaultPosition, wxDefaultSize, 0 );
 	_copyrightStaticText->Wrap( -1 );
 	_topBoxSizer->Add( _copyrightStaticText, 0, wxALL, 5 );
 	
@@ -284,7 +317,9 @@ AboutDialog::AboutDialog( wxWindow* parent, wxWindowID id, const wxString& title
 	_sdbSizerOK = new wxButton( this, wxID_OK );
 	_sdbSizer->AddButton( _sdbSizerOK );
 	_sdbSizer->Realize();
+	
 	_topBoxSizer->Add( _sdbSizer, 1, wxALL|wxEXPAND, 10 );
+	
 	
 	this->SetSizer( _topBoxSizer );
 	this->Layout();
@@ -312,6 +347,7 @@ InfoDialog::InfoDialog( wxWindow* parent, wxWindowID id, const wxString& title, 
 	_deviceBoxSizer->Add( _deviceStaticText, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
 	_deviceTextCtrl = new wxTextCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY );
+	_deviceTextCtrl->SetMaxLength( 0 ); 
 	_deviceBoxSizer->Add( _deviceTextCtrl, 1, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
 	_chipIdStaticText = new wxStaticText( this, wxID_ANY, wxT("Chip ID:"), wxDefaultPosition, wxDefaultSize, 0 );
@@ -319,7 +355,9 @@ InfoDialog::InfoDialog( wxWindow* parent, wxWindowID id, const wxString& title, 
 	_deviceBoxSizer->Add( _chipIdStaticText, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
 	_chipIdTextCtrl = new wxTextCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY );
+	_chipIdTextCtrl->SetMaxLength( 0 ); 
 	_deviceBoxSizer->Add( _chipIdTextCtrl, 1, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+	
 	
 	_topBoxSizer->Add( _deviceBoxSizer, 0, wxALL|wxEXPAND, 5 );
 	
@@ -331,7 +369,9 @@ InfoDialog::InfoDialog( wxWindow* parent, wxWindowID id, const wxString& title, 
 	_versionBoxSizer->Add( _versionStaticText, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
 	_versionTextCtrl = new wxTextCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY );
+	_versionTextCtrl->SetMaxLength( 0 ); 
 	_versionBoxSizer->Add( _versionTextCtrl, 1, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+	
 	
 	_topBoxSizer->Add( _versionBoxSizer, 0, wxALL|wxEXPAND, 5 );
 	
@@ -346,35 +386,41 @@ InfoDialog::InfoDialog( wxWindow* parent, wxWindowID id, const wxString& title, 
 	_flashGridSizer->SetFlexibleDirection( wxBOTH );
 	_flashGridSizer->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
 	
-	_pagesStaticText = new wxStaticText( this, wxID_ANY, wxT("Pages:"), wxDefaultPosition, wxDefaultSize, 0 );
+	_pagesStaticText = new wxStaticText( _flashBoxSizer->GetStaticBox(), wxID_ANY, wxT("Pages:"), wxDefaultPosition, wxDefaultSize, 0 );
 	_pagesStaticText->Wrap( -1 );
 	_flashGridSizer->Add( _pagesStaticText, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
-	_pagesTextCtrl = new wxTextCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY );
+	_pagesTextCtrl = new wxTextCtrl( _flashBoxSizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY );
+	_pagesTextCtrl->SetMaxLength( 0 ); 
 	_flashGridSizer->Add( _pagesTextCtrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
-	_pageSizeStaticText = new wxStaticText( this, wxID_ANY, wxT("Page Size:"), wxDefaultPosition, wxDefaultSize, 0 );
+	_pageSizeStaticText = new wxStaticText( _flashBoxSizer->GetStaticBox(), wxID_ANY, wxT("Page Size:"), wxDefaultPosition, wxDefaultSize, 0 );
 	_pageSizeStaticText->Wrap( -1 );
 	_flashGridSizer->Add( _pageSizeStaticText, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
-	_pageSizeTextCtrl = new wxTextCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY );
+	_pageSizeTextCtrl = new wxTextCtrl( _flashBoxSizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY );
+	_pageSizeTextCtrl->SetMaxLength( 0 ); 
 	_flashGridSizer->Add( _pageSizeTextCtrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
-	_totalSizeStaticText = new wxStaticText( this, wxID_ANY, wxT("Total Size:"), wxDefaultPosition, wxDefaultSize, 0 );
+	_totalSizeStaticText = new wxStaticText( _flashBoxSizer->GetStaticBox(), wxID_ANY, wxT("Total Size:"), wxDefaultPosition, wxDefaultSize, 0 );
 	_totalSizeStaticText->Wrap( -1 );
 	_flashGridSizer->Add( _totalSizeStaticText, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
-	_totalSizeTextCtrl = new wxTextCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY );
+	_totalSizeTextCtrl = new wxTextCtrl( _flashBoxSizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY );
+	_totalSizeTextCtrl->SetMaxLength( 0 ); 
 	_flashGridSizer->Add( _totalSizeTextCtrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
-	_planesStaticText = new wxStaticText( this, wxID_ANY, wxT("Planes:"), wxDefaultPosition, wxDefaultSize, 0 );
+	_planesStaticText = new wxStaticText( _flashBoxSizer->GetStaticBox(), wxID_ANY, wxT("Planes:"), wxDefaultPosition, wxDefaultSize, 0 );
 	_planesStaticText->Wrap( -1 );
 	_flashGridSizer->Add( _planesStaticText, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
-	_planesTextCtrl = new wxTextCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY );
+	_planesTextCtrl = new wxTextCtrl( _flashBoxSizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY );
+	_planesTextCtrl->SetMaxLength( 0 ); 
 	_flashGridSizer->Add( _planesTextCtrl, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
+	
 	_flashBoxSizer->Add( _flashGridSizer, 1, wxEXPAND, 5 );
+	
 	
 	_middleBoxSizer->Add( _flashBoxSizer, 0, wxALL|wxEXPAND, 5 );
 	
@@ -386,126 +432,130 @@ InfoDialog::InfoDialog( wxWindow* parent, wxWindowID id, const wxString& title, 
 	_gpnvGridSizer->SetFlexibleDirection( wxBOTH );
 	_gpnvGridSizer->SetNonFlexibleGrowMode( wxFLEX_GROWMODE_SPECIFIED );
 	
-	_bootCheckBox = new wxCheckBox( this, wxID_ANY, wxT("Boot to flash"), wxDefaultPosition, wxDefaultSize, 0 );
+	_bootCheckBox = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("Boot to flash"), wxDefaultPosition, wxDefaultSize, 0 );
 	_gpnvGridSizer->Add( _bootCheckBox, 0, wxALL, 5 );
 	
-	_bodCheckBox = new wxCheckBox( this, wxID_ANY, wxT("Brownout detect"), wxDefaultPosition, wxDefaultSize, 0 );
+	_bodCheckBox = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("Brownout detect"), wxDefaultPosition, wxDefaultSize, 0 );
 	_gpnvGridSizer->Add( _bodCheckBox, 0, wxALL, 5 );
 	
-	_securityCheckBox = new wxCheckBox( this, wxID_ANY, wxT("Security"), wxDefaultPosition, wxDefaultSize, 0 );
+	_securityCheckBox = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("Security"), wxDefaultPosition, wxDefaultSize, 0 );
 	_gpnvGridSizer->Add( _securityCheckBox, 0, wxALL, 5 );
 	
-	_borCheckBox = new wxCheckBox( this, wxID_ANY, wxT("Brownout reset"), wxDefaultPosition, wxDefaultSize, 0 );
+	_borCheckBox = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("Brownout reset"), wxDefaultPosition, wxDefaultSize, 0 );
 	_gpnvGridSizer->Add( _borCheckBox, 0, wxALL, 5 );
 	
-	_lockStaticText = new wxStaticText( this, wxID_ANY, wxT("Lock Regions:"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockStaticText = new wxStaticText( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("Lock Regions:"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockStaticText->Wrap( -1 );
 	_gpnvGridSizer->Add( _lockStaticText, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
+	
 	
 	_optionsBoxSizer->Add( _gpnvGridSizer, 0, wxEXPAND, 5 );
 	
 	wxGridSizer* _lockGridSizer;
 	_lockGridSizer = new wxGridSizer( 8, 4, 0, 0 );
 	
-	_lockCheckBox0 = new wxCheckBox( this, wxID_ANY, wxT("0"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox0 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("0"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox0, 0, 0, 5 );
 	
-	_lockCheckBox1 = new wxCheckBox( this, wxID_ANY, wxT("1"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox1 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("1"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox1, 0, 0, 5 );
 	
-	_lockCheckBox2 = new wxCheckBox( this, wxID_ANY, wxT("2"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox2 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("2"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox2, 0, 0, 5 );
 	
-	_lockCheckBox3 = new wxCheckBox( this, wxID_ANY, wxT("3"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox3 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("3"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox3, 0, 0, 5 );
 	
-	_lockCheckBox4 = new wxCheckBox( this, wxID_ANY, wxT("4"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox4 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("4"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox4, 0, 0, 5 );
 	
-	_lockCheckBox5 = new wxCheckBox( this, wxID_ANY, wxT("5"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox5 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("5"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox5, 0, 0, 5 );
 	
-	_lockCheckBox6 = new wxCheckBox( this, wxID_ANY, wxT("6"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox6 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("6"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox6, 0, 0, 5 );
 	
-	_lockCheckBox7 = new wxCheckBox( this, wxID_ANY, wxT("7"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox7 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("7"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox7, 0, 0, 5 );
 	
-	_lockCheckBox8 = new wxCheckBox( this, wxID_ANY, wxT("8"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox8 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("8"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox8, 0, 0, 5 );
 	
-	_lockCheckBox9 = new wxCheckBox( this, wxID_ANY, wxT("9"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox9 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("9"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox9, 0, 0, 5 );
 	
-	_lockCheckBox10 = new wxCheckBox( this, wxID_ANY, wxT("10"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox10 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("10"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox10, 0, 0, 5 );
 	
-	_lockCheckBox11 = new wxCheckBox( this, wxID_ANY, wxT("11"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox11 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("11"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox11, 0, 0, 5 );
 	
-	_lockCheckBox12 = new wxCheckBox( this, wxID_ANY, wxT("12"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox12 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("12"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox12, 0, 0, 5 );
 	
-	_lockCheckBox13 = new wxCheckBox( this, wxID_ANY, wxT("13"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox13 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("13"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox13, 0, 0, 5 );
 	
-	_lockCheckBox14 = new wxCheckBox( this, wxID_ANY, wxT("14"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox14 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("14"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox14, 0, 0, 5 );
 	
-	_lockCheckBox15 = new wxCheckBox( this, wxID_ANY, wxT("15"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox15 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("15"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox15, 0, 0, 5 );
 	
-	_lockCheckBox16 = new wxCheckBox( this, wxID_ANY, wxT("16"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox16 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("16"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox16, 0, 0, 5 );
 	
-	_lockCheckBox17 = new wxCheckBox( this, wxID_ANY, wxT("17"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox17 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("17"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox17, 0, 0, 5 );
 	
-	_lockCheckBox18 = new wxCheckBox( this, wxID_ANY, wxT("18"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox18 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("18"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox18, 0, 0, 5 );
 	
-	_lockCheckBox19 = new wxCheckBox( this, wxID_ANY, wxT("19"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox19 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("19"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox19, 0, 0, 5 );
 	
-	_lockCheckBox20 = new wxCheckBox( this, wxID_ANY, wxT("20"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox20 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("20"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox20, 0, 0, 5 );
 	
-	_lockCheckBox21 = new wxCheckBox( this, wxID_ANY, wxT("21"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox21 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("21"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox21, 0, 0, 5 );
 	
-	_lockCheckBox22 = new wxCheckBox( this, wxID_ANY, wxT("22"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox22 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("22"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox22, 0, 0, 5 );
 	
-	_lockCheckBox23 = new wxCheckBox( this, wxID_ANY, wxT("23"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox23 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("23"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox23, 0, 0, 5 );
 	
-	_lockCheckBox24 = new wxCheckBox( this, wxID_ANY, wxT("24"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox24 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("24"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox24, 0, 0, 5 );
 	
-	_lockCheckBox25 = new wxCheckBox( this, wxID_ANY, wxT("25"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox25 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("25"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox25, 0, 0, 5 );
 	
-	_lockCheckBox26 = new wxCheckBox( this, wxID_ANY, wxT("26"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox26 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("26"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox26, 0, 0, 5 );
 	
-	_lockCheckBox27 = new wxCheckBox( this, wxID_ANY, wxT("27"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox27 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("27"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox27, 0, 0, 5 );
 	
-	_lockCheckBox28 = new wxCheckBox( this, wxID_ANY, wxT("28"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox28 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("28"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox28, 0, 0, 5 );
 	
-	_lockCheckBox29 = new wxCheckBox( this, wxID_ANY, wxT("29"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox29 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("29"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox29, 0, 0, 5 );
 	
-	_lockCheckBox30 = new wxCheckBox( this, wxID_ANY, wxT("30"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox30 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("30"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox30, 0, 0, 5 );
 	
-	_lockCheckBox31 = new wxCheckBox( this, wxID_ANY, wxT("31"), wxDefaultPosition, wxDefaultSize, 0 );
+	_lockCheckBox31 = new wxCheckBox( _optionsBoxSizer->GetStaticBox(), wxID_ANY, wxT("31"), wxDefaultPosition, wxDefaultSize, 0 );
 	_lockGridSizer->Add( _lockCheckBox31, 0, 0, 5 );
+	
 	
 	_optionsBoxSizer->Add( _lockGridSizer, 1, wxALL|wxEXPAND, 5 );
 	
+	
 	_middleBoxSizer->Add( _optionsBoxSizer, 0, wxALL|wxEXPAND, 5 );
+	
 	
 	_topBoxSizer->Add( _middleBoxSizer, 0, wxEXPAND, 5 );
 	
@@ -513,7 +563,9 @@ InfoDialog::InfoDialog( wxWindow* parent, wxWindowID id, const wxString& title, 
 	_sdbSizerOK = new wxButton( this, wxID_OK );
 	_sdbSizer->AddButton( _sdbSizerOK );
 	_sdbSizer->Realize();
+	
 	_topBoxSizer->Add( _sdbSizer, 1, wxALL|wxEXPAND, 10 );
+	
 	
 	this->SetSizer( _topBoxSizer );
 	this->Layout();

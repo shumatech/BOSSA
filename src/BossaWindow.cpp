@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BOSSA
 //
-// Copyright (c) 2011-2012, ShumaTech
+// Copyright (c) 2011-2017, ShumaTech
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without
@@ -328,10 +328,32 @@ BossaWindow::OnAutoScan(wxCommandEvent& event)
     Error(wxString(wxT("Could not find a device")));
 }
 
+bool
+BossaWindow::GetOffset(uint32_t& offset)
+{
+    if (_offsetTextCtrl->GetValue().IsEmpty())
+    {
+        offset = 0;
+    }
+    else
+    {
+        char *end = NULL;
+        offset = strtol(_offsetTextCtrl->GetValue().mb_str(), &end, 0);
+        if (end == NULL || *end != '\0')
+        {
+            Error(_("Flash offset is invalid"));
+            return false;
+        }
+    }
+    
+    return true;
+}
+
 void
 BossaWindow::OnWrite(wxCommandEvent& event)
 {
     Flash& flash = *wxGetApp().flash;
+    uint32_t offset;
 
     if (_filePicker->GetPath().IsEmpty())
     {
@@ -339,6 +361,9 @@ BossaWindow::OnWrite(wxCommandEvent& event)
         return;
     }
 
+    if (!GetOffset(offset))
+        return;
+    
     if (access(_filePicker->GetPath().mb_str(), F_OK))
     {
         Error(wxT("File does not exist"));
@@ -370,7 +395,8 @@ BossaWindow::OnWrite(wxCommandEvent& event)
         _bodCheckBox->GetValue(),
         _borCheckBox->GetValue(),
         _lockCheckBox->GetValue(),
-        _securityCheckBox->GetValue()
+        _securityCheckBox->GetValue(),
+        offset
     );
 
     if (_thread->Create() != wxTHREAD_NO_ERROR ||
@@ -387,12 +413,17 @@ BossaWindow::OnWrite(wxCommandEvent& event)
 void
 BossaWindow::OnVerify(wxCommandEvent& event)
 {
+    uint32_t offset;
+    
     if (_filePicker->GetPath().IsEmpty())
     {
         Error(wxT("You must specify a file first"));
         return;
     }
 
+    if (!GetOffset(offset))
+        return;
+    
     if (access(_filePicker->GetPath().mb_str(), F_OK))
     {
         Error(wxT("File does not exist"));
@@ -402,7 +433,8 @@ BossaWindow::OnVerify(wxCommandEvent& event)
     _progress = new BossaProgress(this);
     _thread = new VerifyThread(
         this,
-        _filePicker->GetPath()
+        _filePicker->GetPath(),
+        offset
     );
 
     if (_thread->Create() != wxTHREAD_NO_ERROR ||
@@ -419,6 +451,7 @@ BossaWindow::OnVerify(wxCommandEvent& event)
 void
 BossaWindow::OnRead(wxCommandEvent& event)
 {
+    uint32_t offset;
     size_t size;
 
     if (_filePicker->GetPath().IsEmpty())
@@ -439,19 +472,24 @@ BossaWindow::OnRead(wxCommandEvent& event)
     }
     else
     {
-        size = strtol(_sizeTextCtrl->GetValue().mb_str(), NULL, 0);
-        if (size == 0)
+        char *end = NULL;
+        offset = strtol(_sizeTextCtrl->GetValue().mb_str(), &end, 0);
+        if (end == NULL || *end != '\0')
         {
             Error(_("Read size is invalid"));
             return;
         }
     }
 
+    if (!GetOffset(offset))
+        return;
+    
     _progress = new BossaProgress(this);
     _thread = new ReadThread(
         this,
         _filePicker->GetPath(),
-        size
+        size,
+        offset
     );
 
     if (_thread->Create() != wxTHREAD_NO_ERROR ||

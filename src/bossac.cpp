@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BOSSA
 //
-// Copyright (c) 2011-2012, ShumaTech
+// Copyright (c) 2011-2017, ShumaTech
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <sys/time.h>
 
 #include "CmdOpts.h"
@@ -51,6 +52,7 @@ public:
     bool write;
     bool read;
     bool verify;
+    bool offset;
     bool reset;
     bool port;
     bool boot;
@@ -66,6 +68,7 @@ public:
     string forceUsbArg;
 
     int readArg;
+    int offsetArg;
     string portArg;
     int bootArg;
     int bodArg;
@@ -91,11 +94,61 @@ BossaConfig::BossaConfig()
     forceUsb = false;
 
     readArg = 0;
+    offsetArg = 0;
     bootArg = 1;
     bodArg = 1;
     borArg = 1;
 
     reset = false;
+}
+
+class BossaObserver : public FlasherObserver
+{
+public:
+    BossaObserver() : _lastTicks(-1) {}
+    virtual ~BossaObserver() {}
+    
+    virtual void onStatus(const char *message, ...);
+    virtual void onProgress(int num, int div);
+private:
+    int _lastTicks;
+};
+
+void
+BossaObserver::onStatus(const char *message, ...)
+{
+    va_list ap;
+    
+    va_start(ap, message);
+    vprintf(message, ap);
+    va_end(ap);
+}
+
+void
+BossaObserver::onProgress(int num, int div)
+{
+    int ticks;
+    int bars = 30;
+
+    ticks = num * bars / div;
+    
+    if (ticks == _lastTicks)
+        return;
+    
+    printf("\r[");
+    while (ticks-- > 0)
+    {
+        putchar('=');
+        bars--;
+    }
+    while (bars-- > 0)
+    {
+        putchar(' ');
+    }
+    printf("] %d%% (%d/%d pages)", num * 100 / div, num, div);
+    fflush(stdout);
+    
+    _lastTicks = 0;
 }
 
 static BossaConfig config;
@@ -122,6 +175,12 @@ static Option opts[] =
       'v', "verify", &config.verify,
       { ArgNone },
       "verify FILE matches flash contents"
+    },
+    {
+      'o', "offset", &config.offset,
+      { ArgRequired, ArgInt, "OFFSET", { &config.offsetArg } },
+      "start write/read/verify operation at flash OFFSET;\n"
+      "OFFSET must be aligned to a flash page boundary"
     },
     {
       'p', "port", &config.port,
@@ -277,7 +336,7 @@ main(int argc, char* argv[])
         printf("Usage: %s [OPTION...] [FILE]\n", argv[0]);
         printf("Basic Open Source SAM-BA Application (BOSSA) Version " VERSION "\n"
                "Flash programmer for Atmel SAM devices.\n"
-               "Copyright (c) 2011-2012 ShumaTech (http://www.shumatech.com)\n"
+               "Copyright (c) 2011-2017 ShumaTech (http://www.shumatech.com)\n"
                "\n"
                "Examples:\n"
                "  bossac -e -w -v -b image.bin   # Erase flash, write flash with image.bin,\n"
@@ -339,7 +398,7 @@ main(int argc, char* argv[])
         }
 
         uint32_t chipId = samba.chipId();
-        printf( "Atmel SMART device 0x%08x found\n", chipId ) ;
+        printf( "SAM-BA device 0x%08x found\n", chipId ) ;
 
         Flash::Ptr flash = flashFactory.create(samba, chipId);
         if (flash.get() == NULL)
@@ -348,10 +407,15 @@ main(int argc, char* argv[])
             return 1;
         }
 
-        Flasher flasher(flash);
+        BossaObserver observer;
+        Flasher flasher(samba, flash, observer);
 
         if (config.info)
-            flasher.info(samba);
+        {
+            FlasherInfo info;
+            flasher.info(info);
+            info.print();
+        }
 
         if (config.unlock)
             flasher.lock(config.unlockArg, false);
@@ -360,34 +424,37 @@ main(int argc, char* argv[])
         {
             timer_start();
             flasher.erase();
-            printf("done in %5.3f seconds\n", timer_stop());
+            printf("\nDone in %5.3f seconds\n", timer_stop());
         }
 
         if (config.write)
         {
-            printf("\n");
             timer_start();
-            flasher.write(argv[args]);
-            printf("done in %5.3f seconds\n", timer_stop());
+            flasher.write(argv[args], config.offsetArg);
+            printf("\nDone in %5.3f seconds\n", timer_stop());
         }
 
         if (config.verify)
         {
-            printf("\n");
+            uint32_t pageErrors;
+            uint32_t totalErrors;
+            
             timer_start();
-            if (!flasher.verify(argv[args]))
+            if (!flasher.verify(argv[args], pageErrors, totalErrors, config.offsetArg))
             {
+                printf("\nVerify failed\nPage errors: %d\nByte errors: %d\n",
+                    pageErrors, totalErrors);
                 return 2;
             }
-            printf("done in %5.3f seconds\n", timer_stop());
+
+            printf("\nVerify successful\nDone in %5.3f seconds\n", timer_stop());
         }
 
         if (config.read)
         {
-            printf("\n");
             timer_start();
-            flasher.read(argv[args], config.readArg);
-            printf("done in %5.3f seconds\n", timer_stop());
+            flasher.read(argv[args], config.readArg, config.offsetArg);
+            printf("\nDone in %5.3f seconds\n", timer_stop());
         }
 
         if (config.boot)

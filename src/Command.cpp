@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BOSSA
 //
-// Copyright (c) 2011-2012, ShumaTech
+// Copyright (c) 2011-2017, ShumaTech
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without
@@ -47,13 +47,51 @@ Samba Command::_samba;
 PortFactory Command::_portFactory;
 FlashFactory Command::_flashFactory;
 Flash::Ptr Command::_flash;
-Flasher Command::_flasher(_flash);
+CommandObserver Command::_observer;
+Flasher Command::_flasher(_samba, _flash, _observer);
 bool Command::_connected = false;
 
 Command::Command(const char* name, const char* help, const char* usage) :
     _name(name), _help(help), _usage(usage)
 {
     assert(_shell != NULL);
+}
+
+void
+CommandObserver::onStatus(const char *message, ...)
+{
+    va_list ap;
+    
+    va_start(ap, message);
+    vprintf(message, ap);
+    va_end(ap);
+}
+
+void
+CommandObserver::onProgress(int num, int div)
+{
+    int ticks;
+    int bars = 30;
+
+    ticks = num * bars / div;
+    
+    if (ticks == _lastTicks)
+        return;
+    
+    printf("\r[");
+    while (ticks-- > 0)
+    {
+        putchar('=');
+        bars--;
+    }
+    while (bars-- > 0)
+    {
+        putchar(' ');
+    }
+    printf("] %d%% (%d/%d pages)", num * 100 / div, num, div);
+    fflush(stdout);
+    
+    _lastTicks = 0;
 }
 
 bool
@@ -505,11 +543,15 @@ CommandInfo::CommandInfo() :
 void
 CommandInfo::invoke(char* argv[], int argc)
 {
+    FlasherInfo info;
+    
     if (!argNum(argc, 1) ||
         !flashable())
         return;
 
-    _flasher.info(_samba);
+    _flasher.info(info);
+    
+    info.print();
 }
 
 CommandLock::CommandLock() :
@@ -552,7 +594,7 @@ CommandMrb::invoke(char* argv[], int argc)
 
     if (!argRange(argc, 2, 3) ||
         !argUint32(argv[1], &addr) ||
-        (argc == 3 && !argUint32(argv[2], &count)) ||
+        (argc >= 3 && !argUint32(argv[2], &count)) ||
         !connected())
         return;
 
@@ -633,7 +675,7 @@ CommandMrw::invoke(char* argv[], int argc)
 
     if (!argRange(argc, 2, 3) ||
         !argUint32(argv[1], &addr) ||
-        (argc == 3 && !argUint32(argv[2], &count)) ||
+        (argc >= 3 && !argUint32(argv[2], &count)) ||
         !connected())
         return;
 
@@ -663,7 +705,7 @@ CommandMwb::invoke(char* argv[], int argc)
 
     if (!argRange(argc, 2, 3) ||
         !argUint32(argv[1], &addr) ||
-        (argc == 3 && !argUint32(argv[2], &value)) ||
+        (argc >= 3 && !argUint32(argv[2], &value)) ||
         !connected())
         return;
 
@@ -766,7 +808,7 @@ CommandMww::invoke(char* argv[], int argc)
 
     if (!argRange(argc, 2, 3) ||
         !argUint32(argv[1], &addr) ||
-        (argc == 3 && !argUint32(argv[2], &value)) ||
+        (argc >= 3 && !argUint32(argv[2], &value)) ||
         !connected())
         return;
 
@@ -1053,23 +1095,31 @@ CommandPio::invoke(char* argv[], int argc)
 CommandRead::CommandRead() :
     Command("read",
             "Read flash into a binary file.",
-            "read [FILE] <COUNT>\n"
-            "  FILE -- file name on host filesystem"
+            "read [FILE] <COUNT> <OFFSET>\n"
+            "  FILE -- file name on host filesystem\n"
             "  COUNT -- (optional) count of bytes to read, defaults\n"
-            "           to entire flash if not given")
+            "           to entire flash if not given\n"
+            "  OFFSET -- (optional) start read operation at flash OFFSET\n"
+            "            OFFSET must be aligned to a flash page boundary")
 {}
 
 void
 CommandRead::invoke(char* argv[], int argc)
 {
     uint32_t count = 0;
+    uint32_t offset = 0;
 
-    if (!argRange(argc, 2, 3) ||
-        (argc == 3 && !argUint32(argv[2], &count)) ||
+    if (!argRange(argc, 2, 4) ||
+        (argc >= 3 && !argUint32(argv[2], &count)) ||
+        (argc >= 4 && !argUint32(argv[3], &offset)) ||
         !flashable())
         return;
 
-    _flasher.read(argv[1], count);
+    printf("count:%d offset:%d\n", count, offset);
+    
+    _flasher.read(argv[1], count, offset);
+    
+    printf("\nRead successful\n");
 }
 
 CommandScan::CommandScan() :
@@ -1149,34 +1199,55 @@ CommandVerify::CommandVerify() :
     Command("verify",
             "Verify binary file with the flash.",
             "verify [FILE]\n"
-            "  FILE -- file name on host filesystem")
+            "  FILE -- file name on host filesystem\n"
+            "  OFFSET -- (optional) start verify operation at flash OFFSET\n"
+            "            OFFSET must be aligned to a flash page boundary")
 {}
 
 void
 CommandVerify::invoke(char* argv[], int argc)
 {
-    if (!argNum(argc, 2) ||
+    uint32_t offset = 0;
+    uint32_t pageErrors;
+    uint32_t totalErrors;
+
+    if (!argRange(argc, 2, 3) ||
+        (argc >= 3 && !argUint32(argv[2], &offset)) ||
         !flashable())
         return;
 
-    _flasher.verify(argv[1]);
+    if (!_flasher.verify(argv[1], pageErrors, totalErrors, offset))
+    {
+        printf("\nVerify failed\nPage errors: %d\nByte errors: %d\n",
+            pageErrors, totalErrors);
+        return;
+    }
+
+    printf("\nVerify successful\n");
 }
 
 CommandWrite::CommandWrite() :
     Command("write",
             "Write binary file into flash.",
-            "write [FILE]\n"
-            "  FILE -- file name on host filesystem")
+            "write [FILE] <OFFSET>\n"
+            "  FILE -- file name on host filesystem\n"
+            "  OFFSET -- (optional) start write operation at flash OFFSET\n"
+            "            OFFSET must be aligned to a flash page boundary")
 {}
 
 void
 CommandWrite::invoke(char* argv[], int argc)
 {
-    if (!argNum(argc, 2) ||
+    uint32_t offset = 0;
+
+    if (!argRange(argc, 2, 3) ||
+        (argc >= 3 && !argUint32(argv[2], &offset)) ||
         !flashable())
         return;
 
-    _flasher.write(argv[1]);
+    _flasher.write(argv[1], offset);
+    
+    printf("\nWrite successful\n");
 }
 
 CommandReset::CommandReset() :

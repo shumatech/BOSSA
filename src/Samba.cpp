@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BOSSA
 //
-// Copyright (c) 2011-2012, ShumaTech
+// Copyright (c) 2011-2017, ShumaTech
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -53,10 +53,11 @@ using namespace std;
 #define min(a, b)   ((a) < (b) ? (a) : (b))
 
 Samba::Samba() :
-    _extChipEraseAvailable(false),
-    _extWriteBufferAvailable(false),
-    _extChecksumBufferAvailable(false),
-    _debug(false), _isUsb(false)
+    _canChipErase(false),
+    _canWriteBuffer(false),
+    _canChecksumBuffer(false),
+    _debug(false),
+    _isUsb(false)
 {
 }
 
@@ -74,6 +75,7 @@ Samba::init()
 
     // Allows Arduino auto-reset
     usleep(500000);
+    
     // Flush garbage
     uint8_t dummy[1024];
     _port->read(dummy, 1024);
@@ -116,13 +118,16 @@ Samba::init()
     //       The reason is unknown.
     std::string ver = version();
     std::size_t extIndex = ver.find("[Arduino:");
-    if (extIndex != string::npos) {
+    if (extIndex != string::npos)
+    {
         extIndex += 9;
-        while (ver[extIndex] != ']') {
-            switch (ver[extIndex]) {
-                case 'X': _extChipEraseAvailable = true; break;
-                case 'Y': _extWriteBufferAvailable = true; break;
-                case 'Z': _extChecksumBufferAvailable = true; break;
+        while (ver[extIndex] != ']')
+        {
+            switch (ver[extIndex])
+            {
+                case 'X': _canChipErase = true; break;
+                case 'Y': _canWriteBuffer = true; break;
+                case 'Z': _canChecksumBuffer = true; break;
             }
             extIndex++;
         }
@@ -381,7 +386,7 @@ Samba::crc16Add(uint8_t *blk)
 }
 
 uint16_t
-Samba::crc16AddByte(uint8_t data, uint16_t crc16) {
+Samba::checksumCalc(uint8_t data, uint16_t crc16) {
     return (crc16 << 8) ^ crc16Table[((crc16 >> 8) ^ data) & 0xff];
 }
 
@@ -675,18 +680,12 @@ Samba::reset(void)
         printf("Reset not supported for this CPU.\n");
         return;
     }
-
-    // Some linux users experienced a lock up if the serial
-    // port is closed while the port itself is being destroyed.
-    // This delay is here to give the time to kernel driver to
-    // sort out things before closing the port.
-    usleep(100000);
 }
 
 bool
 Samba::chipErase(uint32_t start_addr)
 {
-    if (!_extChipEraseAvailable)
+    if (!_canChipErase)
         return false;
 
     uint8_t cmd[64];
@@ -705,12 +704,15 @@ Samba::chipErase(uint32_t start_addr)
     return true;
 }
 
-bool
+void
 Samba::writeBuffer(uint32_t src_addr, uint32_t dst_addr, uint32_t size)
 {
-    if (!_extWriteBufferAvailable)
-        return false;
+    if (!_canWriteBuffer)
+        throw SambaError();
 
+    if (size > checksumBufferSize())
+        throw SambaError();
+            
     if (_debug)
         printf("%s(scr_addr=%#x, dst_addr=%#x, size=%#x)\n", __FUNCTION__, src_addr, dst_addr, size);
 
@@ -734,15 +736,17 @@ Samba::writeBuffer(uint32_t src_addr, uint32_t dst_addr, uint32_t size)
     _port->timeout(TIMEOUT_NORMAL);
     if (cmd[0] != 'Y')
         throw SambaError();
-    return true;
 }
 
 uint16_t
 Samba::checksumBuffer(uint32_t start_addr, uint32_t size)
 {
-    if (!_extChecksumBufferAvailable)
+    if (!_canChecksumBuffer)
         throw SambaError();
 
+    if (size > checksumBufferSize())
+        throw SambaError();
+        
     if (_debug)
         printf("%s(start_addr=%#x, size=%#x) = ", __FUNCTION__, start_addr, size);
 

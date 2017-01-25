@@ -1,22 +1,24 @@
 ///////////////////////////////////////////////////////////////////////////
-// C++ code generated with wxFormBuilder (version Nov 17 2010)
+// C++ code generated with wxFormBuilder (version Jun 17 2015)
 // http://www.wxformbuilder.org/
 //
 // PLEASE DO "NOT" EDIT THIS FILE!
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef __BossaForm__
-#define __BossaForm__
+#ifndef __BOSSAFORM_H__
+#define __BOSSAFORM_H__
 
+#include <wx/artprov.h>
+#include <wx/xrc/xmlres.h>
 #include <wx/bitmap.h>
 #include <wx/image.h>
 #include <wx/icon.h>
 #include <wx/statbmp.h>
-#include <wx/string.h>
 #include <wx/gdicmn.h>
 #include <wx/font.h>
 #include <wx/colour.h>
 #include <wx/settings.h>
+#include <wx/string.h>
 #include <wx/stattext.h>
 #include <wx/button.h>
 #include <wx/sizer.h>
@@ -45,32 +47,26 @@ class MainFrame : public wxFrame
 	protected:
 		wxStaticBitmap* _bossaBitmap;
 		wxStaticText* _titleText;
-		
 		wxButton* _aboutButton;
 		wxComboBox* _portComboBox;
 		wxButton* _refreshButton;
-		
 		wxButton* _autoScanButton;
 		wxFilePickerCtrl* _filePicker;
 		wxCheckBox* _eraseCheckBox;
-		wxCheckBox* _bodCheckBox;
-		wxCheckBox* _lockCheckBox;
 		wxCheckBox* _bootCheckBox;
+		wxCheckBox* _bodCheckBox;
 		wxCheckBox* _borCheckBox;
+		wxCheckBox* _lockCheckBox;
 		wxCheckBox* _securityCheckBox;
 		wxStaticText* _sizeStaticText;
 		wxTextCtrl* _sizeTextCtrl;
-		
+		wxStaticText* _offsetStaticText;
+		wxTextCtrl* _offsetTextCtrl;
 		wxButton* _writeButton;
-		
 		wxButton* _verifyButton;
-		
 		wxButton* _readButton;
-		
 		wxButton* _infoButton;
-		
 		wxButton* _exitButton;
-		
 		wxStatusBar* _statusBar;
 	
 	public:
@@ -89,13 +85,10 @@ class ProgressDialog : public wxDialog
 	private:
 	
 	protected:
-		
 		wxStaticText* _infoStaticText;
 		wxGauge* _statusGauge;
-		
 		wxStdDialogButtonSizer* _sdbSizer;
 		wxButton* _sdbSizerCancel;
-		
 	
 	public:
 		
@@ -202,4 +195,4 @@ class InfoDialog : public wxDialog
 	
 };
 
-#endif //__BossaForm__
+#endif //__BOSSAFORM_H__
