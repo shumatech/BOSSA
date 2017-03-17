@@ -66,6 +66,7 @@ endif
 ifeq ($(OS),Linux)
 COMMON_SRCS+=PosixSerialPort.cpp LinuxPortFactory.cpp
 COMMON_LIBS=-Wl,--as-needed
+COMMON_CXXFLAGS=-std=c++11
 WX_LIBS+=-lX11
 
 MACHINE:=$(shell uname -m)
