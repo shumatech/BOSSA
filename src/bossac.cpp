@@ -393,7 +393,14 @@ main(int argc, char* argv[])
             else
                 port = portFactory.create(config.portArg);
 
-            port->open(1200);
+            if(!port->open(1200))
+            {
+                fprintf(stderr, "Failed to open port at 1200bps\n");
+                return 1;
+            }
+
+            port->setRTS(true);
+            port->setDTR(false);
             port->close();
         }
 

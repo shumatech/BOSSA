@@ -52,6 +52,8 @@ public:
 
     bool timeout(int millisecs);
     void flush();
+    void setDTR(bool dtr);
+    void setRTS(bool rts);
     void setAutoFlush(bool autoflush);
 
 private:
