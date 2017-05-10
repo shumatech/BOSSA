@@ -4,7 +4,7 @@
 # Version
 #
 VERSION=1.8
-WXVERSION=3.1
+WXVERSION=3.0
 
 #
 # Source files
