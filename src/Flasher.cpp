@@ -50,7 +50,7 @@ FlasherInfo::print()
     printf("Page Size    : %d bytes\n", pageSize);
     printf("Total Size   : %dKB\n", totalSize / 1024);
     printf("Planes       : %d\n", numPlanes);
-    printf("Lock Regions : %d\n", lockRegions.size());
+    printf("Lock Regions : %zd\n", lockRegions.size());
     printf("Locked       : ");
     first = true;
     for (bool region : lockRegions)
