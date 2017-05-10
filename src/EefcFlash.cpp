@@ -73,7 +73,7 @@ EefcFlash::EefcFlash(Samba& samba,
 {
     assert(planes == 1 || planes == 2);
     assert(pages <= 2048);
-    assert(lockRegions <= 32);
+    assert(lockRegions <= 256);
 
     // SAM3 Errata (FWS must be 6)
     _samba.writeWord(EEFC0_FMR, 0x6 << 8);
@@ -125,22 +125,37 @@ EefcFlash::isLocked()
 bool
 EefcFlash::getLockRegion(uint32_t region)
 {
+    uint32_t frr;
+
     if (region >= _lockRegions)
         throw FlashRegionError();
 
     waitFSR();
     if (_planes == 2 && region >= _lockRegions / 2)
     {
+        region -= _lockRegions / 2;
         writeFCR1(EEFC_FCMD_GLB, 0);
         waitFSR();
-        if (readFRR1() & (1 << (region - _lockRegions / 2)))
+        frr = readFRR1();
+        while (region >= 32)
+        {
+            frr = readFRR1();
+            region -= 32;
+        }
+        if (frr & (1 << region))
             return true;
     }
     else
     {
         writeFCR0(EEFC_FCMD_GLB, 0);
         waitFSR();
-        if (readFRR0() & (1 << region))
+        frr = readFRR0();
+        while (region >= 32)
+        {
+            frr = readFRR0();
+            region -= 32;
+        }
+        if (frr & (1 << region))
             return true;
     }
 
