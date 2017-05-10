@@ -64,6 +64,13 @@ public:
     const char* what() const throw() { return "Flash command failed"; }
 };
 
+class FlashTimeoutError : public std::exception
+{
+public:
+    FlashTimeoutError() : exception() {};
+    const char* what() const throw() { return "Flash command timeout"; }
+};
+
 class BootFlashError : public std::exception
 {
 public:
