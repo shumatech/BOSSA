@@ -70,6 +70,7 @@ Samba::init()
 {
     uint8_t cmd[3];
     uint32_t cid;
+    uint32_t ecid;
 
     _port->timeout(TIMEOUT_QUICK);
 
@@ -105,7 +106,7 @@ Samba::init()
     // Read the chip ID
     try
     {
-        cid = chipId();
+        chipId(cid, ecid);
     }
     catch (SambaError)
     {
@@ -136,7 +137,9 @@ Samba::init()
     _port->timeout(TIMEOUT_NORMAL);
 
     if (_debug)
-        printf("chipId=%#08x\n", cid);
+    {
+        printf("chipId=%#08x extChipId=%#08x\n", cid, ecid);
+    }
 
     uint8_t eproc = (cid >> 5) & 0x7;
     uint8_t arch = (cid >> 20) & 0xff;
@@ -166,6 +169,9 @@ Samba::init()
     {
         // Check for SAM4 architecture
         if (arch >= 0x88 && arch <= 0x8a)
+            return true;
+        // Check for SAM4E architecture
+        if (arch == 0x3c)
             return true;
         if (_debug)
             printf("Unsupported Cortex-M4 architecture\n");
@@ -624,8 +630,8 @@ Samba::version()
     return ver;
 }
 
-uint32_t
-Samba::chipId()
+void
+Samba::chipId(uint32_t& chipId, uint32_t& extChipId)
 {
     // Read the ARM reset vector
     uint32_t vector = readWord(0x0);
@@ -633,7 +639,9 @@ Samba::chipId()
     // If the vector is a ARM7TDMI branch, then assume Atmel SAM7 registers
     if ((vector & 0xff000000) == 0xea000000)
     {
-        return readWord(0xfffff240);
+        chipId = readWord(0xfffff240);
+        extChipId = 0;
+        return;
     }
 
     // Else use the Atmel SAM3 or SAM4 or SAMD registers
@@ -644,14 +652,21 @@ Samba::chipId()
     // Check if it is Cortex M0+
     if (part_no == 0xC600)
     {
-        return readWord(0x41002018) & 0xFFFF00FF ; // DSU_DID register masked to remove DIE and REV
+       chipId = readWord(0x41002018) & 0xFFFF00FF ; // DSU_DID register masked to remove DIE and REV
+       extChipId = readWord(0x4100201c);
+       return;
     }
 
     // Else assume M3 or M4
-    uint32_t cid = readWord(0x400e0740);
-    if (cid == 0)
-        cid = readWord(0x400e0940);
-    return cid;
+    chipId = readWord(0x400e0740);
+    if (chipId != 0)
+    {
+        extChipId = readWord(0x400e0744);
+        return;
+    }
+
+    chipId = readWord(0x400e0940);
+    extChipId = readWord(0x400e0944);
 }
 
 void
@@ -659,7 +674,10 @@ Samba::reset(void)
 {
     printf("CPU reset.\n");
 
-    uint32_t chipId = Samba::chipId();
+    uint32_t chipId;
+    uint32_t extChipId;
+    
+    Samba::chipId(chipId, extChipId);
 
     switch (chipId)
     {

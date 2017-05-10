@@ -200,12 +200,10 @@ Command::flashable()
 bool
 Command::createFlash()
 {
-    uint32_t chipId = _samba.chipId();
-
-    _flash = _flashFactory.create(_samba, chipId);
+    _flash = _flashFactory.create(_samba);
     if (_flash.get() == NULL)
     {
-        printf("Flash for chip ID %08x is not supported\n", chipId);
+        printf("Device is not supported\n");
         return false;
     }
 
@@ -860,6 +858,7 @@ CommandPio::invoke(char* argv[], int argc)
 {
     uint32_t line;
     uint32_t chipId;
+    uint32_t extChipId;
     uint32_t eproc;
     uint32_t arch;
     uint32_t addr = 0;
@@ -897,7 +896,7 @@ CommandPio::invoke(char* argv[], int argc)
     
     port = tolower(argv[1][1]);
 
-    chipId = _samba.chipId();
+    _samba.chipId(chipId, extChipId);
     eproc = (chipId >> 5) & 0x7;
     arch = (chipId >> 20) & 0xff;
 

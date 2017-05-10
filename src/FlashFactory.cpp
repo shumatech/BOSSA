@@ -41,9 +41,13 @@ FlashFactory::~FlashFactory()
 }
 
 Flash::Ptr
-FlashFactory::create(Samba& samba, uint32_t chipId)
+FlashFactory::create(Samba& samba)
 {
     Flash* flash = NULL;
+    uint32_t chipId;
+    uint32_t extChipId;
+
+    samba.chipId(chipId, extChipId);
 
     // Mask out the chip revision
     switch (chipId & 0x7fffffe0)
@@ -248,6 +252,22 @@ FlashFactory::create(Samba& samba, uint32_t chipId)
         case 0x1001001c:
             flash = new NvmFlash( samba, "ATSAMR21E18A", 0x2000, 4096, 64, 1, 16, 0x20004000, 0x20008000, 0x41004000, true ) ;
             break;
+
+        //
+        // SAM4E
+        //
+        case 0xa3cc0ce0:
+            switch (extChipId)
+            {
+            case 0x00120200: // E
+            case 0x00120201: // C
+                flash = new EefcFlash(samba, "ATSAM4E16", 0x400000, 2048, 512, 1, 128, 0x20001000, 0x20020000, 0x400e0a00, false);
+                break;
+            case 0x00120208: // E
+            case 0x00120209: // C
+                flash = new EefcFlash(samba, "ATSAM4E8", 0x400000, 1024, 512, 1, 128, 0x20001000, 0x20020000, 0x400e0a00, false);
+                break;
+            }
         }
     }
     

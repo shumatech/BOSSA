@@ -64,6 +64,7 @@ public:
     
     std::string name;
     uint32_t    chipId;
+    uint32_t    extChipId;
     std::string version;
     uint32_t    address;
     uint32_t    numPages;

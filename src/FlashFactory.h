@@ -40,7 +40,7 @@ public:
     FlashFactory();
     virtual ~FlashFactory();
 
-    Flash::Ptr create(Samba& samba, uint32_t chipId);
+    Flash::Ptr create(Samba& samba);
 };
 
 #endif // _FLASHFACTORY_H

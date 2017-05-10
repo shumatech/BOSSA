@@ -67,7 +67,7 @@ public:
 
     std::string version();
 
-    uint32_t chipId();
+    void chipId(uint32_t& chipId, uint32_t& extChipId);
 
     void setDebug(bool debug) { _debug = debug; }
 

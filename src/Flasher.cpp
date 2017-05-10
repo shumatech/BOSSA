@@ -356,7 +356,7 @@ void
 Flasher::info(FlasherInfo& info)
 {
     info.name = _flash->name();
-    info.chipId = _samba.chipId();
+    _samba.chipId(info.chipId, info.extChipId);
     info.version = _samba.version();
     info.address = _flash->address();
     info.numPages = _flash->numPages();

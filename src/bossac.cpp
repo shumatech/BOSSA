@@ -397,13 +397,10 @@ main(int argc, char* argv[])
             printf("Device found on %s\n", port.c_str());
         }
 
-        uint32_t chipId = samba.chipId();
-        printf( "SAM-BA device 0x%08x found\n", chipId ) ;
-
-        Flash::Ptr flash = flashFactory.create(samba, chipId);
+        Flash::Ptr flash = flashFactory.create(samba);
         if (flash.get() == NULL)
         {
-            fprintf(stderr, "Flash for chip ID %08x is not supported\n", chipId);
+            fprintf(stderr, "Device is not supported\n");
             return 1;
         }
 
