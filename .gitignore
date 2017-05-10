@@ -5,3 +5,5 @@ obj
 bossa
 bossac
 bin
+*.swp
+tags
