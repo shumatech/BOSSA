@@ -16,12 +16,13 @@ Supported Device Families
  * SAM7SE
  * SAM7X
  * SAM7XC
- * SAM3N
- * SAM3S
- * SAM3U
+ * SAM3N (Thanks to Atmel)
+ * SAM3S (Thanks to Atmel)
+ * SAM3U (Thanks to Atmel)
+ * SAM4E (Thanks to David Crocker)
+ * SAM4S (Thanks to David Crocker)
  * SAM3X\*
  * SAM3A\*
- * SAM4S\*
  * SAM7L\*
  * SAM9XE\*
  * SAMD21\*
