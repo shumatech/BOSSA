@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////
-// C++ code generated with wxFormBuilder (version Jun 17 2015)
+// C++ code generated with wxFormBuilder (version Apr 13 2017)
 // http://www.wxformbuilder.org/
 //
 // PLEASE DO "NOT" EDIT THIS FILE!
@@ -153,38 +153,7 @@ class InfoDialog : public wxDialog
 		wxCheckBox* _securityCheckBox;
 		wxCheckBox* _borCheckBox;
 		wxStaticText* _lockStaticText;
-		wxCheckBox* _lockCheckBox0;
-		wxCheckBox* _lockCheckBox1;
-		wxCheckBox* _lockCheckBox2;
-		wxCheckBox* _lockCheckBox3;
-		wxCheckBox* _lockCheckBox4;
-		wxCheckBox* _lockCheckBox5;
-		wxCheckBox* _lockCheckBox6;
-		wxCheckBox* _lockCheckBox7;
-		wxCheckBox* _lockCheckBox8;
-		wxCheckBox* _lockCheckBox9;
-		wxCheckBox* _lockCheckBox10;
-		wxCheckBox* _lockCheckBox11;
-		wxCheckBox* _lockCheckBox12;
-		wxCheckBox* _lockCheckBox13;
-		wxCheckBox* _lockCheckBox14;
-		wxCheckBox* _lockCheckBox15;
-		wxCheckBox* _lockCheckBox16;
-		wxCheckBox* _lockCheckBox17;
-		wxCheckBox* _lockCheckBox18;
-		wxCheckBox* _lockCheckBox19;
-		wxCheckBox* _lockCheckBox20;
-		wxCheckBox* _lockCheckBox21;
-		wxCheckBox* _lockCheckBox22;
-		wxCheckBox* _lockCheckBox23;
-		wxCheckBox* _lockCheckBox24;
-		wxCheckBox* _lockCheckBox25;
-		wxCheckBox* _lockCheckBox26;
-		wxCheckBox* _lockCheckBox27;
-		wxCheckBox* _lockCheckBox28;
-		wxCheckBox* _lockCheckBox29;
-		wxCheckBox* _lockCheckBox30;
-		wxCheckBox* _lockCheckBox31;
+		wxTextCtrl* _lockTextCtrl;
 		wxStdDialogButtonSizer* _sdbSizer;
 		wxButton* _sdbSizerOK;
 	

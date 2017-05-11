@@ -59,27 +59,13 @@ BossaInfo::BossaInfo(wxWindow* parent) : InfoDialog(parent)
     _borCheckBox->SetValue(flash->getBor());
 
     uint32_t lockRegions = flash->lockRegions();
-    wxCheckBox* lockCheckBox[32] = {
-        _lockCheckBox0, _lockCheckBox1, _lockCheckBox2, _lockCheckBox3,
-        _lockCheckBox4, _lockCheckBox5, _lockCheckBox6, _lockCheckBox7,
-        _lockCheckBox8, _lockCheckBox9, _lockCheckBox10, _lockCheckBox11,
-        _lockCheckBox12, _lockCheckBox13, _lockCheckBox14, _lockCheckBox15,
-        _lockCheckBox16, _lockCheckBox17, _lockCheckBox18, _lockCheckBox19,
-        _lockCheckBox20, _lockCheckBox21, _lockCheckBox22, _lockCheckBox23,
-        _lockCheckBox24, _lockCheckBox25, _lockCheckBox26, _lockCheckBox27,
-        _lockCheckBox28, _lockCheckBox29, _lockCheckBox30, _lockCheckBox31,
-    };
-
-    for (uint32_t i = 0; i < sizeof(lockCheckBox) / sizeof(lockCheckBox[0]); i++)
+    bool hasLockRegion = false;
+    for (uint32_t i = 0; i < lockRegions; i++)
     {
-        if (i >= lockRegions)
+        if (flash->getLockRegion(i))
         {
-            lockCheckBox[i]->Destroy();
-        }
-        else
-        {
-            lockCheckBox[i]->Enable(false);
-            lockCheckBox[i]->SetValue(flash->getLockRegion(i));
+            _lockTextCtrl->AppendText(wxString::Format(wxT("%s%d"), hasLockRegion ? "," : "", i));
+            hasLockRegion = true;
         }
     }
 
