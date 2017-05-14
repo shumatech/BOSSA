@@ -40,21 +40,38 @@ COMMON_LDFLAGS=-Wl,--enable-auto-import -static -static-libstdc++ -static-libgcc
 COMMON_LIBS=-ltermcap -Wl,--as-needed -lsetupapi
 BOSSA_RC=BossaRes.rc
 WIXDIR="C:\Program Files (x86)\WiX Toolset v3.10\bin"
+CROSS_CA=$(INSTALLDIR)\\cross_ca.crt
+CODE_SIGN=$(INSTALLDIR)\\code_sign.p12
+TIMESTAMP=http://timestamp.comodoca.com/authenticode
+SIGNTOOL="C:\Program Files (x86)\Windows Kits\10\bin\x64\signtool.exe"
+INF2CAT="C:\Program Files (x86)\Windows Kits\10\bin\x86\Inf2Cat.exe"
 
-$(OBJDIR)\\bossa-$(VERSION).wixobj: $(INSTALLDIR)\\bossa.wxs
-	$(WIXDIR)\\candle.exe -dVersion=$(VERSION) -arch x86 -out $@ -ext $(WIXDIR)\\WixUIExtension.dll -ext $(WIXDIR)\\WixDifxAppExtension.dll $<
+define bossa_msi
+$(OBJDIR)\\bossa-$(1)-$(VERSION).wixobj: $(INSTALLDIR)\\bossa.wxs
+	$(WIXDIR)\\candle.exe -dVersion=$(VERSION) -arch $(1) -out $$@ -ext $(WIXDIR)\\WixUIExtension.dll -ext $(WIXDIR)\\WixDifxAppExtension.dll $$<
 
-$(OBJDIR)\\bossa64-$(VERSION).wixobj: $(INSTALLDIR)\\bossa.wxs
-	$(WIXDIR)\\candle.exe -dVersion=$(VERSION) -arch x64 -out $@ -ext $(WIXDIR)\\WixUIExtension.dll -ext $(WIXDIR)\\WixDifxAppExtension.dll $<
+$(BINDIR)\\bossa-$(1)-$(VERSION).msi: $(OBJDIR)\\bossa-$(1)-$(VERSION).wixobj
+	$(WIXDIR)\\light.exe -cultures:null -out $$@ -pdbout $(OBJDIR)\\bossa.wixpdb -sice:ICE57 -ext $(WIXDIR)\\WixUIExtension.dll -ext $(WIXDIR)\\WixDifxAppExtension.dll $(WIXDIR)\\difxapp_$(1).wixlib $$<
+	$$(Q)read -p "Password:" -rs PASSWORD; \
+	cmd /C '$(SIGNTOOL) sign /v /fd sha256 /ac $(CROSS_CA) /f $(CODE_SIGN) -t $(TIMESTAMP) /p '$$$$PASSWORD' $$@'
+endef
 
-$(BINDIR)\\bossa-$(VERSION).msi: $(OBJDIR)\\bossa-$(VERSION).wixobj
-	$(WIXDIR)\\light.exe -cultures:null -out $@ -pdbout $(OBJDIR)\\bossa.wixpdb -sice:ICE57 -ext $(WIXDIR)\\WixUIExtension.dll -ext $(WIXDIR)\\WixDifxAppExtension.dll $(WIXDIR)\\difxapp_x86.wixlib $<
+$(eval $(call bossa_msi,x86))
+$(eval $(call bossa_msi,x64))
 
-$(BINDIR)\\bossa64-$(VERSION).msi: $(OBJDIR)\\bossa64-$(VERSION).wixobj
-	$(WIXDIR)\\light.exe -cultures:null -out $@ -pdbout $(OBJDIR)\\bossa64.wixpdb -sice:ICE57 -ext $(WIXDIR)\\WixUIExtension.dll -ext $(WIXDIR)\\WixDifxAppExtension.dll $(WIXDIR)\\difxapp_x64.wixlib $<
+$(INSTALLDIR)\\bossa.cat: $(INSTALLDIR)\\bossa.inf
+	export TMP=$$(mktemp -d); \
+	cp $< $$TMP; \
+	cmd /C '$(INF2CAT) /v /driver:'$$(cygpath -w $$TMP)' /os:XP_X86,Vista_X86,Vista_X64,7_X86,7_X64,8_X86,8_X64,6_3_X86,6_3_X64,10_x86,10_x64'; \
+	mv $$TMP/bossa.cat $@; \
+	rm -rf $$TMP; \
+	read -p "Password:" -rs PASSWORD; \
+	cmd /C '$(SIGNTOOL) sign /v /fd sha256 /ac $(CROSS_CA) /f $(CODE_SIGN) -t $(TIMESTAMP) /p '$$PASSWORD' $@'
 
-install32: $(BINDIR)\\bossa-$(VERSION).msi
-install64: $(BINDIR)\\bossa64-$(VERSION).msi
+bossa.cat: $(INSTALLDIR)\\bossa.cat
+
+install32: $(BINDIR)\\bossa-x86-$(VERSION).msi
+install64: $(BINDIR)\\bossa-x64-$(VERSION).msi
 .PHONY: install
 install: strip install32 install64
 
