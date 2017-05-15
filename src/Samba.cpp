@@ -691,6 +691,8 @@ Samba::reset(void)
 
     // SAM3X8E
     case 0x285e0a60:
+    // SAM3X8C
+    case 0x284e0a60:
         writeWord(0x400E1A00, 0xA500000D);
         break;
 
