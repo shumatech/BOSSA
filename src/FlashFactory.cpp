@@ -152,6 +152,10 @@ FlashFactory::create(Samba& samba)
     case 0x29580560 : // C
         flash = new EefcFlash(samba, "ATSAM3N1", 0x400000, 256, 256, 1, 4, 0x20000800, 0x20002000, 0x400e0a00, false);
         break;
+    case 0x29380361 : // A
+    case 0x29480361 : // B
+        flash = new EefcFlash(samba, "ATSAM3N0", 0x400000, 128, 256, 1, 2, 0x20000800, 0x20002000, 0x400e0a00, false);
+        break;
     //
     // SAM3S
     //
