@@ -40,7 +40,6 @@ COMMON_LDFLAGS=-Wl,--enable-auto-import -static -static-libstdc++ -static-libgcc
 COMMON_LIBS=-ltermcap -Wl,--as-needed -lsetupapi
 BOSSA_RC=BossaRes.rc
 WIXDIR="C:\Program Files (x86)\WiX Toolset v3.10\bin"
-CROSS_CA=$(INSTALLDIR)\\cross_ca.crt
 CODE_SIGN=$(INSTALLDIR)\\code_sign.p12
 TIMESTAMP=http://timestamp.comodoca.com/authenticode
 SIGNTOOL="C:\Program Files (x86)\Windows Kits\10\bin\x64\signtool.exe"
@@ -53,7 +52,7 @@ $(OBJDIR)\\bossa-$(1)-$(VERSION).wixobj: $(INSTALLDIR)\\bossa.wxs
 $(BINDIR)\\bossa-$(1)-$(VERSION).msi: $(OBJDIR)\\bossa-$(1)-$(VERSION).wixobj
 	$(WIXDIR)\\light.exe -cultures:null -out $$@ -pdbout $(OBJDIR)\\bossa.wixpdb -sice:ICE57 -ext $(WIXDIR)\\WixUIExtension.dll -ext $(WIXDIR)\\WixDifxAppExtension.dll $(WIXDIR)\\difxapp_$(1).wixlib $$<
 	$$(Q)read -p "Password:" -rs PASSWORD; \
-	cmd /C '$(SIGNTOOL) sign /v /fd sha256 /ac $(CROSS_CA) /f $(CODE_SIGN) -t $(TIMESTAMP) /p '$$$$PASSWORD' $$@'
+	cmd /C '$(SIGNTOOL) sign /v /fd sha256 /f $(CODE_SIGN) -t $(TIMESTAMP) /p '$$$$PASSWORD' $$@'
 endef
 
 $(eval $(call bossa_msi,x86))
@@ -66,7 +65,7 @@ $(INSTALLDIR)\\bossa.cat: $(INSTALLDIR)\\bossa.inf
 	mv $$TMP/bossa.cat $@; \
 	rm -rf $$TMP; \
 	read -p "Password:" -rs PASSWORD; \
-	cmd /C '$(SIGNTOOL) sign /v /fd sha256 /ac $(CROSS_CA) /f $(CODE_SIGN) -t $(TIMESTAMP) /p '$$PASSWORD' $@'
+	cmd /C '$(SIGNTOOL) sign /v /fd sha256 /f $(CODE_SIGN) -t $(TIMESTAMP) /p '$$PASSWORD' $@'
 
 bossa.cat: $(INSTALLDIR)\\bossa.cat
 
