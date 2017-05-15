@@ -678,25 +678,35 @@ Samba::reset(void)
     uint32_t extChipId;
     
     Samba::chipId(chipId, extChipId);
-
-    switch (chipId)
-    {
-    case 0x10010000:
-    case 0x10010005:
-    case 0x1001000a:
-    case 0x1001001c:
-        // http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0484c/index.html
-        writeWord(0xE000ED0C, 0x05FA0004);
-        break;
-
-    // SAM3X8E
-    case 0x285e0a60:
-        writeWord(0x400E1A00, 0xA500000D);
-        break;
-
-    default:
-        printf("Reset not supported for this CPU.\n");
-        return;
+	
+	try
+	{
+	    switch (chipId)
+	    {
+	    case 0x10010000:
+	    case 0x10010005:
+	    case 0x1001000a:
+	    case 0x1001001c:
+	        // http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0484c/index.html
+	        writeWord(0xE000ED0C, 0x05FA0004);
+	        break;
+	
+	    // SAM3X8E
+	    case 0x285e0a60:
+	        writeWord(0x400E1A00, 0xA500000D);
+	        break;
+	    // SAM4E
+	    case 0xa3cc0ce0:
+	        writeWord(0x400E1800, 0xA500000D);
+	        break;
+	
+	    default:
+	        printf("Reset not supported for this CPU.\n");
+	        return;
+	    }
+	}
+	catch (exception& expected)
+    {	// writeWord will most likely throw an exception when the CPU is reset
     }
 }
 
