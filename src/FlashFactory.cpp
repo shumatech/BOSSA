@@ -249,6 +249,10 @@ FlashFactory::create(Samba& samba)
             flash = new NvmFlash( samba, "ATSAMD21E18A", 0x2000, 4096, 64, 1, 16, 0x20004000, 0x20008000, 0x41004000, true ) ;
             break ;
 
+        case 0x1001000b:
+            flash = new NvmFlash( samba, "ATSAMD21E17A", 0x2000, 2048, 64, 1, 16, 0x20002000, 0x20004000, 0x41004000, true ) ;
+            break ;
+
         case 0x1001001c:
             flash = new NvmFlash( samba, "ATSAMR21E18A", 0x2000, 4096, 64, 1, 16, 0x20004000, 0x20008000, 0x41004000, true ) ;
             break;
