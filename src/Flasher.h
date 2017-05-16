@@ -84,7 +84,7 @@ public:
     bool        canWriteBuffer;
     bool        canChecksumBuffer;
     
-    std::vector<uint32_t> lockRegions;
+    std::vector<bool> lockRegions;
 };
 
 class Flasher

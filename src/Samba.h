@@ -77,7 +77,7 @@ public:
 
     // Extended SAM-BA functions
     bool canChipErase() { return _canChipErase; }
-    bool chipErase(uint32_t start_addr);
+    void chipErase(uint32_t start_addr);
 
     bool canWriteBuffer() { return _canWriteBuffer; }
     void writeBuffer(uint32_t src_addr, uint32_t dst_addr, uint32_t size);

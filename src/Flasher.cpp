@@ -53,10 +53,13 @@ FlasherInfo::print()
     printf("Lock Regions : %zd\n", lockRegions.size());
     printf("Locked       : ");
     first = true;
-    for (bool region : lockRegions)
+    for (uint32_t region = 0; region < lockRegions.size(); region++)
     {
-        printf("%s%d", first ? "" : ",", region ? 1 : 0);
-        first = false;
+        if (lockRegions[region])
+        {
+            printf("%s%d", first ? "" : ",", region);
+            first = false;
+        }
     }
     printf("%s\n", first ? "none" : "");
     printf("Security     : %s\n", security ? "true" : "false");

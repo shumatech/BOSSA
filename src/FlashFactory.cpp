@@ -43,7 +43,7 @@ FlashFactory::~FlashFactory()
 Flash::Ptr
 FlashFactory::create(Samba& samba)
 {
-    Flash* flash = NULL;
+    Flash* flash;
     uint32_t chipId;
     uint32_t extChipId;
 
@@ -227,48 +227,34 @@ FlashFactory::create(Samba& samba)
     case 0x329973a0 :
         flash = new EefcFlash(samba, "ATSAM9XE128", 0x200000, 256, 512, 1, 8, 0x300000, 0x303000, 0xfffffa00, true);
         break;
-    }
 
-    // Try direct chipID matches if no flash was found
-    if (flash == NULL)
-    {
-        switch (chipId)
+    //
+    // SAMD21
+    //
+    case 0x10010000:
+        flash = new NvmFlash( samba, "ATSAMD21x18", 0x2000, 4096, 64, 1, 16, 0x20004000, 0x20008000, 0x41004000, true ) ;
+        break ;
+
+    //
+    // SAM4E
+    //
+    case 0x23cc0ce0:
+        switch (extChipId)
         {
-        //
-        // SAMD21
-        //
-        case 0x10010000:
-            flash = new NvmFlash( samba, "ATSAMD21J18A", 0x2000, 4096, 64, 1, 16, 0x20004000, 0x20008000, 0x41004000, true ) ;
-            break ;
-
-        case 0x10010005:
-            flash = new NvmFlash( samba, "ATSAMD21G18A", 0x2000, 4096, 64, 1, 16, 0x20004000, 0x20008000, 0x41004000, true ) ;
-            break ;
-
-        case 0x1001000a:
-            flash = new NvmFlash( samba, "ATSAMD21E18A", 0x2000, 4096, 64, 1, 16, 0x20004000, 0x20008000, 0x41004000, true ) ;
-            break ;
-
-        case 0x1001001c:
-            flash = new NvmFlash( samba, "ATSAMR21E18A", 0x2000, 4096, 64, 1, 16, 0x20004000, 0x20008000, 0x41004000, true ) ;
+        case 0x00120200: // E
+        case 0x00120201: // C
+            flash = new EefcFlash(samba, "ATSAM4E16", 0x400000, 2048, 512, 1, 128, 0x20001000, 0x20020000, 0x400e0a00, false);
             break;
-
-        //
-        // SAM4E
-        //
-        case 0xa3cc0ce0:
-            switch (extChipId)
-            {
-            case 0x00120200: // E
-            case 0x00120201: // C
-                flash = new EefcFlash(samba, "ATSAM4E16", 0x400000, 2048, 512, 1, 128, 0x20001000, 0x20020000, 0x400e0a00, false);
-                break;
-            case 0x00120208: // E
-            case 0x00120209: // C
-                flash = new EefcFlash(samba, "ATSAM4E8", 0x400000, 1024, 512, 1, 128, 0x20001000, 0x20020000, 0x400e0a00, false);
-                break;
-            }
+        case 0x00120208: // E
+        case 0x00120209: // C
+            flash = new EefcFlash(samba, "ATSAM4E8", 0x400000, 1024, 512, 1, 64, 0x20001000, 0x20020000, 0x400e0a00, false);
+            break;
         }
+        break;
+
+    default:
+        flash = NULL;
+        break;
     }
     
     return Flash::Ptr(flash);

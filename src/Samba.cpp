@@ -79,7 +79,7 @@ Samba::init()
     
     // Flush garbage
     uint8_t dummy[1024];
-    _port->read(dummy, 1024);
+    _port->read(dummy, sizeof(dummy));
 
     if (!_isUsb)
     {
@@ -653,7 +653,7 @@ Samba::chipId(uint32_t& chipId, uint32_t& extChipId)
     if (part_no == 0xC600)
     {
        chipId = readWord(0x41002018) & 0xFFFF00FF ; // DSU_DID register masked to remove DIE and REV
-       extChipId = readWord(0x4100201c);
+       extChipId = 0;
        return;
     }
 
@@ -700,11 +700,11 @@ Samba::reset(void)
     }
 }
 
-bool
+void
 Samba::chipErase(uint32_t start_addr)
 {
     if (!_canChipErase)
-        return false;
+        throw SambaError();
 
     uint8_t cmd[64];
 
@@ -719,7 +719,6 @@ Samba::chipErase(uint32_t start_addr)
     _port->timeout(TIMEOUT_NORMAL);
     if (cmd[0] != 'X')
         throw SambaError();
-    return true;
 }
 
 void
