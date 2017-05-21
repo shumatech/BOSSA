@@ -309,11 +309,20 @@ Device::create()
     // No CHIPID devices
     //
     case 0:
-        switch (deviceId)
+        switch (deviceId & 0xffff00ff)
         {
         case 0x10010000:
+        case 0x10010005:
+        case 0x1001000a:
+        case 0x1001000f:
             _family = FAMILY_SAMD21;
             flashPtr = new NvmFlash( _samba, "ATSAMD21x18", 0x2000, 4096, 64, 1, 16, 0x20004000, 0x20008000, 0x41004000, true ) ;
+            break;
+
+        case 0x1001001c:
+        case 0x10010019:
+            _family = FAMILY_SAMR21;
+            flashPtr = new NvmFlash( _samba, "ATSAMR21x18", 0x2000, 4096, 64, 1, 16, 0x20004000, 0x20008000, 0x41004000, true ) ;
             break;
 
         default:
@@ -339,6 +348,7 @@ Device::reset(void)
     switch (_family)
     {
     case FAMILY_SAMD21:
+    case FAMILY_SAMR21:
         _samba.writeWord(0xE000ED0C, 0x05FA0004);
         break;
 

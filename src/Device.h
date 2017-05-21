@@ -65,6 +65,7 @@ public:
         FAMILY_SAM9XE,
 
         FAMILY_SAMD21,
+        FAMILY_SAMR21,
     };
 
     Device(Samba& samba) : _samba(samba), _flash(nullptr), _family(FAMILY_NONE) {}
