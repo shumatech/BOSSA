@@ -77,7 +77,7 @@ public:
 private:
     bool _canBootFlash;
 
-    void waitFSR();
+    void waitFSR(int seconds = 1);
     void writeFCR0(uint8_t cmd, uint32_t arg);
     void writeFCR1(uint8_t cmd, uint32_t arg);
     uint32_t readFSR0();

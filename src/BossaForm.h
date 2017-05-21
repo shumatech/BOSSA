@@ -50,7 +50,6 @@ class MainFrame : public wxFrame
 		wxButton* _aboutButton;
 		wxComboBox* _portComboBox;
 		wxButton* _refreshButton;
-		wxButton* _autoScanButton;
 		wxFilePickerCtrl* _filePicker;
 		wxCheckBox* _eraseCheckBox;
 		wxCheckBox* _bootCheckBox;
@@ -136,8 +135,6 @@ class InfoDialog : public wxDialog
 	protected:
 		wxStaticText* _deviceStaticText;
 		wxTextCtrl* _deviceTextCtrl;
-		wxStaticText* _chipIdStaticText;
-		wxTextCtrl* _chipIdTextCtrl;
 		wxStaticText* _versionStaticText;
 		wxTextCtrl* _versionTextCtrl;
 		wxStaticText* _pagesStaticText;

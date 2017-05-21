@@ -44,18 +44,13 @@ MainFrame::MainFrame( wxWindow* parent, wxWindowID id, const wxString& title, co
 	_portComboBox = new wxComboBox( _portBoxSizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, wxCB_READONLY ); 
 	_portBoxSizer->Add( _portComboBox, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
+	
+	_portBoxSizer->Add( 0, 0, 1, wxEXPAND, 5 );
+	
 	_refreshButton = new wxButton( _portBoxSizer->GetStaticBox(), wxID_ANY, wxT("Refresh"), wxDefaultPosition, wxDefaultSize, 0 );
 	_refreshButton->SetToolTip( wxT("Refresh the list of available serial ports") );
 	
 	_portBoxSizer->Add( _refreshButton, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
-	
-	
-	_portBoxSizer->Add( 0, 0, 1, wxEXPAND, 5 );
-	
-	_autoScanButton = new wxButton( _portBoxSizer->GetStaticBox(), wxID_ANY, wxT("Auto-Scan"), wxDefaultPosition, wxDefaultSize, 0 );
-	_autoScanButton->SetToolTip( wxT("Scan all serial ports for a processor") );
-	
-	_portBoxSizer->Add( _autoScanButton, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
 	
 	_topBoxSizer->Add( _portBoxSizer, 3, wxALL|wxEXPAND, 5 );
@@ -346,13 +341,6 @@ InfoDialog::InfoDialog( wxWindow* parent, wxWindowID id, const wxString& title, 
 	
 	_deviceTextCtrl = new wxTextCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY );
 	_deviceBoxSizer->Add( _deviceTextCtrl, 1, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
-	
-	_chipIdStaticText = new wxStaticText( this, wxID_ANY, wxT("Chip ID:"), wxDefaultPosition, wxDefaultSize, 0 );
-	_chipIdStaticText->Wrap( -1 );
-	_deviceBoxSizer->Add( _chipIdStaticText, 0, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
-	
-	_chipIdTextCtrl = new wxTextCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY );
-	_deviceBoxSizer->Add( _chipIdTextCtrl, 1, wxALIGN_CENTER_VERTICAL|wxALL, 5 );
 	
 	
 	_topBoxSizer->Add( _deviceBoxSizer, 0, wxALL|wxEXPAND, 5 );

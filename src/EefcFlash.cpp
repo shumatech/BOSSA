@@ -88,8 +88,6 @@ EefcFlash::~EefcFlash()
 void
 EefcFlash::eraseAll()
 {
-    uint32_t tries = 20;
-
     waitFSR();
     writeFCR0(EEFC_FCMD_EA, 0);
     if (_planes == 2)
@@ -99,21 +97,8 @@ EefcFlash::eraseAll()
     }
 
     // Erase all can take an exceptionally long time on some devices
-    // so wait on FSR for several timeouts
-    while (--tries > 0)
-    {
-        try
-        {
-            waitFSR();
-            break;
-        }
-        catch (FlashTimeoutError& e)
-        {
-        }
-    }
-
-    if (tries == 0)
-        throw FlashTimeoutError();
+    // so wait on FSR for up to 30 seconds
+    waitFSR(30);
 }
 
 void
@@ -316,13 +301,13 @@ EefcFlash::readPage(uint32_t page, uint8_t* data)
 }
 
 void
-EefcFlash::waitFSR()
+EefcFlash::waitFSR(int seconds)
 {
-    uint32_t tries = 1000;
+    int tries = seconds * 1000;
     uint32_t fsr0;
     uint32_t fsr1 = 0x1;
 
-    while (--tries > 0)
+    while (tries-- > 0)
     {
         fsr0 = _samba.readWord(EEFC0_FSR);
         if (fsr0 & 0x2)

@@ -112,13 +112,14 @@ WriteThread::WriteThread(wxEvtHandler* parent,
 wxThread::ExitCode
 WriteThread::Entry()
 {
-    Flash::Ptr& flash = wxGetApp().flash;
+    Device& device = wxGetApp().device;
+    Device::FlashPtr& flash = device.getFlash();
     Samba& samba = wxGetApp().samba;
     
     try
     {
         ThreadObserver observer(this, "Writing");
-        Flasher flasher(samba, flash, observer);
+        Flasher flasher(samba, device, observer);
         
         if (_eraseAll)
         {
@@ -159,7 +160,7 @@ VerifyThread::VerifyThread(wxEvtHandler* parent, const wxString& filename, uint3
 wxThread::ExitCode
 VerifyThread::Entry()
 {
-    Flash::Ptr& flash = wxGetApp().flash;
+    Device& device = wxGetApp().device;
     Samba& samba = wxGetApp().samba;
     uint32_t pageErrors;
     uint32_t totalErrors;
@@ -167,7 +168,7 @@ VerifyThread::Entry()
     try
     {
         ThreadObserver observer(this, "Verifying");
-        Flasher flasher(samba, flash, observer);
+        Flasher flasher(samba, device, observer);
         
         if (!flasher.verify(_filename.mb_str(), pageErrors, totalErrors, _offset))
         {
@@ -199,13 +200,13 @@ ReadThread::ReadThread(wxEvtHandler* parent, const wxString& filename, size_t si
 wxThread::ExitCode
 ReadThread::Entry()
 {
-    Flash::Ptr& flash = wxGetApp().flash;
+    Device& device = wxGetApp().device;
     Samba& samba = wxGetApp().samba;
     
     try
     {
         ThreadObserver observer(this, "Reading");
-        Flasher flasher(samba, flash, observer);
+        Flasher flasher(samba, device, observer);
         
         flasher.read(_filename.mb_str(), _size, _offset);
         

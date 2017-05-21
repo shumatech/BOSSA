@@ -31,7 +31,7 @@
 #include "BossaAbout.h"
 #include "BossaInfo.h"
 
-#include "FlashFactory.h"
+#include "Device.h"
 
 #include <string>
 
@@ -53,10 +53,6 @@ BossaWindow::BossaWindow() : MainFrame(NULL)
     _portComboBox->Connect(wxEVT_COMMAND_COMBOBOX_SELECTED,
                            wxCommandEventHandler(BossaWindow::OnSerial),
                            NULL, this);
-
-    _autoScanButton->Connect(wxEVT_COMMAND_BUTTON_CLICKED,
-                             wxCommandEventHandler(BossaWindow::OnAutoScan),
-                             NULL, this);
 
     _writeButton->Connect(wxEVT_COMMAND_BUTTON_CLICKED,
                           wxCommandEventHandler(BossaWindow::OnWrite),
@@ -112,7 +108,7 @@ BossaWindow::BossaWindow() : MainFrame(NULL)
 
             if (samba.connect(portFactory.create(std::string(port.mb_str()))))
             {
-                CreateFlash();
+                CreateDevice();
             }
         }
     }
@@ -174,16 +170,16 @@ BossaWindow::OnRefresh(wxCommandEvent& event)
 void
 BossaWindow::Connected()
 {
-    Flash& flash = *wxGetApp().flash;
+    Device::FlashPtr& flash = wxGetApp().device.getFlash();
     Samba& samba = wxGetApp().samba;
     const SerialPort& port = samba.getSerialPort();
 
     _statusBar->SetStatusText(wxT("Connected"), 0);
-    _statusBar->SetStatusText(wxString::Format(wxT("Device: %s"), flash.name().c_str()), 1);
+    _statusBar->SetStatusText(wxString::Format(wxT("Device: %s"), flash->name().c_str()), 1);
     _portComboBox->SetStringSelection(wxString(port.name().c_str(), wxConvUTF8));
-    _bootCheckBox->Enable(flash.canBootFlash());
-    _bodCheckBox->Enable(flash.canBod());
-    _borCheckBox->Enable(flash.canBor());
+    _bootCheckBox->Enable(flash->canBootFlash());
+    _bodCheckBox->Enable(flash->canBod());
+    _borCheckBox->Enable(flash->canBor());
     _writeButton->Enable(true);
     _verifyButton->Enable(true);
     _readButton->Enable(true);
@@ -257,15 +253,13 @@ BossaWindow::Question(const wxString& message)
 }
 
 void
-BossaWindow::CreateFlash()
+BossaWindow::CreateDevice()
 {
-    Samba& samba = wxGetApp().samba;
-    Flash::Ptr& flash = wxGetApp().flash;
-    FlashFactory flashFactory;
+    Device& device = wxGetApp().device;
 
     try
     {
-        flash = flashFactory.create(samba);
+        device.create();
     }
     catch (exception& e)
     {
@@ -274,14 +268,7 @@ BossaWindow::CreateFlash()
         return;
     }
 
-    if (flash.get() == NULL)
-    {
-        Disconnected();
-        Error(wxT("Device is not supported"));
-        return;
-    }
-
-    _statusBar->SetStatusText(wxString::Format(wxT("Device: %s"), flash->name().c_str()), 1);
+    _statusBar->SetStatusText(wxString::Format(wxT("Device: %s"), device.getFlash()->name().c_str()), 1);
     Connected();
 }
 
@@ -299,31 +286,7 @@ BossaWindow::OnSerial(wxCommandEvent& event)
         return;
     }
 
-    CreateFlash();
-}
-
-void
-BossaWindow::OnAutoScan(wxCommandEvent& event)
-{
-    string port;
-    PortFactory& portFactory = wxGetApp().portFactory;
-    Samba& samba = wxGetApp().samba;
-
-    RefreshSerial();
-
-    for (port = portFactory.begin();
-         port != portFactory.end();
-         port = portFactory.next())
-    {
-        if (samba.connect(portFactory.create(port)))
-        {
-            CreateFlash();
-            return;
-        }
-    }
-
-    Disconnected();
-    Error(wxString(wxT("Could not find a device")));
+    CreateDevice();
 }
 
 bool
@@ -350,7 +313,7 @@ BossaWindow::GetOffset(uint32_t& offset)
 void
 BossaWindow::OnWrite(wxCommandEvent& event)
 {
-    Flash& flash = *wxGetApp().flash;
+    Device::FlashPtr& flash = wxGetApp().device.getFlash();
     uint32_t offset;
 
     if (_filePicker->GetPath().IsEmpty())
@@ -370,12 +333,12 @@ BossaWindow::OnWrite(wxCommandEvent& event)
 
     try
     {
-        if (flash.isLocked())
+        if (flash->isLocked())
         {
             if (!Question(wxT("The flash is currently locked. Do you want to unlock it and proceed with the write?")))
                 return;
 
-            flash.unlockAll();
+            flash->unlockAll();
         }
     }
     catch(exception& e)

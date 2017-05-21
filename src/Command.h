@@ -34,7 +34,7 @@
 #include "Shell.h"
 #include "Samba.h"
 #include "PortFactory.h"
-#include "FlashFactory.h"
+#include "Device.h"
 #include "Flasher.h"
 
 class CommandObserver : public FlasherObserver
@@ -69,8 +69,8 @@ protected:
     static Shell* _shell;
     static Samba _samba;
     static PortFactory _portFactory;
-    static FlashFactory _flashFactory;
-    static Flash::Ptr _flash;
+    static Device _device;
+    static Device::FlashPtr& _flash;
     static Flasher _flasher;
     static CommandObserver _observer;
     static bool _connected;
@@ -82,7 +82,7 @@ protected:
     bool argBool(const char* arg, bool* value);
     bool argState(const char* arg, bool* value);
     
-    bool createFlash();
+    bool createDevice();
     bool connected();
     bool flashable();
 
@@ -238,13 +238,6 @@ class CommandRead : public Command
 {
 public:
     CommandRead();
-    virtual void invoke(char* argv[], int argc);
-};
-
-class CommandScan : public Command
-{
-public:
-    CommandScan();
     virtual void invoke(char* argv[], int argc);
 };
 

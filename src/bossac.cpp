@@ -37,7 +37,7 @@
 #include "CmdOpts.h"
 #include "Samba.h"
 #include "PortFactory.h"
-#include "FlashFactory.h"
+#include "Device.h"
 #include "Flasher.h"
 
 using namespace std;
@@ -64,8 +64,7 @@ public:
     bool info;
     bool debug;
     bool help;
-    bool forceUsb;
-    string forceUsbArg;
+    bool usbPort;
 
     int readArg;
     int offsetArg;
@@ -75,6 +74,7 @@ public:
     int borArg;
     string lockArg;
     string unlockArg;
+    bool usbPortArg;
 };
 
 BossaConfig::BossaConfig()
@@ -91,13 +91,14 @@ BossaConfig::BossaConfig()
     security = false;
     info = false;
     help = false;
-    forceUsb = false;
+    usbPort = false;
 
     readArg = 0;
     offsetArg = 0;
     bootArg = 1;
     bodArg = 1;
     borArg = 1;
+    usbPortArg=1;
 
     reset = false;
 }
@@ -157,7 +158,7 @@ static Option opts[] =
     {
       'e', "erase", &config.erase,
       { ArgNone },
-      "erase the entire flash (keep the 8KB of bootloader for SAM Dxx)"
+      "erase the entire flash (minus any bootloader)"
     },
     {
       'w', "write", &config.write,
@@ -186,7 +187,7 @@ static Option opts[] =
       'p', "port", &config.port,
       { ArgRequired, ArgString, "PORT", { &config.portArg } },
       "use serial PORT to communicate to device;\n"
-      "default behavior is to auto-scan all serial ports"
+      "default behavior is to use first serial port"
     },
     {
       'b', "boot", &config.boot,
@@ -240,9 +241,10 @@ static Option opts[] =
       "display this help text"
     },
     {
-      'U', "force_usb_port", &config.forceUsb,
-      { ArgRequired, ArgString, "true/false", { &config.forceUsbArg } },
-      "override USB port autodetection"
+      'U', "usb-port", &config.usbPort,
+      { ArgOptional, ArgInt, "BOOL", { &config.usbPortArg } },
+      "force serial port detection to USB if BOOL is 1 [default]\n"
+      "or to RS-232 if BOOL is 0"
     },
     {
       'R', "reset", &config.reset,
@@ -250,22 +252,6 @@ static Option opts[] =
       "reset CPU (if supported)"
     }
 };
-
-bool
-autoScan(Samba& samba, PortFactory& portFactory, string& port)
-{
-    for (port = portFactory.begin();
-         port != portFactory.end();
-         port = portFactory.next())
-    {
-        if (config.debug)
-            printf("Trying to connect on %s\n", port.c_str());
-        if (samba.connect(portFactory.create(port)))
-            return true;
-    }
-
-    return false;
-}
 
 int
 help(const char* program)
@@ -353,59 +339,37 @@ main(int argc, char* argv[])
     {
         Samba samba;
         PortFactory portFactory;
-        FlashFactory flashFactory;
 
         if (config.debug)
             samba.setDebug(true);
 
-        bool isUsb = false;
-        if (config.forceUsb)
-        {
-            if (config.forceUsbArg.compare("true")==0)
-                isUsb = true;
-            else if (config.forceUsbArg.compare("false")==0)
-                isUsb = false;
-            else
-            {
-                fprintf(stderr, "Invalid USB value: %s\n", config.forceUsbArg.c_str());
-                return 1;
-            }
-        }
+        if (!config.port)
+            config.portArg = portFactory.def();
 
-        if (config.port)
+        if (config.portArg.empty())
         {
-            bool res;
-            if (config.forceUsb)
-                res = samba.connect(portFactory.create(config.portArg, isUsb));
-            else
-                res = samba.connect(portFactory.create(config.portArg));
-            if (!res)
-            {
-                fprintf(stderr, "No device found on %s\n", config.portArg.c_str());
-                return 1;
-            }
-        }
-        else
-        {
-            string port;
-            if (!autoScan(samba, portFactory, port))
-            {
-                fprintf(stderr, "Auto scan for device failed\n");
-                fprintf(stderr, "Try specifying a serial port with the '-p' option\n");
-                return 1;
-            }
-            printf("Device found on %s\n", port.c_str());
-        }
-
-        Flash::Ptr flash = flashFactory.create(samba);
-        if (flash.get() == NULL)
-        {
-            fprintf(stderr, "Device is not supported\n");
+            fprintf(stderr, "No serial ports available\n");
             return 1;
         }
 
+        bool res;
+        if (config.usbPort)
+            res = samba.connect(portFactory.create(config.portArg, config.usbPortArg != 0));
+        else
+            res = samba.connect(portFactory.create(config.portArg));
+        if (!res)
+        {
+            fprintf(stderr, "No device found on %s\n", config.portArg.c_str());
+            return 1;
+        }
+
+        Device device(samba);
+        device.create();
+
+        Device::FlashPtr& flash = device.getFlash();
+
         BossaObserver observer;
-        Flasher flasher(samba, flash, observer);
+        Flasher flasher(samba, device, observer);
 
         if (config.info)
         {
@@ -482,7 +446,7 @@ main(int argc, char* argv[])
             flasher.lock(config.lockArg, true);
 
         if (config.reset)
-            samba.reset();
+            device.reset();
     }
     catch (exception& e)
     {

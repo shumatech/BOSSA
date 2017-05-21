@@ -33,6 +33,7 @@
 #include <exception>
 #include <vector>
 
+#include "Device.h"
 #include "Flash.h"
 #include "Samba.h"
 #include "FileError.h"
@@ -90,7 +91,7 @@ public:
 class Flasher
 {
 public:
-    Flasher(Samba& samba, Flash::Ptr& flash, FlasherObserver& observer) : _samba(samba), _flash(flash), _observer(observer) {}
+    Flasher(Samba& samba, Device& device, FlasherObserver& observer) : _samba(samba), _device(device), _flash(device.getFlash()), _observer(observer) {}
     virtual ~Flasher() {}
 
     void erase();
@@ -102,7 +103,8 @@ public:
 
 private:
     Samba& _samba;
-    Flash::Ptr& _flash;
+    Device& _device;
+    Device::FlashPtr& _flash;
     FlasherObserver& _observer;
 };
 

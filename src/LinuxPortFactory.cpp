@@ -100,3 +100,10 @@ LinuxPortFactory::end()
 {
     return std::string();
 }
+
+std::string
+LinuxPortFactory::def()
+{
+    return std::string("/dev/ttyACM0");
+}
+

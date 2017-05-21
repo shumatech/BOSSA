@@ -43,9 +43,8 @@ FlasherInfo::print()
     bool first;
 
     printf("Device       : %s\n", name.c_str());
-    printf("Chip ID      : %08x\n", chipId);
     printf("Version      : %s\n", version.c_str());
-    printf("Address      : %d\n", address);
+    printf("Address      : %#x\n", address);
     printf("Pages        : %d\n", numPages);
     printf("Page Size    : %d bytes\n", pageSize);
     printf("Total Size   : %dKB\n", totalSize / 1024);
@@ -281,13 +280,13 @@ Flasher::read(const char* filename, uint32_t fsize, uint32_t foffset)
     uint32_t numPages;
     size_t fbytes;
 
-    if (fsize == 0)
-        fsize = pageSize * _flash->numPages();
-    
     if (foffset % pageSize != 0 || foffset >= _flash->totalSize())
         throw FlashOffsetError();
         
     pageOffset = foffset / pageSize;
+
+    if (fsize == 0)
+        fsize = pageSize * (_flash->numPages() - pageOffset);
 
     numPages = (fsize + pageSize - 1) / pageSize;
     if (pageOffset + numPages > _flash->numPages())
@@ -359,7 +358,6 @@ void
 Flasher::info(FlasherInfo& info)
 {
     info.name = _flash->name();
-    _samba.chipId(info.chipId, info.extChipId);
     info.version = _samba.version();
     info.address = _flash->address();
     info.numPages = _flash->numPages();

@@ -29,7 +29,8 @@
 #ifndef _LINUXPORTFACTORY_H
 #define _LINUXPORTFACTORY_H
 
-#include "SerialPort.h"
+class LinuxPortFactory;
+#include "PortFactory.h"
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -37,7 +38,7 @@
 #include <string>
 
 
-class LinuxPortFactory
+class LinuxPortFactory : public PortFactoryBase
 {
 public:
     LinuxPortFactory();
@@ -46,6 +47,7 @@ public:
     virtual std::string begin();
     virtual std::string end();
     virtual std::string next();
+    virtual std::string def();
 
     virtual SerialPort::Ptr create(const std::string& name);
     virtual SerialPort::Ptr create(const std::string& name, bool isUsb);

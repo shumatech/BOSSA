@@ -243,13 +243,13 @@ EfcFlash::readPage(uint32_t page, uint8_t* data)
 }
 
 void
-EfcFlash::waitFSR()
+EfcFlash::waitFSR(int seconds)
 {
-    uint32_t tries = 1000;
+    int tries = seconds * 1000;
     uint32_t fsr0;
     uint32_t fsr1 = 0x1;
 
-    while (--tries <= 500)
+    while (tries-- > 0)
     {
         fsr0 = readFSR0();
         if (fsr0 & 0x2)
