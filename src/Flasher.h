@@ -91,7 +91,7 @@ public:
 class Flasher
 {
 public:
-    Flasher(Samba& samba, Device& device, FlasherObserver& observer) : _samba(samba), _device(device), _flash(device.getFlash()), _observer(observer) {}
+    Flasher(Samba& samba, Device& device, FlasherObserver& observer) : _samba(samba), _flash(device.getFlash()), _observer(observer) {}
     virtual ~Flasher() {}
 
     void erase();
@@ -103,7 +103,6 @@ public:
 
 private:
     Samba& _samba;
-    Device& _device;
     Device::FlashPtr& _flash;
     FlasherObserver& _observer;
 };

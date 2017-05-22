@@ -96,8 +96,8 @@ endif
 #
 ifeq ($(OS),Darwin)
 COMMON_SRCS+=PosixSerialPort.cpp OSXPortFactory.cpp
-COMMON_CXXFLAGS=-arch i386 -arch x86_64 -mmacosx-version-min=10.5
-COMMON_LDFLAGS=-arch i386 -arch x86_64 -mmacosx-version-min=10.5
+COMMON_CXXFLAGS=-arch x86_64 -mmacosx-version-min=10.9
+COMMON_LDFLAGS=-arch x86_64 -mmacosx-version-min=10.9
 APP=BOSSA.app
 DMG=bossa-$(VERSION).dmg
 VOLUME=BOSSA
