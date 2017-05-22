@@ -5,3 +5,8 @@ obj
 bossa
 bossac
 bin
+*.swp
+tags
+*.bak
+install/*.crt
+install/*.p12

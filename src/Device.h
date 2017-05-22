@@ -3,7 +3,7 @@
 //
 // Copyright (c) 2011-2017, ShumaTech
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //     * Redistributions of source code must retain the above copyright
@@ -14,7 +14,7 @@
 //     * Neither the name of the <organization> nor the
 //       names of its contributors may be used to endorse or promote products
 //       derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -26,21 +26,66 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef _FLASHFACTORY_H
-#define _FLASHFACTORY_H
+#ifndef _DEVICE_H
+#define _DEVICE_H
 
-#include <stdint.h>
+#include <exception>
 
 #include "Samba.h"
 #include "Flash.h"
 
-class FlashFactory
+class DeviceUnsupportedError : public std::exception
 {
 public:
-    FlashFactory();
-    virtual ~FlashFactory();
-
-    Flash::Ptr create(Samba& samba, uint32_t chipId);
+    DeviceUnsupportedError() : exception() {};
+    const char* what() const throw() { return "Device unsupported"; }
 };
 
-#endif // _FLASHFACTORY_H
+class Device
+{
+public:
+    enum Family {
+        FAMILY_NONE,
+
+        FAMILY_SAM7S,
+        FAMILY_SAM7SE,
+        FAMILY_SAM7X,
+        FAMILY_SAM7XC,
+        FAMILY_SAM7L,
+
+        FAMILY_SAM3N,
+        FAMILY_SAM3S,
+        FAMILY_SAM3U,
+        FAMILY_SAM3X,
+        FAMILY_SAM3A,
+
+        FAMILY_SAM4S,
+        FAMILY_SAM4E,
+
+        FAMILY_SAM9XE,
+
+        FAMILY_SAMD21,
+        FAMILY_SAMR21,
+    };
+
+    Device(Samba& samba) : _samba(samba), _flash(nullptr), _family(FAMILY_NONE) {}
+    virtual ~Device() {}
+
+    void create();
+
+    Family getFamily() { return _family; }
+
+    typedef std::unique_ptr<Flash> const FlashPtr;
+
+    FlashPtr& getFlash() { return _flash; }
+
+    void reset(void);
+
+private:
+    Samba& _samba;
+    std::unique_ptr<Flash> _flash;
+    Family _family;
+};
+
+#endif // _DEVICE_H
+

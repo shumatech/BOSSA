@@ -28,7 +28,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include "BossaApp.h"
 
-BossaApp::BossaApp() : config(_("Bossa"))
+BossaApp::BossaApp() : config(_("Bossa")), device(samba)
 {
 }
 

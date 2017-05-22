@@ -42,6 +42,7 @@ public:
     virtual std::string begin() = 0;
     virtual std::string end() = 0;
     virtual std::string next() = 0;
+    virtual std::string def() = 0;
 
     virtual SerialPort::Ptr create(const std::string& name) = 0;
     virtual SerialPort::Ptr create(const std::string& name, bool isUsb) = 0;

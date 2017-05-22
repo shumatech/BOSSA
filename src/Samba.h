@@ -45,6 +45,7 @@ public:
 };
 
 
+
 class Samba
 {
 public:
@@ -67,7 +68,7 @@ public:
 
     std::string version();
 
-    uint32_t chipId();
+    void chipId(uint32_t& chipId, uint32_t& extChipId);
 
     void setDebug(bool debug) { _debug = debug; }
 
@@ -77,7 +78,7 @@ public:
 
     // Extended SAM-BA functions
     bool canChipErase() { return _canChipErase; }
-    bool chipErase(uint32_t start_addr);
+    void chipErase(uint32_t start_addr);
 
     bool canWriteBuffer() { return _canWriteBuffer; }
     void writeBuffer(uint32_t src_addr, uint32_t dst_addr, uint32_t size);

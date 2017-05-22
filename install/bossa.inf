@@ -4,6 +4,8 @@ Class=Ports                                                     ; This is a seri
 ClassGuid={4D36E978-E325-11CE-BFC1-08002BE10318}                ; Associated GUID
 Provider=%SHUMATECH%                                            ; Driver is provided by SHUMATECH
 DriverVer=05/18/2011,1.0                                        ; Driver version
+CatalogFile=bossa.cat                                           ; Catalog file
+DriverPackageDisplayName=%BOSSA%                                ; Driver display name
 
 [DestinationDirs]                                               ; DestinationDirs section
 DefaultDestDir=12                                               ; Default install directory is \drivers or \IOSubSys

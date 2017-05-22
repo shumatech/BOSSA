@@ -33,6 +33,7 @@
 #include <exception>
 #include <vector>
 
+#include "Device.h"
 #include "Flash.h"
 #include "Samba.h"
 #include "FileError.h"
@@ -64,6 +65,7 @@ public:
     
     std::string name;
     uint32_t    chipId;
+    uint32_t    extChipId;
     std::string version;
     uint32_t    address;
     uint32_t    numPages;
@@ -83,13 +85,13 @@ public:
     bool        canWriteBuffer;
     bool        canChecksumBuffer;
     
-    std::vector<uint32_t> lockRegions;
+    std::vector<bool> lockRegions;
 };
 
 class Flasher
 {
 public:
-    Flasher(Samba& samba, Flash::Ptr& flash, FlasherObserver& observer) : _samba(samba), _flash(flash), _observer(observer) {}
+    Flasher(Samba& samba, Device& device, FlasherObserver& observer) : _samba(samba), _flash(device.getFlash()), _observer(observer) {}
     virtual ~Flasher() {}
 
     void erase();
@@ -101,7 +103,7 @@ public:
 
 private:
     Samba& _samba;
-    Flash::Ptr& _flash;
+    Device::FlashPtr& _flash;
     FlasherObserver& _observer;
 };
 

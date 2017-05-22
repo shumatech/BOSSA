@@ -178,3 +178,10 @@ WinPortFactory::next()
 
     return std::string((char*) devName, len);
 }
+
+std::string
+WinPortFactory::def()
+{
+    return begin();
+}
+

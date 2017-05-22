@@ -19,9 +19,10 @@ Supported Device Families
  * SAM3N
  * SAM3S
  * SAM3U
+ * SAM4E
+ * SAM4S
  * SAM3X\*
  * SAM3A\*
- * SAM4S\*
  * SAM7L\*
  * SAM9XE\*
  * SAMD21\*
@@ -30,3 +31,6 @@ Supported Device Families
 
 Do you want to help make sure a device family is tested or do you want to see a new device family added?  Then contribute a development board with a device from that family to the BOSSA project to make it happen.  Contact scott at shumatech.com if you are interested in helping the project.
 
+The following individuals and companies graciously provided development boards to assist the BOSSA project.
+ * Atmel Corporation (SAM3N, SAM3S, SAM3U)
+ * David Crocker (SAM4E, SAM4S)

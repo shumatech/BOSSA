@@ -46,7 +46,7 @@ private:
     BossaProgress* _progress;
 
     void RefreshSerial();
-    void CreateFlash();
+    void CreateDevice();
     void Connected();
     void Disconnected();
 
@@ -60,7 +60,6 @@ private:
     void OnAbout(wxCommandEvent& event);
     void OnRefresh(wxCommandEvent& event);
     void OnSerial(wxCommandEvent& event);
-    void OnAutoScan(wxCommandEvent& event);
 
     void OnWrite(wxCommandEvent& event);
     void OnVerify(wxCommandEvent& event);

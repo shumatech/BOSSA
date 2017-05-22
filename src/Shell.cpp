@@ -60,7 +60,6 @@ Shell::Shell() :
     add(new CommandMww);
     add(new CommandPio);
     add(new CommandRead);
-    add(new CommandScan);
     add(new CommandSecurity);
     add(new CommandVerify);
     add(new CommandWrite);

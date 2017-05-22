@@ -45,10 +45,10 @@ using namespace std;
 Shell* Command::_shell = NULL;
 Samba Command::_samba;
 PortFactory Command::_portFactory;
-FlashFactory Command::_flashFactory;
-Flash::Ptr Command::_flash;
+Device Command::_device(_samba);
+Device::FlashPtr& Command::_flash = _device.getFlash();
 CommandObserver Command::_observer;
-Flasher Command::_flasher(_samba, _flash, _observer);
+Flasher Command::_flasher(_samba, _device, _observer);
 bool Command::_connected = false;
 
 Command::Command(const char* name, const char* help, const char* usage) :
@@ -177,7 +177,7 @@ Command::connected()
 {
     if (!_connected)
     {
-        printf("No device connected.  Use \"connect\" or \"scan\" first.\n");
+        printf("No device connected.  Use \"connect\" first.\n");
         return false;
     }
     return true;
@@ -198,14 +198,15 @@ Command::flashable()
 }
 
 bool
-Command::createFlash()
+Command::createDevice()
 {
-    uint32_t chipId = _samba.chipId();
-
-    _flash = _flashFactory.create(_samba, chipId);
-    if (_flash.get() == NULL)
+    try
     {
-        printf("Flash for chip ID %08x is not supported\n", chipId);
+        _device.create();
+    }
+    catch (DeviceUnsupportedError& e)
+    {
+        printf("Device is not supported\n");
         return false;
     }
 
@@ -380,7 +381,7 @@ CommandConnect::invoke(char* argv[], int argc)
 
     printf("Connected to device on %s\n", argv[1]);
     _connected = true;
-    createFlash();
+    createDevice();
 }
 
 CommandDebug::CommandDebug() :
@@ -716,7 +717,7 @@ CommandMwb::invoke(char* argv[], int argc)
             char* input = readline("? ");
             if (!input)
                 return;
-            if (input == '\0' ||
+            if (*input == '\0' ||
                 !argUint32(input, &value))
             {
                 free(input);
@@ -819,7 +820,7 @@ CommandMww::invoke(char* argv[], int argc)
             char* input = readline("? ");
             if (!input)
                 return;
-            if (input == '\0' ||
+            if (*input == '\0' ||
                 !argUint32(input, &value))
             {
                 free(input);
@@ -859,9 +860,6 @@ void
 CommandPio::invoke(char* argv[], int argc)
 {
     uint32_t line;
-    uint32_t chipId;
-    uint32_t eproc;
-    uint32_t arch;
     uint32_t addr = 0;
     size_t len;
     char port;
@@ -897,34 +895,33 @@ CommandPio::invoke(char* argv[], int argc)
     
     port = tolower(argv[1][1]);
 
-    chipId = _samba.chipId();
-    eproc = (chipId >> 5) & 0x7;
-    arch = (chipId >> 20) & 0xff;
-
     // Check for Cortex-M3 register set
-    if (eproc == 3)
+    Device::Family family = _device.getFamily();
+    if (family == Device::FAMILY_SAM3U)
     {
         // Check for SAM3U special case
-        if (arch >= 0x80 && arch <= 0x81)
+        switch (port)
         {
-            switch (port)
-            {
-                case 'a': addr = 0x400e0c00; break;
-                case 'b': addr = 0x400e0e00; break;
-                case 'c': addr = 0x400e1000; break;
-            }
-        }
-        else
-        {
-            switch (port)
-            {
-                case 'a': addr = 0x400e0e00; break;
-                case 'b': addr = 0x400e1000; break;
-                case 'c': addr = 0x400e1200; break;
-            }
+            case 'a': addr = 0x400e0c00; break;
+            case 'b': addr = 0x400e0e00; break;
+            case 'c': addr = 0x400e1000; break;
         }
     }
-    else
+    else if (family == Device::FAMILY_SAM3N ||
+        family == Device::FAMILY_SAM3S)
+    {
+        switch (port)
+        {
+            case 'a': addr = 0x400e0e00; break;
+            case 'b': addr = 0x400e1000; break;
+            case 'c': addr = 0x400e1200; break;
+        }
+    }
+    else if (family == Device::FAMILY_SAM7S ||
+        family == Device::FAMILY_SAM7SE ||
+        family == Device::FAMILY_SAM7X ||
+        family == Device::FAMILY_SAM7XC ||
+        family == Device::FAMILY_SAM7L)
     {
         switch (port)
         {
@@ -932,6 +929,11 @@ CommandPio::invoke(char* argv[], int argc)
             case 'b': addr = 0xfffff600; break;
             case 'c': addr = 0xfffff800; break;
         }
+    }
+    else
+    {
+        printf("Unsupported device\n");
+        return;
     }
 
     if (addr == 0)
@@ -1122,40 +1124,6 @@ CommandRead::invoke(char* argv[], int argc)
     printf("\nRead successful\n");
 }
 
-CommandScan::CommandScan() :
-    Command("scan",
-            "Scan all serial ports for a device.",
-            "scan")
-{}
-
-void
-CommandScan::invoke(char* argv[], int argc)
-{
-    string port;
-
-    if (!argNum(argc, 1))
-        return;
-
-    for (port = _portFactory.begin();
-         port != _portFactory.end();
-         port = _portFactory.next())
-    {
-        printf("Checking port %s...\n", port.c_str());
-        if (_samba.connect(_portFactory.create(port)))
-        {
-            printf("Device found on %s\n", port.c_str());
-            _connected = true;
-            createFlash();
-            return;
-        }
-    }
-
-    _connected = false;
-
-    printf("Auto scan for device failed.\n"
-           "Try specifying a serial port with the \"connect\" command.\n");
-}
-
 CommandSecurity::CommandSecurity() :
     Command("security",
             "Enable the security flag.",
@@ -1259,6 +1227,6 @@ CommandReset::CommandReset() :
 void
 CommandReset::invoke(char* argv[], int argc)
 {
-    _samba.reset();
+    _device.reset();
 }
 

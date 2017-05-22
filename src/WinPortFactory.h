@@ -44,6 +44,7 @@ public:
     std::string begin();
     std::string end();
     std::string next();
+    std::string def();
 
     SerialPort::Ptr create(const std::string& name);
     SerialPort::Ptr create(const std::string& name, bool isUsb);

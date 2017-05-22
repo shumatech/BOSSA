@@ -243,30 +243,34 @@ EfcFlash::readPage(uint32_t page, uint8_t* data)
 }
 
 void
-EfcFlash::waitFSR()
+EfcFlash::waitFSR(int seconds)
 {
-    uint32_t tries = 0;
+    int tries = seconds * 1000;
     uint32_t fsr0;
     uint32_t fsr1 = 0x1;
 
-    while (++tries <= 500)
+    while (tries-- > 0)
     {
         fsr0 = readFSR0();
-        if (fsr0 & (1 << 2))
+        if (fsr0 & 0x2)
+            throw FlashCmdError();
+        if (fsr0 & 0x4)
             throw FlashLockError();
 
         if (_planes == 2)
         {
             fsr1 = readFSR1();
-            if (fsr1 & (1 << 2))
+            if (fsr1 & 0x2)
+                throw FlashCmdError();
+            if (fsr1 & 0x4)
                 throw FlashLockError();
         }
         if (fsr0 & fsr1 & 0x1)
             break;
-        usleep(100);
+        usleep(1000);
     }
-    if (tries > 500)
-        throw FlashCmdError();
+    if (tries == 0)
+        throw FlashTimeoutError();
 }
 
 void

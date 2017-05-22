@@ -64,6 +64,13 @@ public:
     const char* what() const throw() { return "Flash command failed"; }
 };
 
+class FlashTimeoutError : public std::exception
+{
+public:
+    FlashTimeoutError() : exception() {};
+    const char* what() const throw() { return "Flash command timeout"; }
+};
+
 class BootFlashError : public std::exception
 {
 public:
@@ -124,8 +131,6 @@ public:
 
     virtual void writeBuffer(uint32_t dst_addr, uint32_t size);
     virtual void loadBuffer(const uint8_t* data, uint16_t size);
-
-    typedef std::unique_ptr<Flash> Ptr;
 
 protected:
     Samba& _samba;

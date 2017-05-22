@@ -69,16 +69,12 @@ bool
 Samba::init()
 {
     uint8_t cmd[3];
-    uint32_t cid;
 
     _port->timeout(TIMEOUT_QUICK);
 
-    // Allows Arduino auto-reset
-    usleep(500000);
-    
     // Flush garbage
     uint8_t dummy[1024];
-    _port->read(dummy, 1024);
+    _port->read(dummy, sizeof(dummy));
 
     if (!_isUsb)
     {
@@ -102,20 +98,6 @@ Samba::init()
     _port->write(cmd, 2);
     _port->read(cmd, 2);
 
-    // Read the chip ID
-    try
-    {
-        cid = chipId();
-    }
-    catch (SambaError)
-    {
-        return false;
-    }
-
-    // Read the samba version to detect if extended commands are available
-    // NOTE: we MUST call version() after chipId(), otherwise sam-ba did not
-    //       answer correctly on some devices when used from UART.
-    //       The reason is unknown.
     std::string ver = version();
     std::size_t extIndex = ver.find("[Arduino:");
     if (extIndex != string::npos)
@@ -135,63 +117,7 @@ Samba::init()
 
     _port->timeout(TIMEOUT_NORMAL);
 
-    if (_debug)
-        printf("chipId=%#08x\n", cid);
-
-    uint8_t eproc = (cid >> 5) & 0x7;
-    uint8_t arch = (cid >> 20) & 0xff;
-
-    // Check for ARM7TDMI processor
-    if (eproc == 2)
-    {
-        // Check for SAM7 architecture
-        if (arch >= 0x70 && arch <= 0x76)
-            return true;
-        if (_debug)
-            printf("Unsupported ARM7TDMI architecture\n");
-    }
-    // Check for Cortex-M3 processor
-    else if (eproc == 3)
-    {
-        // Check for SAM3 architecture
-        if (arch >= 0x80 && arch <= 0x8a)
-            return true;
-        if (arch >= 0x93 && arch <= 0x9a)
-            return true;
-        if (_debug)
-            printf("Unsupported Cortex-M3 architecture\n");
-    }
-    // Check for Cortex-M4 processor
-    else if (eproc == 7)
-    {
-        // Check for SAM4 architecture
-        if (arch >= 0x88 && arch <= 0x8a)
-            return true;
-        if (_debug)
-            printf("Unsupported Cortex-M4 architecture\n");
-    }
-    // Check for ARM920T processor
-    else if (eproc == 4)
-    {
-        // Check for SAM9XE architecture
-        if (arch == 0x29)
-            return true;
-        if (_debug)
-            printf("Unsupported ARM920T architecture\n");
-    }
-    // Check for supported M0+ processor
-    // NOTE: 0x1001000a is a ATSAMD21E18A, 0x1001001c is ATSAMR21E18A
-	else if (cid == 0x10010000 || cid == 0x10010100 || cid == 0x10010005 || cid == 0x1001000a || cid == 0x1001001c)
-    {
-        return true;
-    }
-    else
-    {
-        if (_debug)
-            printf("Unsupported processor\n");
-    }
-
-    return false;
+    return true;
 }
 
 bool
@@ -249,7 +175,7 @@ Samba::writeByte(uint32_t addr, uint8_t value)
 
     // The SAM firmware has a bug that if the command and binary data
     // are received in the same USB data packet, then the firmware
-    // gets confused.  Even though the writes are sperated in the code,
+    // gets confused.  Even though the writes are separated in the code,
     // USB drivers often do write combining which can put them together
     // in the same USB data packet.  To avoid this, we call the serial
     // port object's flush method before writing the data.
@@ -624,69 +550,11 @@ Samba::version()
     return ver;
 }
 
-uint32_t
-Samba::chipId()
-{
-    // Read the ARM reset vector
-    uint32_t vector = readWord(0x0);
-
-    // If the vector is a ARM7TDMI branch, then assume Atmel SAM7 registers
-    if ((vector & 0xff000000) == 0xea000000)
-    {
-        return readWord(0xfffff240);
-    }
-
-    // Else use the Atmel SAM3 or SAM4 or SAMD registers
-
-    // The M0+, M3 and M4 have the CPUID register at a common addresss 0xe000ed00
-    uint32_t cpuid_reg = readWord(0xe000ed00);
-    uint16_t part_no = cpuid_reg & 0x0000fff0;
-    // Check if it is Cortex M0+
-    if (part_no == 0xC600)
-    {
-        return readWord(0x41002018) & 0xFFFF00FF ; // DSU_DID register masked to remove DIE and REV
-    }
-
-    // Else assume M3 or M4
-    uint32_t cid = readWord(0x400e0740);
-    if (cid == 0)
-        cid = readWord(0x400e0940);
-    return cid;
-}
-
 void
-Samba::reset(void)
-{
-    printf("CPU reset.\n");
-
-    uint32_t chipId = Samba::chipId();
-
-    switch (chipId)
-    {
-    case 0x10010000:
-    case 0x10010005:
-    case 0x1001000a:
-    case 0x1001001c:
-        // http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0484c/index.html
-        writeWord(0xE000ED0C, 0x05FA0004);
-        break;
-
-    // SAM3X8E
-    case 0x285e0a60:
-        writeWord(0x400E1A00, 0xA500000D);
-        break;
-
-    default:
-        printf("Reset not supported for this CPU.\n");
-        return;
-    }
-}
-
-bool
 Samba::chipErase(uint32_t start_addr)
 {
     if (!_canChipErase)
-        return false;
+        throw SambaError();
 
     uint8_t cmd[64];
 
@@ -701,7 +569,6 @@ Samba::chipErase(uint32_t start_addr)
     _port->timeout(TIMEOUT_NORMAL);
     if (cmd[0] != 'X')
         throw SambaError();
-    return true;
 }
 
 void

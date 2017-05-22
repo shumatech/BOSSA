@@ -98,3 +98,10 @@ OSXPortFactory::end()
 {
     return std::string();
 }
+
+std::string
+OSXPortFactory::def()
+{
+    return begin();
+}
+

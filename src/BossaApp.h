@@ -43,11 +43,11 @@ class BossaApp : public wxApp
 public:
     BossaApp();
 
+    wxConfig config;
     PortFactory portFactory;
     Samba samba;
     BossaBitmaps bitmaps;
-    Flash::Ptr flash;
-    wxConfig config;
+    Device device;
 
 private:
     bool OnInit();

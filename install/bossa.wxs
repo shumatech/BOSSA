@@ -87,6 +87,10 @@
                 Name='bossa.inf'
                 DiskId='1'
                 Source='install\bossa.inf' />
+          <File Id='bossa.cat'
+                Name='bossa.cat'
+                DiskId='1'
+                Source='install\bossa.cat' />
           <difx:Driver Legacy='yes'
                        ForceInstall='yes'
                        PlugAndPlayPrompt='no'

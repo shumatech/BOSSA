@@ -43,20 +43,22 @@ FlasherInfo::print()
     bool first;
 
     printf("Device       : %s\n", name.c_str());
-    printf("Chip ID      : %08x\n", chipId);
     printf("Version      : %s\n", version.c_str());
-    printf("Address      : %d\n", address);
+    printf("Address      : %#x\n", address);
     printf("Pages        : %d\n", numPages);
     printf("Page Size    : %d bytes\n", pageSize);
     printf("Total Size   : %dKB\n", totalSize / 1024);
     printf("Planes       : %d\n", numPlanes);
-    printf("Lock Regions : %d\n", lockRegions.size());
+    printf("Lock Regions : %zd\n", lockRegions.size());
     printf("Locked       : ");
     first = true;
-    for (bool region : lockRegions)
+    for (uint32_t region = 0; region < lockRegions.size(); region++)
     {
-        printf("%s%d", first ? "" : ",", region ? 1 : 0);
-        first = false;
+        if (lockRegions[region])
+        {
+            printf("%s%d", first ? "" : ",", region);
+            first = false;
+        }
     }
     printf("%s\n", first ? "none" : "");
     printf("Security     : %s\n", security ? "true" : "false");
@@ -278,13 +280,13 @@ Flasher::read(const char* filename, uint32_t fsize, uint32_t foffset)
     uint32_t numPages;
     size_t fbytes;
 
-    if (fsize == 0)
-        fsize = pageSize * _flash->numPages();
-    
     if (foffset % pageSize != 0 || foffset >= _flash->totalSize())
         throw FlashOffsetError();
         
     pageOffset = foffset / pageSize;
+
+    if (fsize == 0)
+        fsize = pageSize * (_flash->numPages() - pageOffset);
 
     numPages = (fsize + pageSize - 1) / pageSize;
     if (pageOffset + numPages > _flash->numPages())
@@ -356,7 +358,6 @@ void
 Flasher::info(FlasherInfo& info)
 {
     info.name = _flash->name();
-    info.chipId = _samba.chipId();
     info.version = _samba.version();
     info.address = _flash->address();
     info.numPages = _flash->numPages();
