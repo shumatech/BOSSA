@@ -310,10 +310,7 @@ PosixSerialPort::setDTR(bool dtr)
 
     int iFlags = TIOCM_DTR;
 
-    if (dtr)
-        ioctl(_devfd, TIOCMBIS, &iFlags);
-    else
-        ioctl(_devfd, TIOCMBIC, &iFlags);
+    ioctl(_devfd, (dtr ? TIOCMBIS : TIOCMBIC), &iFlags);
 }
 
 void
@@ -324,10 +321,7 @@ PosixSerialPort::setRTS(bool rts)
 
     int iFlags = TIOCM_RTS;
 
-    if (rts)
-        ioctl(_devfd, TIOCMBIS, &iFlags);
-    else
-        ioctl(_devfd, TIOCMBIC, &iFlags);
+    ioctl(_devfd, (rts ? TIOCMBIS : TIOCMBIC), &iFlags);
 }
 
 void
