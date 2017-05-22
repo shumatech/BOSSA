@@ -255,11 +255,17 @@ WinSerialPort::flush()
 void
 WinSerialPort::setDTR(bool dtr)
 {
-    Sleep(1);
+    if (_handle == INVALID_HANDLE_VALUE)
+        return -1;
+
+    EscapeCommFunction(_handle, dtr ? SETDTR : CLRDTR);
 }
 
 void
 WinSerialPort::setRTS(bool rts)
 {
-    Sleep(1);
+    if (_handle == INVALID_HANDLE_VALUE)
+        return -1;
+
+    EscapeCommFunction(_handle, rts ? SETRTS : CLRRTS);
 }
