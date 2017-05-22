@@ -254,7 +254,7 @@ static Option opts[] =
       "reset CPU (if supported)"
     },
     {
-      'a', "arduino_erase", &config.arduinoErase,
+      'a', "arduino-erase", &config.arduinoErase,
       { ArgNone },
       "erase and reset via Arduino 1200 baud hack (cannot be used with port autodetection)"
     }
@@ -309,12 +309,6 @@ main(int argc, char* argv[])
         return help(argv[0]);
     }
 
-    if (config.arduinoErase && !config.port)
-    {
-        fprintf(stderr, "%s: port must be specified for Arduino 1200bps erase hack\n", argv[0]);
-        return help(argv[0]);
-    }
-
     if (config.read || config.write || config.verify)
     {
         if (args == argc)
@@ -362,10 +356,7 @@ main(int argc, char* argv[])
         if (config.arduinoErase)
         {
             SerialPort::Ptr port;
-            if (config.forceUsb)
-                port = portFactory.create(config.portArg, isUsb);
-            else
-                port = portFactory.create(config.portArg);
+            port = portFactory.create(config.portArg, config.usbPortArg != 0);
 
             if(!port->open(1200))
             {
