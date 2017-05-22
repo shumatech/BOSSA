@@ -96,6 +96,11 @@ BSDPortFactory::next()
 std::string
 BSDPortFactory::end()
 {
-    return std::string("/dev/cuaU0");
+    return std::string();
 }
 
+std::string
+BSDPortFactory::def()
+{
+    return std::string("/dev/cuaU0");
+}
