@@ -256,7 +256,7 @@ static Option opts[] =
     {
       'a', "arduino-erase", &config.arduinoErase,
       { ArgNone },
-      "erase and reset via Arduino 1200 baud hack (cannot be used with port autodetection)"
+      "erase and reset via Arduino 1200 baud hack"
     }
 };
 
