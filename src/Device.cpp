@@ -351,43 +351,48 @@ Device::create()
 void
 Device::reset(void)
 {
-    switch (_family)
+    try
     {
-    case FAMILY_SAMD21:
-    case FAMILY_SAMR21:
-        _samba.writeWord(0xE000ED0C, 0x05FA0004);
-        break;
+        switch (_family)
+        {
+        case FAMILY_SAMD21:
+        case FAMILY_SAMR21:
+            _samba.writeWord(0xE000ED0C, 0x05FA0004);
+            break;
 
-    case FAMILY_SAM3X:
-    case FAMILY_SAM3S:
-    case FAMILY_SAM3A:
-        _samba.writeWord(0x400E1A00, 0xA500000D);
-        break;
+        case FAMILY_SAM3X:
+        case FAMILY_SAM3S:
+        case FAMILY_SAM3A:
+            _samba.writeWord(0x400E1A00, 0xA500000D);
+            break;
 
-    case FAMILY_SAM3U:
-        _samba.writeWord(0x400E1200, 0xA500000D);
-        break;
+        case FAMILY_SAM3U:
+            _samba.writeWord(0x400E1200, 0xA500000D);
+            break;
 
-    case FAMILY_SAM3N:
-    case FAMILY_SAM4S:
-        _samba.writeWord(0x400E1400, 0xA500000D);
-        break;
+        case FAMILY_SAM3N:
+        case FAMILY_SAM4S:
+            _samba.writeWord(0x400E1400, 0xA500000D);
+            break;
 
-    case FAMILY_SAM4E:
-        _samba.writeWord(0x400E1800, 0xA500000D);
-        break;
+        case FAMILY_SAM4E:
+            _samba.writeWord(0x400E1800, 0xA500000D);
+            break;
 
-    case FAMILY_SAM7S:
-    case FAMILY_SAM7SE:
-    case FAMILY_SAM7X:
-    case FAMILY_SAM7XC:
-    case FAMILY_SAM7L:
-    case FAMILY_SAM9XE:
-        _samba.writeWord(0xFFFFFD00, 0xA500000D);
-        break;
+        case FAMILY_SAM7S:
+        case FAMILY_SAM7SE:
+        case FAMILY_SAM7X:
+        case FAMILY_SAM7XC:
+        case FAMILY_SAM7L:
+        case FAMILY_SAM9XE:
+            _samba.writeWord(0xFFFFFD00, 0xA500000D);
+            break;
 
-    default:
-        break;
+        default:
+            break;
+        }
+    catch (exception& expected)
+    {   // writeWord will most likely throw an exception when the CPU is reset
     }
 }
 
