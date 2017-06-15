@@ -98,9 +98,6 @@ NvmFlash::~NvmFlash()
 }
 
 const int
-NvmFlash::bootloaderSize = 0x2000;
-
-const int
 NvmFlash::flashRowPages = 4;
 
 void
@@ -117,7 +114,7 @@ NvmFlash::eraseAll()
     }
 
     // Calculate the number of rows that samba occupies (should be 32 for 8KB/0x2000bytes).
-    uint32_t starting_row = bootloaderSize / _size / flashRowPages;
+    uint32_t starting_row = _addr/ _size / flashRowPages;
     uint32_t total_rows = _pages / flashRowPages;
 
     for (uint32_t row=starting_row; row<total_rows; row++)

@@ -51,7 +51,7 @@ public:
 
     virtual ~NvmFlash();
 
-    virtual uint32_t numPages() { return _pages - bootloaderSize / pageSize(); }
+    virtual uint32_t numPages() { return _pages - _addr/ pageSize(); }
 
     void eraseAll();
     void eraseAuto(bool enable);
@@ -78,7 +78,6 @@ public:
     void writePage(uint32_t page);
     void readPage(uint32_t page, uint8_t* data);
 
-    static const int bootloaderSize;
     static const int flashRowPages;
 
 private:
