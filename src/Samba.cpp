@@ -50,7 +50,7 @@ using namespace std;
 
 #define TIMEOUT_QUICK   100
 #define TIMEOUT_NORMAL  1000
-#define TIMEOUT_LONG    5000
+#define TIMEOUT_LONG    10000
 
 #define min(a, b)   ((a) < (b) ? (a) : (b))
 
@@ -178,7 +178,8 @@ Samba::init()
     }
     // Check for supported M0+ processor
     // NOTE: 0x1001000a is a ATSAMD21E18A, 0x1001001c is ATSAMR21E18A
-	else if (cid == 0x10010000 || cid == 0x10010100 || cid == 0x10010005 || cid == 0x1001000a || cid == 0x1001001c)
+	else if (cid == 0x10010000 || cid == 0x10010100 || cid == 0x10010005 
+	|| cid == 0x1001000a || cid == 0x1001001c || cid == ATSAMD51P20A_CHIPID || cid == ATSAMD51G19A_CHIPID || cid == ATSAMD51J20A_CHIPID)
     {
         return true;
     }
@@ -638,14 +639,16 @@ Samba::chipId()
     // The M0+, M3 and M4 have the CPUID register at a common addresss 0xe000ed00
     uint32_t cpuid_reg = readWord(0xe000ed00);
     uint16_t part_no = cpuid_reg & 0x0000fff0;
+	
     // Check if it is Cortex M0+
-    if (part_no == 0xC600)
+    if (part_no == 0xC600 || part_no == 0xC240)
     {
         return readWord(0x41002018) & ATSAMD_CHIPID_MASK ; // DSU_DID register masked to remove DIE and REV
     }
+	
+	// Else assume M3 or M4
+	uint32_t cid = readWord(0x400e0740);
 
-    // Else assume M3 or M4
-    uint32_t cid = readWord(0x400e0740);
     if (cid == 0)
         cid = readWord(0x400e0940);
     return cid;
@@ -664,6 +667,9 @@ Samba::reset(void)
     case ATSAMD21G18A_CHIPID:
     case ATSAMD21E18A_CHIPID:
     case ATSAMR21E18A_CHIPID:
+	case ATSAMD51P20A_CHIPID:
+    case ATSAMD51J20A_CHIPID:
+	case ATSAMD51G19A_CHIPID:
         // http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0484c/index.html
         writeWord(0xE000ED0C, 0x05FA0004);
         break;

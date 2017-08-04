@@ -78,11 +78,15 @@ public:
 
     void writePage(uint32_t page);
     void readPage(uint32_t page, uint8_t* data);
+	
+	void setCmdSet(nvmCmdSet *cmdSet) { _cmdSet = cmdSet; };
 
 private:
     uint32_t _regs;
     bool _canBrownout;
-
+	
+	nvmCmdSet *_cmdSet;
+	
     uint32_t getAddressByRegion(uint32_t region);
     bool nvmIsReady();
     void executeNvmCommand(uint32_t cmd);

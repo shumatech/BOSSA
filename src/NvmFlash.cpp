@@ -43,32 +43,8 @@
 
 #define NVM_CTRLB_REG                   (_regs+0x04)
 
-// The NVM register that stores lock status
-#define NVM_LOCK_REG                    (_regs+0x20)
-
-// The interrupt status register
-#define NVM_INT_STATUS_REG              (_regs+0x14)
-
 // NVM ready bit mask
 #define NVM_INT_STATUS_READY_MASK       0x1
-
-// NVM input register to some of the CMDEX commands.
-#define NVM_ADDR_REG                    (_regs+0x1c)
-
-// NVM STATUS register
-#define NVM_STATUS_REG                  (_regs+0x18)
-#define NVMCTRL_STATUS_MASK             (0xFFEBu)
-
-// CMDEX field should be 0xA5 to allow execution of any command.
-#define CMDEX_KEY             (0xa500u)
-
-// List of NVM Commands.//as per datasheet prefix CMDEX
-#define CMD_LOCK_REGION       (CMDEX_KEY | 0x0040u)
-#define CMD_UNLOCK_REGION     (CMDEX_KEY | 0x0041u)
-#define CMD_ERASE_ROW         (CMDEX_KEY | 0x0002u)
-#define CMD_WRITE_PAGE        (CMDEX_KEY | 0x0004u)
-#define CMD_SET_SECURITY_BIT  (CMDEX_KEY | 0x0045u)
-#define CMD_CLEAR_PAGE_BUFFER (CMDEX_KEY | 0x0044u)
 
 // This is the word size allowed by the communication layer of this bossa client, not the NVM word size which is 2 bytes
 #define SAMBA_API_WORD_SIZE (4ul) // bytes
@@ -130,19 +106,19 @@ NvmFlash::eraseAll()
         }
 
         // Clear error bits
-        uint16_t status_reg = _samba.readWord(NVM_STATUS_REG) & 0xffff;
-        _samba.writeWord(NVM_STATUS_REG, status_reg | NVMCTRL_STATUS_MASK);
+        uint16_t status_reg = _samba.readWord(_cmdSet->NVM_STATUS_REG) & 0xffff;
+        _samba.writeWord(_cmdSet->NVM_STATUS_REG, status_reg | _cmdSet->NVMCTRL_STATUS_MASK);
 
         // Issue erase command
-        _samba.writeWord(NVM_ADDR_REG, addr_in_flash);
-        executeNvmCommand(CMD_ERASE_ROW);
+        _samba.writeWord(_cmdSet->NVM_ADDR_REG, addr_in_flash);
+        executeNvmCommand(_cmdSet->CMD_ERASE_ROW);
     }
 }
 
 bool
 NvmFlash::nvmIsReady()
 {
-    uint8_t int_flag = _samba.readByte(NVM_INT_STATUS_REG) & NVM_INT_STATUS_READY_MASK;
+    uint8_t int_flag = _samba.readByte(_cmdSet->NVM_INT_STATUS_REG) & NVM_INT_STATUS_READY_MASK;
 
     return int_flag == 1;
 }
@@ -168,7 +144,7 @@ NvmFlash::getLockRegion(uint32_t region)
         throw FlashRegionError();
     }
 
-    uint32_t value = _samba.readWord(NVM_LOCK_REG);
+    uint32_t value = _samba.readWord(_cmdSet->NVM_LOCK_REG);
 
     return ((value & (1 << region)) == 0); // 0 -> locked, 1 -> unlocked,
 }
@@ -191,17 +167,17 @@ NvmFlash::setLockRegion(uint32_t region, bool enable)
             // on the NVM controller.
             uint32_t addr_to_lock = getAddressByRegion(region);
             // addr_to_lock = addr_to_lock & 0x1fffff;
-            _samba.writeWord(NVM_ADDR_REG, addr_to_lock);
+            _samba.writeWord(_cmdSet->NVM_ADDR_REG, addr_to_lock);
 
-            executeNvmCommand(CMD_LOCK_REGION);
+            executeNvmCommand(_cmdSet->CMD_LOCK_REGION);
         }
         else
         {
             uint32_t addr_to_unlock = getAddressByRegion(region);
             addr_to_unlock = addr_to_unlock & 0x1fffff;
-            _samba.writeWord(NVM_ADDR_REG, addr_to_unlock);
+            _samba.writeWord(_cmdSet->NVM_ADDR_REG, addr_to_unlock);
 
-            executeNvmCommand(CMD_UNLOCK_REGION);
+            executeNvmCommand(_cmdSet->CMD_UNLOCK_REGION);
         }
     }
 }
@@ -211,7 +187,7 @@ NvmFlash::setLockRegion(uint32_t region, bool enable)
 bool
 NvmFlash::getSecurity()
 {
-    uint16_t status_reg_value = _samba.readWord(NVM_STATUS_REG) & 0xffff;
+    uint16_t status_reg_value = _samba.readWord(_cmdSet->NVM_STATUS_REG) & 0xffff;
 
     // If the 8th bit is 1 then security bit is set, else unset.
     return (((status_reg_value >> 8) & 0x1) == 1);
@@ -223,7 +199,7 @@ NvmFlash::setSecurity()
 {
     if (!getSecurity())
     {
-        executeNvmCommand(CMD_SET_SECURITY_BIT);
+        executeNvmCommand(_cmdSet->CMD_SET_SECURITY_BIT);
 
         if (!getSecurity())
         {
@@ -306,13 +282,13 @@ NvmFlash::writePage(uint32_t page)
     {
         throw FlashPageError();
     }
-
+	
     // Clear page buffer
-    executeNvmCommand(CMD_CLEAR_PAGE_BUFFER);
+    executeNvmCommand(_cmdSet->CMD_CLEAR_PAGE_BUFFER);
 
     // Clear error flags in target
-    uint16_t status_reg = _samba.readWord(NVM_STATUS_REG) & 0xffff;
-    _samba.writeWord(NVM_STATUS_REG, status_reg | NVMCTRL_STATUS_MASK);
+    uint16_t status_reg = _samba.readWord(_cmdSet->NVM_STATUS_REG) & 0xffff;
+    _samba.writeWord(_cmdSet->NVM_STATUS_REG, status_reg | _cmdSet->NVMCTRL_STATUS_MASK);
 
     // Configure manual page write. This is critical for the write to work
     // irrespective of full page or partial page.
@@ -333,9 +309,9 @@ NvmFlash::writePage(uint32_t page)
 
     while (!nvmIsReady());
 
-    _samba.writeWord(NVM_ADDR_REG, addr_cached >> 1);
+    _samba.writeWord(_cmdSet->NVM_ADDR_REG, addr_cached >> 1);
     // Reset the buffer, so that subsequent reads are clear
-    executeNvmCommand(CMD_WRITE_PAGE);
+    executeNvmCommand(_cmdSet->CMD_WRITE_PAGE);
 }
 
 void

@@ -51,29 +51,75 @@ FlashFactory::create(Samba& samba, uint32_t chipId)
     //
     // SAMD21
     //
-    case ATSAMD21J18A_CHIPID:
+    case ATSAMD21J18A_CHIPID: {
         flash = new NvmFlash( samba, ATSAMD21J18A_NAME, ATSAMD21J18A_FLASH_BASE, ATSAMD21J18A_FLASH_PAGES, ATSAMD21J18A_FLASH_PAGE_SIZE,
                               ATSAMD21J18A_FLASH_PLANES, ATSAMD21J18A_FLASH_LOCK_REGIONS,
                               ATSAMD21J18A_BUFFER_ADDR, ATSAMD21J18A_STACK_ADDR, ATSAMD21J18A_NVMCTRL_BASE, /*canBrownout*/true ) ;
+	    
+		NvmFlash* nvm = dynamic_cast<NvmFlash*>(flash);
+		nvm->setCmdSet(&samd21CmdSet);
         break ;
+	}
 
-    case ATSAMD21G18A_CHIPID:
+    case ATSAMD21G18A_CHIPID: {
         flash = new NvmFlash( samba, ATSAMD21G18A_NAME, ATSAMD21G18A_FLASH_BASE, ATSAMD21G18A_FLASH_PAGES, ATSAMD21G18A_FLASH_PAGE_SIZE,
                               ATSAMD21G18A_FLASH_PLANES, ATSAMD21G18A_FLASH_LOCK_REGIONS,
                               ATSAMD21G18A_BUFFER_ADDR, ATSAMD21G18A_STACK_ADDR, ATSAMD21G18A_NVMCTRL_BASE, /*canBrownout*/true ) ;
-        break ;
+		
+		NvmFlash* nvm = dynamic_cast<NvmFlash*>(flash);
+		nvm->setCmdSet(&samd21CmdSet);
+		break ;
+	}
 
-    case ATSAMD21E18A_CHIPID:
+    case ATSAMD21E18A_CHIPID: {
         flash = new NvmFlash( samba, ATSAMD21E18A_NAME, ATSAMD21E18A_FLASH_BASE, ATSAMD21E18A_FLASH_PAGES, ATSAMD21E18A_FLASH_PAGE_SIZE,
                               ATSAMD21E18A_FLASH_PLANES, ATSAMD21E18A_FLASH_LOCK_REGIONS,
                               ATSAMD21E18A_BUFFER_ADDR, ATSAMD21E18A_STACK_ADDR, ATSAMD21E18A_NVMCTRL_BASE, /*canBrownout*/true ) ;
-        break ;
+        
+		NvmFlash* nvm = dynamic_cast<NvmFlash*>(flash);
+		nvm->setCmdSet(&samd21CmdSet);
+		break ;
+	}
 
-    case ATSAMR21E18A_CHIPID:
+    case ATSAMR21E18A_CHIPID: {
         flash = new NvmFlash( samba, ATSAMR21E18A_NAME, ATSAMR21E18A_FLASH_BASE, ATSAMR21E18A_FLASH_PAGES, ATSAMR21E18A_FLASH_PAGE_SIZE,
                               ATSAMR21E18A_FLASH_PLANES, ATSAMR21E18A_FLASH_LOCK_REGIONS,
                               ATSAMR21E18A_BUFFER_ADDR, ATSAMR21E18A_STACK_ADDR, ATSAMR21E18A_NVMCTRL_BASE, /*canBrownout*/true ) ;
+        
+		NvmFlash* nvm = dynamic_cast<NvmFlash*>(flash);
+		nvm->setCmdSet(&samd21CmdSet);
+		break;
+	}
+
+    case ATSAMD51J20A_CHIPID: {
+        flash = new NvmFlash( samba, ATSAMD51J20A_NAME, ATSAMD51J20A_FLASH_BASE, ATSAMD51J20A_FLASH_PAGES, ATSAMD51J20A_FLASH_PAGE_SIZE,
+                              ATSAMD51J20A_FLASH_PLANES, ATSAMD51J20A_FLASH_LOCK_REGIONS,
+                              ATSAMD51J20A_BUFFER_ADDR, ATSAMD51J20A_STACK_ADDR, ATSAMD51J20A_NVMCTRL_BASE, /*canBrownout*/true ) ;
+        
+        NvmFlash* nvm = dynamic_cast<NvmFlash*>(flash);
+        nvm->setCmdSet(&samd51CmdSet);
         break;
+    }
+    
+	case ATSAMD51P20A_CHIPID: {
+        flash = new NvmFlash( samba, ATSAMD51P20A_NAME, ATSAMD51P20A_FLASH_BASE, ATSAMD51P20A_FLASH_PAGES, ATSAMD51P20A_FLASH_PAGE_SIZE,
+                              ATSAMD51P20A_FLASH_PLANES, ATSAMD51P20A_FLASH_LOCK_REGIONS,
+                              ATSAMD51P20A_BUFFER_ADDR, ATSAMD51P20A_STACK_ADDR, ATSAMD51P20A_NVMCTRL_BASE, /*canBrownout*/true ) ;
+        
+		NvmFlash* nvm = dynamic_cast<NvmFlash*>(flash);
+		nvm->setCmdSet(&samd51CmdSet);
+		break;
+	}
+
+	case ATSAMD51G19A_CHIPID: {
+        flash = new NvmFlash( samba, ATSAMD51G19A_NAME, ATSAMD51G19A_FLASH_BASE, ATSAMD51G19A_FLASH_PAGES, ATSAMD51G19A_FLASH_PAGE_SIZE,
+                              ATSAMD51G19A_FLASH_PLANES, ATSAMD51G19A_FLASH_LOCK_REGIONS,
+                              ATSAMD51G19A_BUFFER_ADDR, ATSAMD51G19A_STACK_ADDR, ATSAMD51G19A_NVMCTRL_BASE, /*canBrownout*/true ) ;
+        
+		NvmFlash* nvm = dynamic_cast<NvmFlash*>(flash);
+		nvm->setCmdSet(&samd51CmdSet);
+		break;
+	}
     //
     // SAM7SE
     //
@@ -266,6 +312,8 @@ FlashFactory::create(Samba& samba, uint32_t chipId)
         flash = NULL;
         break;
     }
+	
+	flash->setChipId(chipId);
 
     return Flash::Ptr(flash);
 }
