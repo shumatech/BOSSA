@@ -37,6 +37,7 @@
 
 #define ATSAMD_CHIPID_MASK                   (0xFFFF00FFul)  // mask for DIE & REV bitfields removal in Samba::chipId()
 #define ATSAMD_BOOTLOADER_SIZE               (0x00002000ul)  // 8192 bytes
+#define ATSAMD51_BOOTLOADER_SIZE			 (0x00004000ul)  //16kb for samd51
 #define ATSAMR_BOOTLOADER_SIZE               (0x00002000ul) // 8192 bytes, USB-CDC only
 #define ATSAMD_FLASH_ROW_PAGES               (4ul)           // 4 pages per row
 
@@ -86,7 +87,7 @@
 
 #define ATSAMD51J20A_NAME                    "ATSAMD51J20A"
 #define ATSAMD51J20A_CHIPID                  (0x60060004) 
-#define ATSAMD51J20A_FLASH_BASE              (0x00000000ul + ATSAMD_BOOTLOADER_SIZE)
+#define ATSAMD51J20A_FLASH_BASE              (0x00000000ul + ATSAMD51_BOOTLOADER_SIZE)
 #define ATSAMD51J20A_FLASH_PAGE_SIZE         (512ul)
 #define ATSAMD51J20A_FLASH_PAGES             (2048ul)
 #define ATSAMD51J20A_FLASH_PLANES            (1ul) // is it (2ul)? BANK A and BANK B ?
@@ -97,7 +98,7 @@
 
 #define ATSAMD51P20A_NAME                    "ATSAMD51P20A"
 #define ATSAMD51P20A_CHIPID                  (0x60060000)  // DIE & REV bitfields masked in Samba::chipId()
-#define ATSAMD51P20A_FLASH_BASE              (0x00000000ul + ATSAMD_BOOTLOADER_SIZE)
+#define ATSAMD51P20A_FLASH_BASE              (0x00000000ul + ATSAMD51_BOOTLOADER_SIZE)
 #define ATSAMD51P20A_FLASH_PAGE_SIZE         (512ul)
 #define ATSAMD51P20A_FLASH_PAGES             (2048ul)
 #define ATSAMD51P20A_FLASH_PLANES            (1ul) // is it (2ul)? BANK A and BANK B ?
@@ -108,7 +109,7 @@
 
 #define ATSAMD51G19A_NAME                    "ATSAMD51G19A"
 #define ATSAMD51G19A_CHIPID                  (0x60060007)  // DIE & REV bitfields masked in Samba::chipId()
-#define ATSAMD51G19A_FLASH_BASE              (0x00000000ul + ATSAMD_BOOTLOADER_SIZE)
+#define ATSAMD51G19A_FLASH_BASE              (0x00000000ul + ATSAMD51_BOOTLOADER_SIZE)
 #define ATSAMD51G19A_FLASH_PAGE_SIZE         (512ul)
 #define ATSAMD51G19A_FLASH_PAGES             (1024ul)
 #define ATSAMD51G19A_FLASH_PLANES            (1ul) // is it (2ul)? BANK A and BANK B ?
