@@ -85,6 +85,17 @@
 #define ATSAMR21E18A_STACK_ADDR              (0x20008000ul)
 #define ATSAMR21E18A_NVMCTRL_BASE            (0x41004000ul)
 
+#define ATSAMD51J19A_NAME                    "ATSAMD51J19A"
+#define ATSAMD51J19A_CHIPID                  (0x60060005) 
+#define ATSAMD51J19A_FLASH_BASE              (0x00000000ul + ATSAMD51_BOOTLOADER_SIZE)
+#define ATSAMD51J19A_FLASH_PAGE_SIZE         (512ul)
+#define ATSAMD51J19A_FLASH_PAGES             (1024ul)
+#define ATSAMD51J19A_FLASH_PLANES            (1ul) // is it (2ul)? BANK A and BANK B ?
+#define ATSAMD51J19A_FLASH_LOCK_REGIONS      (32ul)
+#define ATSAMD51J19A_BUFFER_ADDR             (0x20004000ul)
+#define ATSAMD51J19A_STACK_ADDR              (0x20008000ul)
+#define ATSAMD51J19A_NVMCTRL_BASE            (0x41004000ul)
+
 #define ATSAMD51J20A_NAME                    "ATSAMD51J20A"
 #define ATSAMD51J20A_CHIPID                  (0x60060004) 
 #define ATSAMD51J20A_FLASH_BASE              (0x00000000ul + ATSAMD51_BOOTLOADER_SIZE)

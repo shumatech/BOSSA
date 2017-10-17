@@ -100,7 +100,17 @@ FlashFactory::create(Samba& samba, uint32_t chipId)
         nvm->setCmdSet(&samd51CmdSet);
         break;
     }
-    
+
+    case ATSAMD51J19A_CHIPID: {
+        flash = new NvmFlash( samba, ATSAMD51J19A_NAME, ATSAMD51J19A_FLASH_BASE, ATSAMD51J19A_FLASH_PAGES, ATSAMD51J19A_FLASH_PAGE_SIZE,
+                              ATSAMD51J19A_FLASH_PLANES, ATSAMD51J19A_FLASH_LOCK_REGIONS,
+                              ATSAMD51J19A_BUFFER_ADDR, ATSAMD51J19A_STACK_ADDR, ATSAMD51J19A_NVMCTRL_BASE, /*canBrownout*/true ) ;
+        
+        NvmFlash* nvm = dynamic_cast<NvmFlash*>(flash);
+        nvm->setCmdSet(&samd51CmdSet);
+        break;
+    }
+
 	case ATSAMD51P20A_CHIPID: {
         flash = new NvmFlash( samba, ATSAMD51P20A_NAME, ATSAMD51P20A_FLASH_BASE, ATSAMD51P20A_FLASH_PAGES, ATSAMD51P20A_FLASH_PAGE_SIZE,
                               ATSAMD51P20A_FLASH_PLANES, ATSAMD51P20A_FLASH_LOCK_REGIONS,
