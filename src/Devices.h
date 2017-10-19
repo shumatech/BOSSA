@@ -38,7 +38,7 @@
 #define ATSAMD_CHIPID_MASK                   (0xFFFF00FFul)  // mask for DIE & REV bitfields removal in Samba::chipId()
 #define ATSAMD_BOOTLOADER_SIZE               (0x00002000ul)  // 8192 bytes
 #define ATSAMD51_BOOTLOADER_SIZE			 (0x00004000ul)  //16kb for samd51
-#define ATSAMR_BOOTLOADER_SIZE               (0x00002000ul) // 8192 bytes, USB-CDC only
+#define ATSAMR_BOOTLOADER_SIZE               (0x00002000ul)  // 8192 bytes (classic)
 #define ATSAMD_FLASH_ROW_PAGES               (4ul)           // 4 pages per row
 
 #define ATSAMD21J18A_NAME                    "ATSAMD21J18A"
@@ -84,6 +84,17 @@
 #define ATSAMR21E18A_BUFFER_ADDR             (0x20004000ul)
 #define ATSAMR21E18A_STACK_ADDR              (0x20008000ul)
 #define ATSAMR21E18A_NVMCTRL_BASE            (0x41004000ul)
+
+#define ATSAMR21G18A_NAME                    "ATSAMR21G18A"
+#define ATSAMR21G18A_CHIPID                  (0x10010019ul)  // DIE & REV bitfields masked in Samba::chipId()
+#define ATSAMR21G18A_FLASH_BASE              (0x00000000ul + ATSAMR_BOOTLOADER_SIZE)
+#define ATSAMR21G18A_FLASH_PAGE_SIZE         (64ul)
+#define ATSAMR21G18A_FLASH_PAGES             (4096ul)
+#define ATSAMR21G18A_FLASH_PLANES            (1ul)
+#define ATSAMR21G18A_FLASH_LOCK_REGIONS      (16ul)
+#define ATSAMR21G18A_BUFFER_ADDR             (0x20004000ul)
+#define ATSAMR21G18A_STACK_ADDR              (0x20008000ul)
+#define ATSAMR21G18A_NVMCTRL_BASE            (0x41004000ul)
 
 #define ATSAMD51J19A_NAME                    "ATSAMD51J19A"
 #define ATSAMD51J19A_CHIPID                  (0x60060005) 
