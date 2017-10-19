@@ -124,6 +124,8 @@ public:
     virtual uint16_t checksumBuffer(uint32_t start_addr, uint32_t size);
     virtual uint16_t crc16AddByte(uint8_t d, uint16_t crc) { return _samba.crc16AddByte(d, crc); }
     virtual void readPage(uint32_t page, uint8_t* data) = 0;
+	
+	void setChipId(uint32_t chipId);
 
     typedef std::auto_ptr<Flash> Ptr;
 
@@ -140,6 +142,8 @@ protected:
     uint32_t _lockRegions;
     uint32_t _user;
     WordCopyApplet _wordCopy;
+	
+	uint32_t _chipId;
 
     bool _onBufferA;
     uint32_t _pageBufferA;

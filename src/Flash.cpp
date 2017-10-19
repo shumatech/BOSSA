@@ -90,3 +90,9 @@ Flash::checksumBuffer(uint32_t start_addr, uint32_t size) {
     return _samba.checksumBuffer(start_addr + _addr, size);
 }
 
+
+void 
+Flash::setChipId(uint32_t chipId){
+	_chipId = chipId;
+}
+
