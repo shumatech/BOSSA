@@ -129,14 +129,34 @@ Samba::connect(SerialPort::Ptr port, int bps)
     _isUsb = _port->isUsb();
     if (_isUsb)
     {
-        if (_port->open(921600) && init())
+        try
+        {
+            if (_port->open(921600) && init())
+            {
+                if (_debug)
+                    printf("Connected at 921600 baud\n");
+                return true;
+            }
+        }
+        catch (SambaError::exception& e)
         {
             if (_debug)
-                printf("Connected at 921600 baud\n");
-            return true;
+                    printf("Unable to connect at 921600 baud : Error : %s \n", e.what());
         }
-        else
+
+        try
         {
+            if (_port->open(115200) && init())
+            {
+                if (_debug)
+                    printf("Connected at 115200 baud\n");
+                return true;
+            }
+        }
+        catch (SambaError::exception& e)
+        {
+            if (_debug)
+                    printf("Unable to connect at 115200 baud : Error : %s \n", e.what());
             _port->close();
         }
     }
