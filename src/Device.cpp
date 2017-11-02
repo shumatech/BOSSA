@@ -331,6 +331,11 @@ Device::create()
             flashPtr = new NvmFlash( _samba, "ATSAMR21x18", 0x2000, 4096, 64, 1, 16, 0x20004000, 0x20008000, 0x41004000, true ) ;
             break;
 
+        case 0x1081000f:
+            _family = FAMILY_SAML21;
+            flashPtr = new NvmFlash( _samba, "ATSAML21x18", 0x2000, 4096, 64, 1, 16, 0x20004000, 0x20008000, 0x41004000, true ) ;
+            break;
+
         default:
             throw DeviceUnsupportedError();
             break;
@@ -353,6 +358,7 @@ Device::reset(void)
 {
     switch (_family)
     {
+    case FAMILY_SAML21:
     case FAMILY_SAMD21:
     case FAMILY_SAMR21:
         _samba.writeWord(0xE000ED0C, 0x05FA0004);
