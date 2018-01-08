@@ -26,6 +26,7 @@ Supported Device Families
  * SAM7L\*
  * SAM9XE\*
  * SAMD21\*
+ * SAME70Q21\*
 
 \* Device families which are not tested for each release and could stop working.
 
