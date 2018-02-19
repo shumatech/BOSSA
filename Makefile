@@ -3,7 +3,7 @@
 #
 # Version
 #
-VERSION=1.9
+VERSION?=1.9
 WXVERSION=3.0
 
 #
