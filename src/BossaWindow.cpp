@@ -434,7 +434,7 @@ BossaWindow::OnRead(wxCommandEvent& event)
     else
     {
         char *end = NULL;
-        offset = strtol(_sizeTextCtrl->GetValue().mb_str(), &end, 0);
+        size = strtol(_sizeTextCtrl->GetValue().mb_str(), &end, 0);
         if (end == NULL || *end != '\0')
         {
             Error(_("Read size is invalid"));
