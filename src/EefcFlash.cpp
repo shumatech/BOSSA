@@ -72,7 +72,7 @@ EefcFlash::EefcFlash(Samba& samba,
       _regs(regs), _canBrownout(canBrownout), _eraseAuto(true)
 {
     assert(planes == 1 || planes == 2);
-    assert(pages <= 2048);
+    assert(pages <= 4096);
     assert(lockRegions <= 256);
 
     // SAM3 Errata (FWS must be 6)
