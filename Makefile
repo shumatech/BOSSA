@@ -117,7 +117,7 @@ install: strip app
 	cp $(BINDIR)/bossac$(EXE) /Volumes/$(VOLUME)/
 	cp $(BINDIR)/bossash$(EXE) /Volumes/$(VOLUME)/
 	ln -s /Applications /Volumes/$(VOLUME)/Applications
-	ln -s /usr/bin /Volumes/$(VOLUME)/bin
+	ln -s /usr/local/bin /Volumes/$(VOLUME)/bin
 	mkdir /Volumes/$(VOLUME)/.background
 	cp $(BACKGROUND) /Volumes/$(VOLUME)/.background
 	osascript < $(INSTALLDIR)/dmgwin.osa
