@@ -55,7 +55,7 @@ Device::create()
     {
         deviceId = _samba.readWord(0x41002018);
     }
-    // Assume we have a SAM3, SAM4 or SAME7 so check the CHIPID registers
+    // Assume we have a SAM3, SAM4 or SAME70 so check the CHIPID registers
     else if ((chipId = _samba.readWord(0x400e0740)) != 0)
     {
         extChipId = _samba.readWord(0x400e0744);
@@ -309,13 +309,21 @@ Device::create()
             break;
         }
         break;
-	//
-	// SAME70Q21
-	//
-	case 0x21020e00:
-		_family = FAMILY_SAME70;
-		flashPtr = new EefcFlash(_samba, "ATSAME70Q21", 0x400000, 4096, 512, 1, 128, 0x20401000, 0x20401040, 0x400e0c00, false);
-		break;
+    //
+    // SAME70
+    //
+    case 0x21020a00:
+        _family = FAMILY_SAME70;
+        flashPtr = new EefcFlash(_samba, "ATSAME70x19", 0x400000, 1024, 512, 1, 32, 0x20401000, 0x20401040, 0x400e0c00, false);
+        break;
+    case 0x21020c00:
+        _family = FAMILY_SAME70;
+        flashPtr = new EefcFlash(_samba, "ATSAME70x20", 0x400000, 2048, 512, 1, 64, 0x20401000, 0x20401040, 0x400e0c00, false);
+        break;
+    case 0x21020e00:
+        _family = FAMILY_SAME70;
+        flashPtr = new EefcFlash(_samba, "ATSAME70x21", 0x400000, 4096, 512, 1, 128, 0x20401000, 0x20401040, 0x400e0c00, false);
+        break;
     //
     // No CHIPID devices
     //

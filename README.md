@@ -1,4 +1,4 @@
-BOSSA 1.8
+BOSSA 1.9
 ---------
 
 BOSSA is a flash programming utility for Atmel's SAM family of flash-based ARM microcontrollers.
@@ -26,7 +26,7 @@ Supported Device Families
  * SAM7L\*
  * SAM9XE\*
  * SAMD21\*
- * SAME70Q21\*
+ * SAME70\*
 
 \* Device families which are not tested for each release and could stop working.
 
