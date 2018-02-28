@@ -85,6 +85,9 @@ PosixSerialPort::open(int baud,
 
     switch (baud)
     {
+    case 1200:
+        speed = B1200;
+        break;
     case 9600:
         speed = B9600;
         break;
@@ -297,6 +300,28 @@ PosixSerialPort::timeout(int millisecs)
 {
     _timeout = millisecs;
     return true;
+}
+
+void
+PosixSerialPort::setDTR(bool dtr)
+{
+    if (_devfd == -1)
+        return;
+
+    int iFlags = TIOCM_DTR;
+
+    ioctl(_devfd, (dtr ? TIOCMBIS : TIOCMBIC), &iFlags);
+}
+
+void
+PosixSerialPort::setRTS(bool rts)
+{
+    if (_devfd == -1)
+        return;
+
+    int iFlags = TIOCM_RTS;
+
+    ioctl(_devfd, (rts ? TIOCMBIS : TIOCMBIC), &iFlags);
 }
 
 void

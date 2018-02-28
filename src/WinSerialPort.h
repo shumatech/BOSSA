@@ -55,6 +55,8 @@ public:
 
     bool timeout(int millisecs);
     void flush();
+    void setDTR(bool dtr);
+    void setRTS(bool rts);
 
 private:
     HANDLE _handle;

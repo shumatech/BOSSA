@@ -65,6 +65,7 @@ public:
     bool debug;
     bool help;
     bool usbPort;
+    bool arduinoErase;
 
     int readArg;
     int offsetArg;
@@ -92,6 +93,7 @@ BossaConfig::BossaConfig()
     info = false;
     help = false;
     usbPort = false;
+    arduinoErase = false;
 
     readArg = 0;
     offsetArg = 0;
@@ -250,6 +252,11 @@ static Option opts[] =
       'R', "reset", &config.reset,
       { ArgNone },
       "reset CPU (if supported)"
+    },
+    {
+      'a', "arduino-erase", &config.arduinoErase,
+      { ArgNone },
+      "erase and reset via Arduino 1200 baud hack"
     }
 };
 
@@ -345,6 +352,22 @@ main(int argc, char* argv[])
 
         if (!config.port)
             config.portArg = portFactory.def();
+
+        if (config.arduinoErase)
+        {
+            SerialPort::Ptr port;
+            port = portFactory.create(config.portArg, config.usbPortArg != 0);
+
+            if(!port->open(1200))
+            {
+                fprintf(stderr, "Failed to open port at 1200bps\n");
+                return 1;
+            }
+
+            port->setRTS(true);
+            port->setDTR(false);
+            port->close();
+        }
 
         if (config.portArg.empty())
         {
