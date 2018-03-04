@@ -347,6 +347,11 @@ Device::create()
             _family = FAMILY_SAMD21;
             flashPtr = new NvmFlash( _samba, "ATSAMD21x18", 0x2000, 4096, 64, 1, 16, 0x20004000, 0x20008000, 0x41004000, true ) ;
             break;
+        case 0x10810019:
+        case 0x10810014:
+            _family = FAMILY_SAML21;
+            flashPtr = new NvmFlash( _samba, "ATSAML21x18", 0x6000, 4096, 64, 1, 16, 0x20004000, 0x20008000, 0x41004000, true ) ;
+            break;
 
         case 0x1001001c:
         case 0x10010019:
@@ -377,6 +382,7 @@ Device::reset(void)
     switch (_family)
     {
     case FAMILY_SAMD21:
+    case FAMILY_SAML21:
     case FAMILY_SAMR21:
         _samba.writeWord(0xE000ED0C, 0x05FA0004);
         break;
