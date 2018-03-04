@@ -98,7 +98,16 @@ Samba::init()
     _port->write(cmd, 2);
     _port->read(cmd, 2);
 
-    std::string ver = version();
+    std::string ver;
+    try
+    {
+        ver = version();
+    }
+    catch(SambaError& err)
+    {
+        return false;
+    }
+
     std::size_t extIndex = ver.find("[Arduino:");
     if (extIndex != string::npos)
     {
@@ -482,7 +491,7 @@ Samba::write(uint32_t addr, const uint8_t* buffer, int size)
 
     // The SAM firmware has a bug that if the command and binary data
     // are received in the same USB data packet, then the firmware
-    // gets confused.  Even though the writes are sperated in the code,
+    // gets confused.  Even though the writes are separated in the code,
     // USB drivers often do write combining which can put them together
     // in the same USB data packet.  To avoid this, we call the serial
     // port object's flush method before writing the data.
