@@ -352,7 +352,7 @@ Device::create()
         case 0x10010056: // E15B WLCSP
         case 0x10010063: // E15C WLCSP
             _family = FAMILY_SAMD21;
-            flashPtr = new NvmFlash(_samba, "ATSAMD21x15", 0x2000, 512, 64, 1, 16, 0x20000800, 0x20001000, 0x41004000, true) ;
+            flashPtr = new NvmFlash(_samba, "ATSAMD21x15", 0x0, 512, 64, 1, 16, 0x20000800, 0x20001000, 0x41004000, true) ;
             break;
 
         case 0x10010002: // J16A
@@ -364,7 +364,7 @@ Device::create()
         case 0x10010055: // E16B WLCSP
         case 0x10010062: // E16C WLCSP
             _family = FAMILY_SAMD21;
-            flashPtr = new NvmFlash(_samba, "ATSAMD21x16", 0x2000, 1024, 64, 1, 16, 0x20001000, 0x20002000, 0x41004000, true) ;
+            flashPtr = new NvmFlash(_samba, "ATSAMD21x16", 0x0, 1024, 64, 1, 16, 0x20001000, 0x20002000, 0x41004000, true) ;
             break;
 
         case 0x10010001: // J17A
@@ -372,7 +372,7 @@ Device::create()
         case 0x1001000b: // E17A
         case 0x10010010: // G17A WLCSP
             _family = FAMILY_SAMD21;
-            flashPtr = new NvmFlash(_samba, "ATSAMD21x17", 0x2000, 2048, 64, 1, 16, 0x20002000, 0x20004000, 0x41004000, true) ;
+            flashPtr = new NvmFlash(_samba, "ATSAMD21x17", 0x0, 2048, 64, 1, 16, 0x20002000, 0x20004000, 0x41004000, true) ;
             break;
 
         case 0x10010000: // J18A
@@ -380,7 +380,7 @@ Device::create()
         case 0x1001000a: // E18A
         case 0x1001000f: // G18A WLCSP
             _family = FAMILY_SAMD21;
-            flashPtr = new NvmFlash(_samba, "ATSAMD21x18", 0x2000, 4096, 64, 1, 16, 0x20004000, 0x20008000, 0x41004000, true) ;
+            flashPtr = new NvmFlash(_samba, "ATSAMD21x18", 0x0, 4096, 64, 1, 16, 0x20004000, 0x20008000, 0x41004000, true) ;
             break;
 
         //
@@ -389,24 +389,24 @@ Device::create()
         case 0x1001001e: // E16A
         case 0x1001001b: // G16A
             _family = FAMILY_SAMR21;
-            flashPtr = new NvmFlash(_samba, "ATSAMR21x16", 0x2000, 1024, 64, 1, 16, 0x20001000, 0x20002000, 0x41004000, true) ;
+            flashPtr = new NvmFlash(_samba, "ATSAMR21x16", 0x0, 1024, 64, 1, 16, 0x20001000, 0x20002000, 0x41004000, true) ;
             break;
 
         case 0x1001001d: // E17A
         case 0x1001001a: // G17A
             _family = FAMILY_SAMR21;
-            flashPtr = new NvmFlash(_samba, "ATSAMR21x17", 0x2000, 2048, 64, 1, 16, 0x20002000, 0x20004000, 0x41004000, true) ;
+            flashPtr = new NvmFlash(_samba, "ATSAMR21x17", 0x0, 2048, 64, 1, 16, 0x20002000, 0x20004000, 0x41004000, true) ;
             break;
 
         case 0x1001001c: // E18A
         case 0x10010019: // G18A
             _family = FAMILY_SAMR21;
-            flashPtr = new NvmFlash(_samba, "ATSAMR21x18", 0x2000, 4096, 64, 1, 16, 0x20004000, 0x20008000, 0x41004000, true) ;
+            flashPtr = new NvmFlash(_samba, "ATSAMR21x18", 0x0, 4096, 64, 1, 16, 0x20004000, 0x20008000, 0x41004000, true) ;
             break;
 
         case 0x10010018: // E19A
             _family = FAMILY_SAMR21;
-            flashPtr = new NvmFlash(_samba, "ATSAMR21x19", 0x2000, 4096, 64, 1, 16, 0x20004000, 0x20008000, 0x41004000, true) ;
+            flashPtr = new NvmFlash(_samba, "ATSAMR21x19", 0x0, 4096, 64, 1, 16, 0x20004000, 0x20008000, 0x41004000, true) ;
             break;
 
         default:

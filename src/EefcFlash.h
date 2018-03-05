@@ -50,7 +50,7 @@ public:
               bool canBrownout);
     virtual ~EefcFlash();
 
-    void eraseAll();
+    void eraseAll(uint32_t offset);
     void eraseAuto(bool enable);
 
     bool isLocked();
@@ -74,6 +74,8 @@ public:
 
     void writePage(uint32_t page);
     void readPage(uint32_t page, uint8_t* data);
+
+    static const uint32_t PagesPerErase;
 
 private:
     uint32_t _regs;

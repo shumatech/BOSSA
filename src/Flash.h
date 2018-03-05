@@ -75,7 +75,15 @@ class BootFlashError : public std::exception
 {
 public:
     BootFlashError() : exception() {};
-    const char* what() const throw() { return "Cannot clear Boot Flash. No ROM boot option available for this device"; }
+    const char* what() const throw() { return "Unable to clear boot flash for this device"; }
+
+};
+
+class FlashEraseError : public std::exception
+{
+public:
+    FlashEraseError() : exception() {};
+    const char* what() const throw() { return "Flash erase failed"; }
 
 };
 
@@ -101,7 +109,7 @@ public:
     virtual uint32_t numPlanes() { return _planes; }
     virtual uint32_t totalSize() { return _size * _pages; }
 
-    virtual void eraseAll() = 0;
+    virtual void eraseAll(uint32_t offset) = 0;
     virtual void eraseAuto(bool enable) = 0;
 
     virtual uint32_t lockRegions() { return _lockRegions; }

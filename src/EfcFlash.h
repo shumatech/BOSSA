@@ -49,7 +49,7 @@ public:
              bool canBootFlash);
     virtual ~EfcFlash();
 
-    void eraseAll();
+    void eraseAll(uint32_t offset);
     void eraseAuto(bool enable);
 
     bool isLocked();

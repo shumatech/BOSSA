@@ -76,8 +76,11 @@ EfcFlash::~EfcFlash()
 }
 
 void
-EfcFlash::eraseAll()
+EfcFlash::eraseAll(uint32_t offset)
 {
+    if (offset != 0)
+        throw FlashEraseError();
+
     waitFSR();
     writeFCR0(EFC_FCMD_EA, 0);
     if (_planes == 2)

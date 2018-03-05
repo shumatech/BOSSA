@@ -182,7 +182,7 @@ static Option opts[] =
     {
       'o', "offset", &config.offset,
       { ArgRequired, ArgInt, "OFFSET", { &config.offsetArg } },
-      "start write/read/verify operation at flash OFFSET;\n"
+      "start erase/write/read/verify operation at flash OFFSET;\n"
       "OFFSET must be aligned to a flash page boundary"
     },
     {
@@ -407,7 +407,7 @@ main(int argc, char* argv[])
         if (config.erase)
         {
             timer_start();
-            flasher.erase();
+            flasher.erase(config.offsetArg);
             printf("\nDone in %5.3f seconds\n", timer_stop());
         }
 

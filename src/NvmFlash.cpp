@@ -86,7 +86,7 @@ NvmFlash::NvmFlash(Samba& samba,
                    uint32_t regs,
                    bool canBrownout)
     : Flash(samba, name, addr, pages, size, planes, lockRegions, user, stack),
-      _regs(regs), _canBrownout(canBrownout)
+      _regs(regs), _canBrownout(canBrownout), _eraseAuto(true)
 {
     // Upon power up the NVM controller goes through a power up sequence.
     // During this time, access to the NVM controller is halted. Upon power up the
@@ -98,47 +98,50 @@ NvmFlash::~NvmFlash()
 }
 
 const int
-NvmFlash::bootloaderSize = 0x2000;
-
-const int
-NvmFlash::flashRowPages = 4;
+NvmFlash::PagesPerErase = 4;
 
 void
-NvmFlash::eraseAll()
+NvmFlash::erase(uint32_t offset, uint32_t size)
 {
-    // Leave the first 8KB, where bootloader resides, erase the rest.
-    // Row is a concept used for convinence. When writing you have to write
-    // page(s). When erasing you have to erase row(s).
+    uint32_t eraseSize = _size * PagesPerErase;
 
+    // Offset must be a multiple of the erase size
+    if (offset % eraseSize)
+        throw FlashEraseError();
+
+    // Offset and size must be in range
+    if (offset + size > totalSize())
+        throw FlashEraseError();
+
+    uint32_t eraseEnd = (offset + size + eraseSize - 1) / eraseSize;
+
+    // Erase each erase size set of pages
+    for (uint32_t eraseNum = offset / eraseSize; eraseNum < eraseEnd; eraseNum++)
+    {
+        // Safe wait. Check and see if this is needed all the time
+        while (!nvmIsReady());
+
+        // Clear error bits
+        uint16_t statusReg = _samba.readWord(NVM_STATUS_REG);
+        _samba.writeWord(NVM_STATUS_REG, statusReg | NVMCTRL_STATUS_MASK);
+
+        // Issue erase command
+        uint32_t wordAddr = (eraseNum * eraseSize) / 2;
+        _samba.writeWord(NVM_ADDR_REG, wordAddr);
+        executeNvmCommand(CMD_ERASE_ROW);
+    }
+}
+
+void
+NvmFlash::eraseAll(uint32_t offset)
+{
     if (_samba.canChipErase())
     {
-        _samba.chipErase(_addr);
+        _samba.chipErase(offset);
         return;
     }
 
-    // Calculate the number of rows that samba occupies (should be 32 for 8KB/0x2000bytes).
-    uint32_t starting_row = bootloaderSize / _size / flashRowPages;
-    uint32_t total_rows = _pages / flashRowPages;
-
-    for (uint32_t row=starting_row; row<total_rows; row++)
-    {
-        uint32_t addr_in_flash = (row * flashRowPages * pageSize());
-        // The address is byte address, so convert it to word address.
-        addr_in_flash = addr_in_flash / 2;
-
-        // Safe wait. Check and see if this is needed all the time
-        while (!nvmIsReady())
-        {
-        }
-
-        // Clear error bits
-        uint16_t status_reg = _samba.readWord(NVM_STATUS_REG) & 0xffff;
-        _samba.writeWord(NVM_STATUS_REG, status_reg | NVMCTRL_STATUS_MASK);
-
-        // Issue erase command
-        _samba.writeWord(NVM_ADDR_REG, addr_in_flash);
-        executeNvmCommand(CMD_ERASE_ROW);
-    }
+    erase(offset, totalSize() - offset);
 }
 
 bool
@@ -152,7 +155,7 @@ NvmFlash::nvmIsReady()
 void
 NvmFlash::eraseAuto(bool enable)
 {
-    // Useless for SAMD, the flash controller doesn't have the auto erase function
+    _eraseAuto = enable;
 }
 
 bool
@@ -298,7 +301,8 @@ NvmFlash::getBootFlash()
 void
 NvmFlash::setBootFlash(bool enable)
 {
-    printf("Ignoring set boot from flash flag.\n");
+    if (!enable)
+        throw BootFlashError();
 }
 
 void
@@ -307,6 +311,12 @@ NvmFlash::writePage(uint32_t page)
     if (page >= _pages)
     {
         throw FlashPageError();
+    }
+
+    // Auto-erase if writing at the start of the erase page
+    if (_eraseAuto && page % PagesPerErase == 0)
+    {
+        erase(page * _size, PagesPerErase * _size);
     }
 
     // Clear page buffer
@@ -351,8 +361,8 @@ NvmFlash::readPage(uint32_t page, uint8_t* buf)
     // Convert page number into physical address.
     // The flash base should be defined as starting after bootloader (ie at 0x00002000 => page number 128)
     // flash_base_address + page.no * page_size
-    uint32_t addr = _addr + (page * pageSize());
-    _samba.read(addr, buf, pageSize());
+    uint32_t addr = _addr + (page * _size);
+    _samba.read(addr, buf, _size);
 }
 
 // Returns the start address of a specified region number
@@ -366,7 +376,7 @@ NvmFlash::getAddressByRegion(uint32_t region_num)
         throw FlashRegionError();
     }
 
-    uint32_t size_of_region = (pageSize() * _pages) / _lockRegions; // Flash Size / no of lock regions
+    uint32_t size_of_region = (_size * _pages) / _lockRegions; // Flash Size / no of lock regions
     uint32_t addr = address() + (region_num * size_of_region);
     addr = addr / 2; // Convert byte address to word address
 
@@ -390,4 +400,15 @@ NvmFlash::executeNvmCommand(uint32_t cmd)
     }
 
     //TODO : check and return return error status from nvm status flag.
+}
+
+void
+NvmFlash::writeBuffer(uint32_t dst_addr, uint32_t size)
+{
+    // Auto-erase if enabled
+    if (_eraseAuto)
+        erase(dst_addr, size);
+
+    // Call the base class method
+    Flash::writeBuffer(dst_addr, size);
 }

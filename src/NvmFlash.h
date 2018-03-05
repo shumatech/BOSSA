@@ -51,9 +51,7 @@ public:
 
     virtual ~NvmFlash();
 
-    virtual uint32_t numPages() { return _pages - bootloaderSize / pageSize(); }
-
-    void eraseAll();
+    void eraseAll(uint32_t offset);
     void eraseAuto(bool enable);
 
     bool isLocked();
@@ -73,22 +71,24 @@ public:
 
     bool getBootFlash();
     void setBootFlash(bool enable);
-    bool canBootFlash() { return true; }
+    bool canBootFlash() { return false; }
 
     void writePage(uint32_t page);
     void readPage(uint32_t page, uint8_t* data);
 
-    static const int bootloaderSize;
-    static const int flashRowPages;
+    void writeBuffer(uint32_t dst_addr, uint32_t size);
+
+    static const int PagesPerErase;
 
 private:
     uint32_t _regs;
     bool _canBrownout;
+    bool _eraseAuto;
 
     uint32_t getAddressByRegion(uint32_t region);
     bool nvmIsReady();
     void executeNvmCommand(uint32_t cmd);
-
+    void erase(uint32_t offset, uint32_t size);
 };
 
 #endif // _NVMFLASH_H

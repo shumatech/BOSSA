@@ -444,18 +444,23 @@ CommandDump::invoke(char* argv[], int argc)
 
 CommandErase::CommandErase() :
     Command("erase",
-            "Erase the entire flash.",
-            "erase")
+            "Erase the flash to the end.",
+            "erase <offset>"
+            "  OFFSET -- (optional) start erase operation at flash OFFSET\n"
+            "            OFFSET must be aligned to a flash page boundary")
 {}
 
 void
 CommandErase::invoke(char* argv[], int argc)
 {
-    if (!argNum(argc, 1) ||
+    uint32_t offset = 0;
+
+    if (!argRange(argc, 1, 2) ||
+        (argc >= 2 && !argUint32(argv[1], &offset)) ||
         !flashable())
         return;
 
-    _flasher.erase();
+    _flasher.erase(offset);
     printf("Flash is erased\n");
 }
 
@@ -1166,7 +1171,7 @@ CommandUnlock::invoke(char* argv[], int argc)
 CommandVerify::CommandVerify() :
     Command("verify",
             "Verify binary file with the flash.",
-            "verify [FILE]\n"
+            "verify [FILE] <OFFSET>\n"
             "  FILE -- file name on host filesystem\n"
             "  OFFSET -- (optional) start verify operation at flash OFFSET\n"
             "            OFFSET must be aligned to a flash page boundary")

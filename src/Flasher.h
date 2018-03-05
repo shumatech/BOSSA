@@ -94,7 +94,7 @@ public:
     Flasher(Samba& samba, Device& device, FlasherObserver& observer) : _samba(samba), _flash(device.getFlash()), _observer(observer) {}
     virtual ~Flasher() {}
 
-    void erase();
+    void erase(uint32_t foffset);
     void write(const char* filename, uint32_t foffset = 0);
     bool verify(const char* filename, uint32_t& pageErrors, uint32_t& totalErrors, uint32_t foffset = 0);
     void read(const char* filename, uint32_t fsize, uint32_t foffset = 0);
