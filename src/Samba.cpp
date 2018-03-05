@@ -638,8 +638,8 @@ Samba::checksumBuffer(uint32_t start_addr, uint32_t size)
         throw SambaError();
 
     cmd[9] = 0;
-    uint32_t res;// = cmd[1] << 8 | cmd[2];
-    if (sscanf((const char *)(cmd+1), "%x", &res) != 1)
+    uint32_t res = strtol((char*) &cmd[1], NULL, 16);
+    if (errno != 0)
         throw SambaError();
     if (_debug)
         printf("%x\n", res);
