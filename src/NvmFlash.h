@@ -46,10 +46,9 @@ public:
              uint32_t lockRegions,
              uint32_t user,
              uint32_t stack,
-             uint32_t regs,
              bool canBrownout);
 
-    virtual ~NvmFlash();
+    virtual ~NvmFlash() = 0;
 
     void eraseAll(uint32_t offset);
     void eraseAuto(bool enable);
@@ -80,15 +79,49 @@ public:
 
     static const int PagesPerErase;
 
-private:
-    uint32_t _regs;
-    bool _canBrownout;
-    bool _eraseAuto;
+protected:
+    bool     _canBrownout;
+    bool     _eraseAuto;
+
+    uint32_t _regBase;
+    uint8_t  _regCTRLA;
+    uint8_t  _regCTRLB;
+    uint8_t  _regINTFLAG;
+    uint8_t  _regSTATUS;
+    uint8_t  _regADDR;
+    uint8_t  _regLOCK;
+
+    uint8_t  _cmdER;
+    uint8_t  _cmdWP;
+    uint8_t  _cmdLR;
+    uint8_t  _cmdUR;
+    uint8_t  _cmdSSB;
+    uint8_t  _cmdPBC;
+
+    uint32_t readReg(uint8_t reg);
+    void writeReg(uint8_t reg, uint32_t value);
 
     uint32_t getAddressByRegion(uint32_t region);
     bool nvmIsReady();
-    void executeNvmCommand(uint32_t cmd);
+    void executeNvmCommand(uint8_t cmd);
     void erase(uint32_t offset, uint32_t size);
+};
+
+class NvmFlashD2x : public NvmFlash
+{
+public:
+    NvmFlashD2x(Samba& samba,
+                const std::string& name,
+                uint32_t addr,
+                uint32_t pages,
+                uint32_t size,
+                uint32_t planes,
+                uint32_t lockRegions,
+                uint32_t user,
+                uint32_t stack,
+                bool canBrownout);
+
+    virtual ~NvmFlashD2x() {}
 };
 
 #endif // _NVMFLASH_H

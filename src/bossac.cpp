@@ -160,7 +160,7 @@ static Option opts[] =
     {
       'e', "erase", &config.erase,
       { ArgNone },
-      "erase the flash after the offset"
+      "erase the entire flash starting at the offset"
     },
     {
       'w', "write", &config.write,
