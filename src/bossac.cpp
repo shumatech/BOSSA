@@ -160,7 +160,7 @@ static Option opts[] =
     {
       'e', "erase", &config.erase,
       { ArgNone },
-      "erase the entire flash (minus any bootloader)"
+      "erase the flash after the offset"
     },
     {
       'w', "write", &config.write,

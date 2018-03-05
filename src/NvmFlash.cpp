@@ -359,8 +359,6 @@ NvmFlash::readPage(uint32_t page, uint8_t* buf)
     }
 
     // Convert page number into physical address.
-    // The flash base should be defined as starting after bootloader (ie at 0x00002000 => page number 128)
-    // flash_base_address + page.no * page_size
     uint32_t addr = _addr + (page * _size);
     _samba.read(addr, buf, _size);
 }
