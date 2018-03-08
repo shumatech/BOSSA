@@ -150,6 +150,24 @@ Device::create()
     //
     // SAM4S
     //
+    case 0x29870ee0: // A
+    case 0x29970ee0: // B
+    case 0x29A70ee0: // C
+        _family = FAMILY_SAM4S;
+        flashPtr = new EefcFlash(_samba, "ATSAM4SD32", 0x400000, 4096, 512, 2, 256, 0x20001000, 0x20010000, 0x400e0a00, false);
+        break;
+    case 0x29870c30: // A
+    case 0x29970c30: // B
+    case 0x29a70c30: // C
+        _family = FAMILY_SAM4S;
+        flashPtr = new EefcFlash(_samba, "ATSAM4SD16", 0x400000, 2048, 512, 2, 256, 0x20001000, 0x20010000, 0x400e0a00, false);
+        break;
+    case 0x28870ce0: // A
+    case 0x28970ce0: // B
+    case 0x28A70ce0: // C
+        _family = FAMILY_SAM4S;
+        flashPtr = new EefcFlash(_samba, "ATSAM4SA16", 0x400000, 2048, 512, 1, 256, 0x20001000, 0x20010000, 0x400e0a00, false);
+        break;
     case 0x288c0ce0 : // A
     case 0x289c0ce0 : // B
     case 0x28ac0ce0 : // C
