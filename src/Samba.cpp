@@ -56,6 +56,7 @@ Samba::Samba() :
     _canChipErase(false),
     _canWriteBuffer(false),
     _canChecksumBuffer(false),
+    _readBufferSize(0),
     _debug(false),
     _isUsb(false)
 {
@@ -122,6 +123,12 @@ Samba::init()
             }
             extIndex++;
         }
+
+        // All SAMD-based Arduino/AdaFruit boards have a bug in their bootloader
+        // that trying to read 64 bytes or more over USB corrupts the data.
+        // We must limit these boards to read chunks of 63 bytes.
+        if (_isUsb)
+            _readBufferSize = 63;
     }
 
     _port->timeout(TIMEOUT_NORMAL);
@@ -452,6 +459,7 @@ void
 Samba::read(uint32_t addr, uint8_t* buffer, int size)
 {
     uint8_t cmd[20];
+    int chunk;
 
     if (_debug)
         printf("%s(addr=%#x,size=%#x)\n", __FUNCTION__, addr, size);
@@ -459,7 +467,7 @@ Samba::read(uint32_t addr, uint8_t* buffer, int size)
     // The SAM firmware has a bug reading powers of 2 over 32 bytes
     // via USB.  If that is the case here, then read the first byte
     // with a readByte and then read one less than the requested size.
-    if (_isUsb && size > 32 && !(size & (size - 1)))
+    if (_isUsb && _readBufferSize == 0 && size > 32 && !(size & (size - 1)))
     {
         *buffer = readByte(addr);
         addr++;
@@ -467,14 +475,27 @@ Samba::read(uint32_t addr, uint8_t* buffer, int size)
         size--;
     }
 
-    snprintf((char*) cmd, sizeof(cmd), "R%08X,%08X#", addr, size);
-    if (_port->write(cmd, sizeof(cmd) - 1) != sizeof(cmd) - 1)
-        throw SambaError();
+    while (size > 0)
+    {
+        // Handle any limitations on the size of the read
+        if (_readBufferSize > 0 && size > _readBufferSize)
+            chunk = _readBufferSize;
+        else
+            chunk = size;
 
-    if (_isUsb)
-        readBinary(buffer, size);
-    else
-        readXmodem(buffer, size);
+        snprintf((char*) cmd, sizeof(cmd), "R%08X,%08X#", addr, chunk);
+        if (_port->write(cmd, sizeof(cmd) - 1) != sizeof(cmd) - 1)
+            throw SambaError();
+
+        if (_isUsb)
+            readBinary(buffer, chunk);
+        else
+            readXmodem(buffer, chunk);
+
+        size -= chunk;
+        addr += chunk;
+        buffer += chunk;
+    }
 }
 
 void

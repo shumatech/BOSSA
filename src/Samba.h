@@ -93,6 +93,7 @@ private:
     bool _canChipErase;
     bool _canWriteBuffer;
     bool _canChecksumBuffer;
+    int _readBufferSize;
     bool _debug;
     bool _isUsb;
     SerialPort::Ptr _port;
