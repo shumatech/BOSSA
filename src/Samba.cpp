@@ -31,6 +31,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include <unistd.h>
 #include <errno.h>
