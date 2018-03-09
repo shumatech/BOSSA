@@ -33,6 +33,7 @@
 #include <stdint.h>
 #include <ctype.h>
 #include <unistd.h>
+#include <errno.h>
 
 using namespace std;
 
