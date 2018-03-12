@@ -9,7 +9,7 @@ WXVERSION=3.0
 #
 # Source files
 #
-COMMON_SRCS=Samba.cpp Flash.cpp NvmFlash.cpp EfcFlash.cpp EefcFlash.cpp Applet.cpp WordCopyApplet.cpp Flasher.cpp Device.cpp
+COMMON_SRCS=Samba.cpp Flash.cpp D5xNvmFlash.cpp D2xNvmFlash.cpp EfcFlash.cpp EefcFlash.cpp Applet.cpp WordCopyApplet.cpp Flasher.cpp Device.cpp
 APPLET_SRCS=WordCopyArm.asm
 BOSSA_SRCS=BossaForm.cpp BossaWindow.cpp BossaAbout.cpp BossaApp.cpp BossaBitmaps.cpp BossaInfo.cpp BossaThread.cpp BossaProgress.cpp
 BOSSA_BMPS=BossaLogo.bmp BossaIcon.bmp ShumaTechLogo.bmp
@@ -238,9 +238,9 @@ $(foreach src,$(COMMON_SRCS),$(eval $(call common_obj,$(src))))
 define applet_obj
 $(SRCDIR)/$(1:%.asm=%.cpp): $(SRCDIR)/$(1)
 	@echo APPLET $(1:%.asm=%)
-	$$(Q)$$(ARMAS) -o $$(@:%.o=%.obj) $$<
-	$$(Q)$$(ARMOBJCOPY) -O binary $$(@:%.o=%.obj) $$(@:%.o=%.bin)
-	$$(Q)appletgen $(1:%.asm=%) $(SRCDIR) $(OBJDIR)
+	$$(Q)$$(ARMAS) -o $$(@:$(SRCDIR)/%.cpp=$(OBJDIR)/%.obj) $$<
+	$$(Q)$$(ARMOBJCOPY) -O binary $$(@:$(SRCDIR)/%.cpp=$(OBJDIR)/%.obj) $$(@:$(SRCDIR)/%.cpp=$(OBJDIR)/%.bin)
+	$$(Q)./appletgen $(1:%.asm=%) $(SRCDIR) $(OBJDIR)
 $(OBJDIR)/$(1:%.asm=%.o): $(SRCDIR)/$(1:%.asm=%.cpp)
 	@echo CPP APPLET $$<
 	$$(Q)$$(CXX) $$(COMMON_CXXFLAGS) -c -o $$(@) $$(<:%.asm=%.cpp)
