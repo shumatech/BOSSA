@@ -29,34 +29,13 @@
 #include "Device.h"
 #include "EfcFlash.h"
 #include "EefcFlash.h"
-#include "NvmFlash.h"
+#include "D2xNvmFlash.h"
+#include "D5xNvmFlash.h"
 
 void
-Device::create()
+Device::readChipId(uint32_t& chipId, uint32_t& extChipId)
 {
-    Flash* flashPtr;
-    uint32_t chipId = 0;
-    uint32_t extChipId = 0;
-    uint32_t deviceId = 0;
-
-    // Device identification must be performed carefully to avoid reading from
-    // addresses that devices do not support.
-
-    // All devices support addresss 0 as the ARM reset vector so if the vector is
-    // a ARM7TDMI branch, then assume we have an Atmel SAM7/9 CHIPID register
-    if ((_samba.readWord(0x0) & 0xff000000) == 0xea000000)
-    {
-        chipId = _samba.readWord(0xfffff240);
-    }
-    // Next try the ARM CPUID register since all Coretex-M devices support it.
-    // If it identifies a Coretex M0+, then assume we have a SAMD device
-    // that only supports the ARM device ID register
-    else if ((_samba.readWord(0xe000ed00) & 0x0000fff0) == 0xC600)
-    {
-        deviceId = _samba.readWord(0x41002018);
-    }
-    // Assume we have a SAM3, SAM4 or SAME70 so check the CHIPID registers
-    else if ((chipId = _samba.readWord(0x400e0740)) != 0)
+    if ((chipId = _samba.readWord(0x400e0740)) != 0)
     {
         extChipId = _samba.readWord(0x400e0744);
     }
@@ -64,10 +43,56 @@ Device::create()
     {
         extChipId = _samba.readWord(0x400e0944);
     }
-    // Else we don't know what the device is
+}
+
+void
+Device::create()
+{
+    Flash* flashPtr;
+    uint32_t chipId = 0;
+    uint32_t cpuId = 0;
+    uint32_t extChipId = 0;
+    uint32_t deviceId = 0;
+
+    // Device identification must be performed carefully to avoid reading from
+    // addresses that devices do not support which will lock up the CPU
+
+    // All devices support addresss 0 as the ARM reset vector so if the vector is
+    // a ARM7TDMI branch, then assume we have an Atmel SAM7/9 CHIPID register
+    if ((_samba.readWord(0x0) & 0xff000000) == 0xea000000)
+    {
+        chipId = _samba.readWord(0xfffff240);
+    }
     else
     {
-        throw DeviceUnsupportedError();
+        // Next try the ARM CPUID register since all Cortex-M devices support it
+        cpuId = _samba.readWord(0xe000ed00) & 0x0000fff0;
+
+        // Cortex-M0+
+        if (cpuId == 0xC600)
+        {
+            // These should support the ARM device ID register
+            deviceId = _samba.readWord(0x41002018);
+        }
+        // Cortex-M4
+        else if (cpuId == 0xC240)
+        {
+            // SAM4 processors have a reset vector to the SAM-BA ROM
+            if ((_samba.readWord(0x4) & 0xfff00000) == 0x800000)
+            {
+                readChipId(chipId, extChipId);
+            }
+            // Else we should have a device that supports the ARM device ID register
+            else
+            {
+                deviceId = _samba.readWord(0x41002018);
+            }
+        }
+        // For all other Cortex versions try the Atmel chip ID registers
+        else
+        {
+            readChipId(chipId, extChipId);
+        }
     }
 
     // Instantiate the proper flash for the device
@@ -352,7 +377,7 @@ Device::create()
         case 0x10010056: // E15B WLCSP
         case 0x10010063: // E15C WLCSP
             _family = FAMILY_SAMD21;
-            flashPtr = new NvmFlashD2x(_samba, "ATSAMD21x15", 0x0, 512, 64, 1, 16, 0x20000800, 0x20001000, true) ;
+            flashPtr = new D2xNvmFlash(_samba, "ATSAMD21x15", 512, 64, 0x20000800, 0x20001000) ;
             break;
 
         case 0x10010002: // J16A
@@ -364,7 +389,7 @@ Device::create()
         case 0x10010055: // E16B WLCSP
         case 0x10010062: // E16C WLCSP
             _family = FAMILY_SAMD21;
-            flashPtr = new NvmFlashD2x(_samba, "ATSAMD21x16", 0x0, 1024, 64, 1, 16, 0x20001000, 0x20002000, true) ;
+            flashPtr = new D2xNvmFlash(_samba, "ATSAMD21x16", 1024, 64, 0x20001000, 0x20002000) ;
             break;
 
         case 0x10010001: // J17A
@@ -372,7 +397,7 @@ Device::create()
         case 0x1001000b: // E17A
         case 0x10010010: // G17A WLCSP
             _family = FAMILY_SAMD21;
-            flashPtr = new NvmFlashD2x(_samba, "ATSAMD21x17", 0x0, 2048, 64, 1, 16, 0x20002000, 0x20004000, true) ;
+            flashPtr = new D2xNvmFlash(_samba, "ATSAMD21x17", 2048, 64, 0x20002000, 0x20004000) ;
             break;
 
         case 0x10010000: // J18A
@@ -380,7 +405,7 @@ Device::create()
         case 0x1001000a: // E18A
         case 0x1001000f: // G18A WLCSP
             _family = FAMILY_SAMD21;
-            flashPtr = new NvmFlashD2x(_samba, "ATSAMD21x18", 0x0, 4096, 64, 1, 16, 0x20004000, 0x20008000, true) ;
+            flashPtr = new D2xNvmFlash(_samba, "ATSAMD21x18", 4096, 64, 0x20004000, 0x20008000) ;
             break;
 
         //
@@ -389,26 +414,100 @@ Device::create()
         case 0x1001001e: // E16A
         case 0x1001001b: // G16A
             _family = FAMILY_SAMR21;
-            flashPtr = new NvmFlashD2x(_samba, "ATSAMR21x16", 0x0, 1024, 64, 1, 16, 0x20001000, 0x20002000, true) ;
+            flashPtr = new D2xNvmFlash(_samba, "ATSAMR21x16", 1024, 64, 0x20001000, 0x20002000) ;
             break;
 
         case 0x1001001d: // E17A
         case 0x1001001a: // G17A
             _family = FAMILY_SAMR21;
-            flashPtr = new NvmFlashD2x(_samba, "ATSAMR21x17", 0x0, 2048, 64, 1, 16, 0x20002000, 0x20004000, true) ;
+            flashPtr = new D2xNvmFlash(_samba, "ATSAMR21x17", 2048, 64, 0x20002000, 0x20004000) ;
             break;
 
         case 0x1001001c: // E18A
         case 0x10010019: // G18A
             _family = FAMILY_SAMR21;
-            flashPtr = new NvmFlashD2x(_samba, "ATSAMR21x18", 0x0, 4096, 64, 1, 16, 0x20004000, 0x20008000, true) ;
+            flashPtr = new D2xNvmFlash(_samba, "ATSAMR21x18", 4096, 64, 0x20004000, 0x20008000) ;
             break;
 
         case 0x10010018: // E19A
             _family = FAMILY_SAMR21;
-            flashPtr = new NvmFlashD2x(_samba, "ATSAMR21x19", 0x0, 4096, 64, 1, 16, 0x20004000, 0x20008000, true) ;
+            flashPtr = new D2xNvmFlash(_samba, "ATSAMR21x19", 4096, 64, 0x20004000, 0x20008000) ;
             break;
 
+        //
+        // SAMD51
+        //
+        case 0x60060006: // J18A
+        case 0x60060008: // G18A
+            _family = FAMILY_SAMD51;
+            flashPtr = new D5xNvmFlash(_samba, "ATSAMD51x18", 512, 512, 0x20004000, 0x20008000) ;
+            break;
+
+        case 0x60060001: // P19A
+        case 0x60060003: // N19A
+        case 0x60060005: // J19A
+        case 0x60060007: // G19A
+            _family = FAMILY_SAMD51;
+            flashPtr = new D5xNvmFlash(_samba, "ATSAMD51x19", 1024, 512, 0x20004000, 0x20008000) ;
+            break;
+
+        case 0x60060000: // P20A
+        case 0x60060002: // N20A
+        case 0x60060004: // J20A
+            _family = FAMILY_SAMD51;
+            flashPtr = new D5xNvmFlash(_samba, "ATSAMD51x20", 2048, 512, 0x20004000, 0x20008000) ;
+            break;
+
+        //
+        // SAME51
+        //
+        case 0x61810003: // J18A
+            flashPtr = new D5xNvmFlash(_samba, "ATSAME51x18", 512, 512, 0x20004000, 0x20008000) ;
+            break;
+
+        case 0x61810002: // J19A
+        case 0x61810001: // N19A
+            flashPtr = new D5xNvmFlash(_samba, "ATSAME51x19", 1024, 512, 0x20004000, 0x20008000) ;
+            break;
+
+        case 0x61810004: // J20A
+        case 0x61810000: // N20A
+            flashPtr = new D5xNvmFlash(_samba, "ATSAME51x20", 2048, 512, 0x20004000, 0x20008000) ;
+            break;
+
+        //
+        // SAME53
+        //
+        case 0x61830006: // J18A
+            flashPtr = new D5xNvmFlash(_samba, "ATSAME53x18", 512, 512, 0x20004000, 0x20008000) ;
+            break;
+
+        case 0x61830005: // J19A
+        case 0x61830003: // N19A
+            flashPtr = new D5xNvmFlash(_samba, "ATSAME53x19", 1024, 512, 0x20004000, 0x20008000) ;
+            break;
+
+        case 0x61830004: // J20A
+        case 0x61830002: // N20A
+            flashPtr = new D5xNvmFlash(_samba, "ATSAME53x20", 2048, 512, 0x20004000, 0x20008000) ;
+            break;
+
+        //
+        // SAME54
+        //
+        case 0x61840001: // P19A
+        case 0x61840003: // N19A
+            flashPtr = new D5xNvmFlash(_samba, "ATSAME54x19", 1024, 512, 0x20004000, 0x20008000) ;
+            break;
+
+        case 0x61840000: // P20A
+        case 0x61840002: // N20A
+            flashPtr = new D5xNvmFlash(_samba, "ATSAME54x20", 2048, 512, 0x20004000, 0x20008000) ;
+            break;
+
+        //
+        // Unknown
+        //
         default:
             throw DeviceUnsupportedError();
             break;
@@ -427,7 +526,7 @@ Device::create()
 }
 
 void
-Device::reset(void)
+Device::reset()
 {
     switch (_family)
     {

@@ -110,54 +110,28 @@ EfcFlash::eraseAuto(bool enable)
     }
 }
 
-bool
-EfcFlash::isLocked()
+std::vector<bool>
+EfcFlash::getLockRegions()
 {
-    if ((readFSR0() & (0xffff << 16)) != 0)
-        return true;
+    std::vector<bool> regions(_lockRegions);
+    uint32_t fsr0;
+    uint32_t fsr1;
 
+    fsr0 = readFSR0();
     if (_planes == 2)
-        if ((readFSR1() & (0xffff << 16)) != 0)
-            return true;
-
-    return false;
-}
-
-bool
-EfcFlash::getLockRegion(uint32_t region)
-{
-    if (region >= _lockRegions)
-        throw FlashRegionError();
-
-    if (_planes == 2 && region >= _lockRegions / 2)
-        return (readFSR1() & (1 << (16 + region - _lockRegions / 2)));
+        fsr1 = readFSR1();
     else
-        return (readFSR0() & (1 << (16 + region)));
-}
+        fsr1 = 0;
 
-void
-EfcFlash::setLockRegion(uint32_t region, bool enable)
-{
-    uint32_t page;
-
-    if (region >= _lockRegions)
-        throw FlashRegionError();
-
-    if (enable != getLockRegion(region))
+    for (uint32_t region = 0; region < _lockRegions; region++)
     {
         if (_planes == 2 && region >= _lockRegions / 2)
-        {
-            page = (region - _lockRegions / 2) * _pages / _lockRegions;
-            waitFSR();
-            writeFCR1(enable ? EFC_FCMD_SLB : EFC_FCMD_CLB, page);
-        }
+            regions[region] = (fsr1 & (1 << (16 + region - _lockRegions / 2))) != 0;
         else
-        {
-            page = region * _pages / _lockRegions;
-            waitFSR();
-            writeFCR0(enable ? EFC_FCMD_SLB : EFC_FCMD_CLB, page);
-        }
+            regions[region] = (fsr0 & (1 << (16 + region))) != 0;
     }
+
+    return regions;
 }
 
 bool
@@ -166,37 +140,16 @@ EfcFlash::getSecurity()
     return (readFSR0() & (1 << 4));
 }
 
-void
-EfcFlash::setSecurity()
-{
-    waitFSR();
-    writeFCR0(EFC_FCMD_SSB, 0);
-}
-
 bool
 EfcFlash::getBod()
 {
     return (readFSR0() & (1 << 8));
 }
 
-void
-EfcFlash::setBod(bool enable)
-{
-    waitFSR();
-    writeFCR0(enable ? EFC_FCMD_SGPB : EFC_FCMD_CGPB, 0);
-}
-
 bool
 EfcFlash::getBor()
 {
     return (readFSR0() & (2 << 8));
-}
-
-void
-EfcFlash::setBor(bool enable)
-{
-    waitFSR();
-    writeFCR0(enable ? EFC_FCMD_SGPB : EFC_FCMD_CGPB, 1);
 }
 
 bool
@@ -209,13 +162,54 @@ EfcFlash::getBootFlash()
 }
 
 void
-EfcFlash::setBootFlash(bool enable)
+EfcFlash::writeOptions()
 {
-    if (!_canBootFlash)
-        return;
+    if (canBootFlash() && _bootFlash.isDirty() && _bootFlash.get() != getBootFlash())
+    {
+        waitFSR();
+        writeFCR0(_bootFlash.get() ? EFC_FCMD_SGPB : EFC_FCMD_CGPB, 2);
+    }
+    if (canBor() && _bor.isDirty() && _bor.get() != getBor())
+    {
+        waitFSR();
+        writeFCR0(_bor.get() ? EFC_FCMD_SGPB : EFC_FCMD_CGPB, 1);
+    }
+    if (canBod() && _bod.isDirty() && _bod.get() != getBod())
+    {
+        waitFSR();
+        writeFCR0(_bod.get() ? EFC_FCMD_SGPB : EFC_FCMD_CGPB, 0);
+    }
+    if (_regions.isDirty())
+    {
+        uint32_t page;
+        std::vector<bool> current;
 
-    waitFSR();
-    writeFCR0(enable ? EFC_FCMD_SGPB : EFC_FCMD_CGPB, 2);
+        current = getLockRegions();
+
+        for (uint32_t region = 0; region < _regions.get().size(); region++)
+        {
+            if (_regions.get()[region] != current[region])
+            {
+                if (_planes == 2 && region >= _lockRegions / 2)
+                {
+                    page = (region - _lockRegions / 2) * _pages / _lockRegions;
+                    waitFSR();
+                    writeFCR1(_regions.get()[region] ? EFC_FCMD_SLB : EFC_FCMD_CLB, page);
+                }
+                else
+                {
+                    page = region * _pages / _lockRegions;
+                    waitFSR();
+                    writeFCR0(_regions.get()[region] ? EFC_FCMD_SLB : EFC_FCMD_CLB, page);
+                }
+            }
+        }
+    }
+    if (_security.isDirty() && _security.get() == true && _security.get() != getSecurity())
+    {
+        waitFSR();
+        writeFCR0(EFC_FCMD_SSB, 0);
+    }
 }
 
 void

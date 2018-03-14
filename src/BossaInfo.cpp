@@ -54,11 +54,11 @@ BossaInfo::BossaInfo(wxWindow* parent) : InfoDialog(parent)
     _bodCheckBox->SetValue(flash->getBod());
     _borCheckBox->SetValue(flash->getBor());
 
-    uint32_t lockRegions = flash->lockRegions();
+    std::vector<bool> lockRegions = flash->getLockRegions();
     bool hasLockRegion = false;
-    for (uint32_t i = 0; i < lockRegions; i++)
+    for (uint32_t i = 0; i < lockRegions.size(); i++)
     {
-        if (flash->getLockRegion(i))
+        if (lockRegions[i])
         {
             _lockTextCtrl->AppendText(wxString::Format(wxT("%s%d"), hasLockRegion ? "," : "", i));
             hasLockRegion = true;

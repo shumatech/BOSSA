@@ -276,4 +276,11 @@ public:
     virtual void invoke(char* argv[], int argc);
 };
 
+class CommandOptions : public Command
+{
+public:
+    CommandOptions();
+    virtual void invoke(char* argv[], int argc);
+};
+
 #endif // _COMMAND_H

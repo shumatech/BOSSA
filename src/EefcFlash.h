@@ -53,24 +53,20 @@ public:
     void eraseAll(uint32_t offset);
     void eraseAuto(bool enable);
 
-    bool isLocked();
-    bool getLockRegion(uint32_t region);
-    void setLockRegion(uint32_t region, bool enable);
+    std::vector<bool> getLockRegions();
 
     bool getSecurity();
-    void setSecurity();
 
     bool getBod();
-    void setBod(bool enable);
     bool canBod() { return _canBrownout; }
 
     bool getBor();
-    void setBor(bool enable);
     bool canBor() { return _canBrownout; }
 
     bool getBootFlash();
-    void setBootFlash(bool enable);
     bool canBootFlash() { return true; }
+
+    void writeOptions();
 
     void writePage(uint32_t page);
     void readPage(uint32_t page, uint8_t* data);

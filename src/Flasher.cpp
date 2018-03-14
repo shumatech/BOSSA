@@ -44,7 +44,7 @@ FlasherInfo::print()
 
     printf("Device       : %s\n", name.c_str());
     printf("Version      : %s\n", version.c_str());
-    printf("Address      : %#x\n", address);
+    printf("Address      : 0x%x\n", address);
     printf("Pages        : %d\n", numPages);
     printf("Page Size    : %d bytes\n", pageSize);
     printf("Total Size   : %dKB\n", totalSize / 1024);
@@ -68,13 +68,6 @@ FlasherInfo::print()
         printf("BOD          : %s\n", bod ? "true" : "false");
     if (canBor)
         printf("BOR          : %s\n", bor ? "true" : "false");
-    
-    if (canChipErase)
-        printf("Chip Erase   : true\n");
-    if (canWriteBuffer)
-        printf("Fast Write   : true\n");
-    if (canChecksumBuffer)
-        printf("Fast Verify  : true\n");
 }
 
 void
@@ -330,10 +323,8 @@ Flasher::lock(string& regionArg, bool enable)
     if (regionArg.empty())
     {
         _observer.onStatus("%s all regions\n", enable ? "Lock" : "Unlock");
-        if (enable)
-            _flash->lockAll();
-        else
-            _flash->unlockAll();
+        std::vector<bool> regions(_flash->lockRegions(), enable);
+        _flash->setLockRegions(regions);
     }
     else
     {
@@ -341,6 +332,7 @@ Flasher::lock(string& regionArg, bool enable)
         size_t delim;
         uint32_t region;
         string sub;
+        std::vector<bool> regions = _flash->getLockRegions();
 
         do
         {
@@ -348,9 +340,11 @@ Flasher::lock(string& regionArg, bool enable)
             sub = regionArg.substr(pos, delim - pos);
             region = strtol(sub.c_str(), NULL, 0);
             _observer.onStatus("%s region %d\n", enable ? "Lock" : "Unlock", region);
-            _flash->setLockRegion(region, enable);
+            regions[region] = enable;
             pos = delim + 1;
         } while (delim != string::npos);
+
+        _flash->setLockRegions(regions);
     }
 }
 
@@ -368,17 +362,12 @@ Flasher::info(FlasherInfo& info)
     info.bootFlash = _flash->getBootFlash();
     info.bod = _flash->getBod();
     info.bor = _flash->getBor();
-    
+
     info.canBootFlash = _flash->canBootFlash();
     info.canBod = _flash->canBod();
     info.canBor = _flash->canBor();
     info.canChipErase = _samba.canChipErase();
     info.canWriteBuffer = _samba.canWriteBuffer();
     info.canChecksumBuffer = _samba.canChecksumBuffer();
-    
-    info.lockRegions.resize(_flash->lockRegions());    
-    for (uint32_t region = 0; region < _flash->lockRegions(); region++)
-    {
-        info.lockRegions[region] = _flash->getLockRegion(region);
-    }
+    info.lockRegions = _flash->getLockRegions();
 }

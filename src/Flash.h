@@ -30,6 +30,7 @@
 #define _FLASH_H
 
 #include <stdint.h>
+#include <vector>
 #include <memory>
 #include <exception>
 
@@ -87,6 +88,21 @@ public:
 
 };
 
+template<class T>
+class FlashOption
+{
+public:
+    FlashOption() : _dirty(false) {}
+    virtual ~FlashOption() {}
+    void set(const T& value) { _value = value; _dirty = true; }
+    const T& get() { return _value; }
+    bool isDirty() { return _dirty; }
+    
+private:
+    T    _value;
+    bool _dirty;
+};
+
 class Flash
 {
 public:
@@ -108,33 +124,32 @@ public:
     virtual uint32_t numPages() { return _pages; }
     virtual uint32_t numPlanes() { return _planes; }
     virtual uint32_t totalSize() { return _size * _pages; }
+    virtual uint32_t lockRegions() { return _lockRegions; }
 
     virtual void eraseAll(uint32_t offset) = 0;
     virtual void eraseAuto(bool enable) = 0;
 
-    virtual uint32_t lockRegions() { return _lockRegions; }
-    virtual bool isLocked() = 0;
-    virtual bool getLockRegion(uint32_t region) = 0;
-    virtual void setLockRegion(uint32_t region, bool enable) = 0;
-    virtual void lockAll();
-    virtual void unlockAll();
+    virtual std::vector<bool> getLockRegions() = 0;
+    virtual void setLockRegions(const std::vector<bool>& regions);
 
     virtual bool getSecurity() = 0;
-    virtual void setSecurity() = 0;
+    virtual void setSecurity();
 
     virtual bool getBod() = 0;
-    virtual void setBod(bool enable) = 0;
+    virtual void setBod(bool enable);
     virtual bool canBod() = 0;
 
     virtual bool getBor() = 0;
-    virtual void setBor(bool enable) = 0;
+    virtual void setBor(bool enable);
     virtual bool canBor() = 0;
 
     virtual bool getBootFlash() = 0;
-    virtual void setBootFlash(bool enable) = 0;
+    virtual void setBootFlash(bool enable);
     virtual bool canBootFlash() = 0;
 
-    virtual void writePage(uint32_t page) = 0;    
+    virtual void writeOptions() = 0;
+
+    virtual void writePage(uint32_t page) = 0;
     virtual void readPage(uint32_t page, uint8_t* data) = 0;
 
     virtual void writeBuffer(uint32_t dst_addr, uint32_t size);
@@ -150,6 +165,12 @@ protected:
     uint32_t _lockRegions;
     uint32_t _user;
     WordCopyApplet _wordCopy;
+
+    FlashOption<bool> _bootFlash;
+    FlashOption< std::vector<bool> > _regions;
+    FlashOption<bool> _bod;
+    FlashOption<bool> _bor;
+    FlashOption<bool> _security;
 
     bool _onBufferA;
     uint32_t _pageBufferA;

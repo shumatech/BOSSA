@@ -140,9 +140,10 @@ WriteThread::Entry()
         if (flash->canBor())
             flash->setBor(_bor);
         if (_lock)
-            flash->lockAll();
+            flash->setLockRegions(std::vector<bool>(flash->lockRegions(), true));
         if (_security)
             flash->setSecurity();
+        flash->writeOptions();
     }
     catch(exception& e)
     {

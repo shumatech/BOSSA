@@ -28,7 +28,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 #define __STDC_LIMIT_MACROS
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdarg.h>
 #include <errno.h>
 #include <string.h>
@@ -416,7 +415,6 @@ CommandDump::invoke(char* argv[], int argc)
 {
     uint32_t addr;
     uint32_t count;
-    uint8_t* buf;
 
     if (!argNum(argc, 3) ||
         !argUint32(argv[1], &addr) ||
@@ -424,22 +422,18 @@ CommandDump::invoke(char* argv[], int argc)
         !connected())
         return;
 
-    buf = (uint8_t*) malloc(count);
-    if (!buf)
-        return;
+    std::unique_ptr<uint8_t[]> buf(new uint8_t[count]);
 
     try
     {
-        _samba.read(addr, buf, count);
+        _samba.read(addr, buf.get(), count);
     }
     catch (...)
     {
-        free(buf);
         throw;
     }
 
-    hexdump(addr, buf, count);
-    free(buf);
+    hexdump(addr, buf.get(), count);
 }
 
 CommandErase::CommandErase() :
@@ -580,7 +574,7 @@ CommandLock::invoke(char* argv[], int argc)
         bits += argv[argn];
 
     _flasher.lock(bits, true);
-    printf("Locked regions %s", bits.c_str());
+    printf("Locked regions %s\n", bits.c_str());
 }
 
 CommandMrb::CommandMrb() :
@@ -1233,5 +1227,17 @@ void
 CommandReset::invoke(char* argv[], int argc)
 {
     _device.reset();
+}
+
+CommandOptions::CommandOptions() :
+    Command("options",
+            "Write options to flash.",
+            "options\n")
+{}
+
+void
+CommandOptions::invoke(char* argv[], int argc)
+{
+    _flash->writeOptions();
 }
 

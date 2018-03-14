@@ -34,6 +34,7 @@
 #include "Device.h"
 
 #include <string>
+#include <algorithm>
 
 
 using namespace std;
@@ -333,12 +334,14 @@ BossaWindow::OnWrite(wxCommandEvent& event)
 
     try
     {
-        if (flash->isLocked())
+        std::vector<bool> regions = flash->getLockRegions();
+
+        if (std::find(regions.begin(), regions.end(), true) != regions.end())
         {
             if (!Question(wxT("The flash is currently locked. Do you want to unlock it and proceed with the write?")))
                 return;
 
-            flash->unlockAll();
+            flash->setLockRegions(std::vector<bool>(regions.size(), false));
         }
     }
     catch(exception& e)

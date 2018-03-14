@@ -74,7 +74,7 @@ public:
 
     const SerialPort& getSerialPort() { return *_port; }
 
-    void reset(void);
+    void reset();
 
     // Extended SAM-BA functions
     bool canChipErase() { return _canChipErase; }

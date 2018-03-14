@@ -52,22 +52,44 @@ Flash::Flash(Samba& samba,
     _onBufferA = true;
 
     // page buffers will have the size of a physical page and will be situated right after the applet
-    _pageBufferA = _user + ((_wordCopy.size() + 3) / 4) * 4; // we need to avoid non 32bits aligned access on Cortex-M0+
+    _pageBufferA = ((_user + _wordCopy.size() + 3) / 4) * 4; // we need to avoid non 32bits aligned access on Cortex-M0+
     _pageBufferB = _pageBufferA + size;
 }
 
 void
-Flash::lockAll()
+Flash::setLockRegions(const std::vector<bool>& regions)
 {
-    for (uint32_t region = 0; region < _lockRegions; region++)
-        setLockRegion(region, true);
+    if (regions.size() > _lockRegions)
+        throw FlashRegionError();
+
+    _regions.set(regions);
 }
 
 void
-Flash::unlockAll()
+Flash::setSecurity()
 {
-    for (uint32_t region = 0; region < _lockRegions; region++)
-        setLockRegion(region, false);
+    _security.set(true);
+}
+
+void
+Flash::setBor(bool enable)
+{
+    if (canBor())
+        _bor.set(enable);
+}
+
+void
+Flash::setBod(bool enable)
+{
+    if (canBod())
+        _bod.set(enable);
+}
+
+void
+Flash::setBootFlash(bool enable)
+{
+    if (canBootFlash())
+        _bootFlash.set(enable);
 }
 
 void

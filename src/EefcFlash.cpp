@@ -137,88 +137,45 @@ EefcFlash::eraseAuto(bool enable)
     _eraseAuto = enable;
 }
 
-bool
-EefcFlash::isLocked()
+std::vector<bool>
+EefcFlash::getLockRegions()
 {
-    waitFSR();
-    writeFCR0(EEFC_FCMD_GLB, 0);
-    waitFSR();
-    if (readFRR0())
-        return true;
-    if (_planes == 2)
-    {
-        writeFCR1(EEFC_FCMD_GLB, 0);
-        waitFSR();
-        if (readFRR1())
-            return true;
-    }
-
-    return false;
-}
-
-bool
-EefcFlash::getLockRegion(uint32_t region)
-{
+    std::vector<bool> regions(_lockRegions);
     uint32_t frr;
-
-    if (region >= _lockRegions)
-        throw FlashRegionError();
+    uint32_t bit;
 
     waitFSR();
-    if (_planes == 2 && region >= _lockRegions / 2)
-    {
-        region -= _lockRegions / 2;
-        writeFCR1(EEFC_FCMD_GLB, 0);
-        waitFSR();
-        frr = readFRR1();
-        while (region >= 32)
-        {
-            frr = readFRR1();
-            region -= 32;
-        }
-        if (frr & (1 << region))
-            return true;
-    }
-    else
-    {
-        writeFCR0(EEFC_FCMD_GLB, 0);
-        waitFSR();
-        frr = readFRR0();
-        while (region >= 32)
-        {
-            frr = readFRR0();
-            region -= 32;
-        }
-        if (frr & (1 << region))
-            return true;
-    }
-
-    return false;
-}
-
-void
-EefcFlash::setLockRegion(uint32_t region, bool enable)
-{
-    uint32_t page;
-
-    if (region >= _lockRegions)
-        throw FlashRegionError();
-
-    if (enable != getLockRegion(region))
+    for (uint32_t region = 0; region < _lockRegions; region++)
     {
         if (_planes == 2 && region >= _lockRegions / 2)
         {
-            page = (region - _lockRegions / 2) * _pages / _lockRegions;
+            bit = region - _lockRegions / 2;
+            writeFCR1(EEFC_FCMD_GLB, 0);
             waitFSR();
-            writeFCR1(enable ? EEFC_FCMD_SLB : EEFC_FCMD_CLB, page);
+            frr = readFRR1();
+            while (bit >= 32)
+            {
+                frr = readFRR1();
+                bit -= 32;
+            }
+            regions[region] = (frr & (1 << bit)) != 0;
         }
         else
         {
-            page = region * _pages / _lockRegions;
+            bit = region;
+            writeFCR0(EEFC_FCMD_GLB, 0);
             waitFSR();
-            writeFCR0(enable ? EEFC_FCMD_SLB : EEFC_FCMD_CLB, page);
+            frr = readFRR0();
+            while (bit >= 32)
+            {
+                frr = readFRR0();
+                bit -= 32;
+            }
+            regions[region] = (frr & (1 << bit)) != 0;
         }
     }
+
+    return regions;
 }
 
 bool
@@ -228,13 +185,6 @@ EefcFlash::getSecurity()
     writeFCR0(EEFC_FCMD_GGPB, 0);
     waitFSR();
     return (readFRR0() & (1 << 0));
-}
-
-void
-EefcFlash::setSecurity()
-{
-    waitFSR();
-    writeFCR0(EEFC_FCMD_SGPB, 0);
 }
 
 bool
@@ -249,16 +199,6 @@ EefcFlash::getBod()
     return (readFRR0() & (1 << 1));
 }
 
-void
-EefcFlash::setBod(bool enable)
-{
-    if (!_canBrownout)
-        return;
-
-    waitFSR();
-    writeFCR0(enable ? EEFC_FCMD_SGPB : EEFC_FCMD_CGPB, 1);
-}
-
 bool
 EefcFlash::getBor()
 {
@@ -271,16 +211,6 @@ EefcFlash::getBor()
     return (readFRR0() & (1 << 2));
 }
 
-void
-EefcFlash::setBor(bool enable)
-{
-    if (!_canBrownout)
-        return;
-
-    waitFSR();
-    writeFCR0(enable ? EEFC_FCMD_SGPB : EEFC_FCMD_CGPB, 2);
-}
-
 bool
 EefcFlash::getBootFlash()
 {
@@ -291,10 +221,57 @@ EefcFlash::getBootFlash()
 }
 
 void
-EefcFlash::setBootFlash(bool enable)
+EefcFlash::writeOptions()
 {
-    waitFSR();
-    writeFCR0(enable ? EEFC_FCMD_SGPB : EEFC_FCMD_CGPB, (_canBrownout ? 3 : 1));
+    if (canBootFlash() && _bootFlash.isDirty() && _bootFlash.get() != getBootFlash())
+    {
+        waitFSR();
+        writeFCR0(_bootFlash.get() ? EEFC_FCMD_SGPB : EEFC_FCMD_CGPB, (canBod() ? 3 : 1));
+    }
+    if (canBor() && _bor.isDirty() && _bor.get() != getBor())
+    {
+        waitFSR();
+        writeFCR0(_bor.get() ? EEFC_FCMD_SGPB : EEFC_FCMD_CGPB, 2);
+    }
+    if (canBod() && _bod.isDirty() && _bod.get() != getBod())
+    {
+        waitFSR();
+        writeFCR0(_bod.get() ? EEFC_FCMD_SGPB : EEFC_FCMD_CGPB, 1);
+    }
+    if (_regions.isDirty())
+    {
+        uint32_t page;
+        std::vector<bool> current;
+
+        if (_regions.get().size() >= _lockRegions)
+            throw FlashRegionError();
+
+        current = getLockRegions();
+
+        for (uint32_t region = 0; region < _lockRegions; region++)
+        {
+            if (_regions.get()[region] != current[region])
+            {
+                if (_planes == 2 && region >= _lockRegions / 2)
+                {
+                    page = (region - _lockRegions / 2) * _pages / _lockRegions;
+                    waitFSR();
+                    writeFCR1(_regions.get()[region] ? EEFC_FCMD_SLB : EEFC_FCMD_CLB, page);
+                }
+                else
+                {
+                    page = region * _pages / _lockRegions;
+                    waitFSR();
+                    writeFCR0(_regions.get()[region] ? EEFC_FCMD_SLB : EEFC_FCMD_CLB, page);
+                }
+            }
+        }
+    }
+    if (_security.isDirty() && _security.get() == true && _security.get() != getSecurity())
+    {
+        waitFSR();
+        writeFCR0(EEFC_FCMD_SGPB, 0);
+    }
 }
 
 void

@@ -422,7 +422,7 @@ main(int argc, char* argv[])
         {
             uint32_t pageErrors;
             uint32_t totalErrors;
-            
+
             timer_start();
             if (!flasher.verify(argv[args], pageErrors, totalErrors, config.offsetArg))
             {
@@ -467,6 +467,8 @@ main(int argc, char* argv[])
 
         if (config.lock)
             flasher.lock(config.lockArg, true);
+
+        flash->writeOptions();
 
         if (config.reset)
             device.reset();

@@ -22,10 +22,15 @@ Supported Device Families
  * SAM4E
  * SAM4S
  * SAMD21
+ * SAMD51
  * SAM3X\*
  * SAM3A\*
  * SAM7L\*
  * SAM9XE\*
+ * SAME51\*
+ * SAME52\*
+ * SAME53\*
+ * SAME54\*
  * SAME70\*
 
 \* Device families which are not tested for each release and could stop working.

@@ -66,6 +66,7 @@ public:
 
         FAMILY_SAMD21,
         FAMILY_SAMR21,
+        FAMILY_SAMD51,
 
         FAMILY_SAME70
     };
@@ -81,12 +82,14 @@ public:
 
     FlashPtr& getFlash() { return _flash; }
 
-    void reset(void);
+    void reset();
 
 private:
     Samba& _samba;
     std::unique_ptr<Flash> _flash;
     Family _family;
+
+    void readChipId(uint32_t& chipId, uint32_t& extChipId);
 };
 
 #endif // _DEVICE_H
