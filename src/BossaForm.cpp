@@ -289,7 +289,7 @@ AboutDialog::AboutDialog( wxWindow* parent, wxWindowID id, const wxString& title
 	_shumatechBitmap = new wxStaticBitmap( this, wxID_ANY, wxNullBitmap, wxDefaultPosition, wxDefaultSize, 0 );
 	_topBoxSizer->Add( _shumatechBitmap, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5 );
 	
-	_copyrightStaticText = new wxStaticText( this, wxID_ANY, wxT("(c) 2011-2017 ShumaTech. All rights reserved."), wxDefaultPosition, wxDefaultSize, 0 );
+	_copyrightStaticText = new wxStaticText( this, wxID_ANY, wxT("(c) 2011-2018 ShumaTech. All rights reserved."), wxDefaultPosition, wxDefaultSize, 0 );
 	_copyrightStaticText->Wrap( -1 );
 	_topBoxSizer->Add( _copyrightStaticText, 0, wxALL, 5 );
 	

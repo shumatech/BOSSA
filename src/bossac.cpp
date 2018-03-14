@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BOSSA
 //
-// Copyright (c) 2011-2017, ShumaTech
+// Copyright (c) 2011-2018, ShumaTech
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -329,7 +329,7 @@ main(int argc, char* argv[])
         printf("Usage: %s [OPTION...] [FILE]\n", argv[0]);
         printf("Basic Open Source SAM-BA Application (BOSSA) Version " VERSION "\n"
                "Flash programmer for Atmel SAM devices.\n"
-               "Copyright (c) 2011-2017 ShumaTech (http://www.shumatech.com)\n"
+               "Copyright (c) 2011-2018 ShumaTech (http://www.shumatech.com)\n"
                "\n"
                "Examples:\n"
                "  bossac -e -w -v -b image.bin   # Erase flash, write flash with image.bin,\n"
