@@ -36,7 +36,6 @@
 
 BossaBitmaps::BossaBitmaps()
 {
-    wxImage::AddHandler(new wxBMPHandler);
 }
 
 void
