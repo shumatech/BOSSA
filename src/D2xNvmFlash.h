@@ -70,7 +70,7 @@ protected:
     void waitReady();
     void command(uint8_t cmd);
     void erase(uint32_t offset, uint32_t size);
-    std::unique_ptr<uint8_t[]> readUserRow();
+    void readUserRow(std::unique_ptr<uint8_t[]>& userRow);
 };
 
 #endif // _D2XNVMFLASH_H

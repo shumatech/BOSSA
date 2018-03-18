@@ -73,7 +73,7 @@ protected:
     void command(uint8_t cmd);
     void erase(uint32_t offset, uint32_t size);
     void checkError();
-    std::unique_ptr<uint8_t[]> readUserPage();
+    void readUserPage(std::unique_ptr<uint8_t[]>& userPage);
 };
 
 #endif // _D5XNVMFLASH_H

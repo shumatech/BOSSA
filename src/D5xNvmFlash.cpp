@@ -163,13 +163,14 @@ D5xNvmFlash::getBootFlash()
     return true;
 }
 
-std::unique_ptr<uint8_t[]>
-D5xNvmFlash::readUserPage()
+void
+D5xNvmFlash::readUserPage(std::unique_ptr<uint8_t[]>& userPage)
 {
-    std::unique_ptr<uint8_t[]> userPage(new uint8_t[NVM_UP_SIZE]);
-    _samba.read(NVM_UP_ADDR, userPage.get(), NVM_UP_SIZE);
-
-    return userPage;
+    if (!userPage)
+    {
+        userPage.reset(new uint8_t[NVM_UP_SIZE]);
+        _samba.read(NVM_UP_ADDR, userPage.get(), NVM_UP_SIZE);
+    }
 }
 
 void
@@ -179,8 +180,7 @@ D5xNvmFlash::writeOptions()
 
     if (canBor() && _bor.isDirty() && _bor.get() != getBor())
     {
-        if (!userPage)
-            userPage = readUserPage();
+        readUserPage(userPage);
         if (_bor.get())
             userPage[NVM_UP_BOD33_RESET_OFFSET] |= NVM_UP_BOD33_RESET_MASK;
         else
@@ -188,8 +188,7 @@ D5xNvmFlash::writeOptions()
     }
     if (canBod() && _bod.isDirty() && _bod.get() != getBod())
     {
-        if (!userPage)
-            userPage = readUserPage();
+        readUserPage(userPage);
         if (_bod.get())
             userPage[NVM_UP_BOD33_DISABLE_OFFSET] &= ~NVM_UP_BOD33_DISABLE_MASK;
         else
@@ -201,8 +200,7 @@ D5xNvmFlash::writeOptions()
         std::vector<bool> current = getLockRegions();
         if (!equal(_regions.get().begin(), _regions.get().end(), current.begin()))
         {
-            if (!userPage)
-                userPage = readUserPage();
+            readUserPage(userPage);
 
             uint8_t* lockBits = &userPage[NVM_UP_NVM_LOCK_OFFSET];
             for (uint32_t region = 0; region < _regions.get().size(); region++)

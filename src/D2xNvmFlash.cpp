@@ -169,37 +169,36 @@ D2xNvmFlash::getBootFlash()
     return true;
 }
 
-std::unique_ptr<uint8_t[]>
-D2xNvmFlash::readUserRow()
+void
+D2xNvmFlash::readUserRow(std::unique_ptr<uint8_t[]>& userRow)
 {
-    std::unique_ptr<uint8_t[]> userPage(new uint8_t[NVM_UR_SIZE]);
-    _samba.read(NVM_UR_ADDR, userPage.get(), NVM_UR_SIZE);
-
-    return userPage;
+    if (!userRow)
+    {
+        userRow.reset(new uint8_t[NVM_UR_SIZE]);
+        _samba.read(NVM_UR_ADDR, userRow.get(), NVM_UR_SIZE);
+    }
 }
 
 void
 D2xNvmFlash::writeOptions()
 {
-    std::unique_ptr<uint8_t[]> userPage;
+    std::unique_ptr<uint8_t[]> userRow;
 
     if (canBor() && _bor.isDirty() && _bor.get() != getBor())
     {
-        if (!userPage)
-            userPage = readUserRow();
+        readUserRow(userRow);
         if (_bor.get())
-            userPage[NVM_UR_BOD33_RESET_OFFSET] |= NVM_UR_BOD33_RESET_MASK;
+            userRow[NVM_UR_BOD33_RESET_OFFSET] |= NVM_UR_BOD33_RESET_MASK;
         else
-            userPage[NVM_UR_BOD33_RESET_OFFSET] &= ~NVM_UR_BOD33_RESET_MASK;
+            userRow[NVM_UR_BOD33_RESET_OFFSET] &= ~NVM_UR_BOD33_RESET_MASK;
     }
     if (canBod() && _bod.isDirty() && _bod.get() != getBod())
     {
-        if (!userPage)
-            userPage = readUserRow();
+        readUserRow(userRow);
         if (_bod.get())
-            userPage[NVM_UR_BOD33_ENABLE_OFFSET] |= NVM_UR_BOD33_ENABLE_MASK;
+            userRow[NVM_UR_BOD33_ENABLE_OFFSET] |= NVM_UR_BOD33_ENABLE_MASK;
         else
-            userPage[NVM_UR_BOD33_ENABLE_OFFSET] &= ~NVM_UR_BOD33_ENABLE_MASK;
+            userRow[NVM_UR_BOD33_ENABLE_OFFSET] &= ~NVM_UR_BOD33_ENABLE_MASK;
     }
     if (_regions.isDirty())
     {
@@ -207,10 +206,9 @@ D2xNvmFlash::writeOptions()
         std::vector<bool> current = getLockRegions();
         if (!equal(_regions.get().begin(), _regions.get().end(), current.begin()))
         {
-            if (!userPage)
-                userPage = readUserRow();
+            readUserRow(userRow);
 
-            uint8_t* lockBits = &userPage[NVM_UR_NVM_LOCK_OFFSET];
+            uint8_t* lockBits = &userRow[NVM_UR_NVM_LOCK_OFFSET];
             for (uint32_t region = 0; region < _regions.get().size(); region++)
             {
                 if (_regions.get()[region])
@@ -222,7 +220,7 @@ D2xNvmFlash::writeOptions()
     }
 
     // Erase and write the user row if modified
-    if (userPage)
+    if (userRow)
     {
         // Disable cache and configure manual page write
         writeReg(NVM_REG_CTRLB, readReg(NVM_REG_CTRLB) | (0x1 << 18) | (0x1 << 7));
@@ -235,7 +233,7 @@ D2xNvmFlash::writeOptions()
         for (uint32_t offset = 0; offset < NVM_UR_SIZE; offset += _size)
         {
             // Load the buffer with the page
-            loadBuffer(&userPage[offset], _size);
+            loadBuffer(&userRow[offset], _size);
 
             // Clear page buffer
             command(NVM_CMD_PBC);
