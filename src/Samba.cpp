@@ -661,6 +661,7 @@ Samba::checksumBuffer(uint32_t start_addr, uint32_t size)
         throw SambaError();
 
     cmd[9] = 0;
+    errno = 0;
     uint32_t res = strtol((char*) &cmd[1], NULL, 16);
     if (errno != 0)
         throw SambaError();
