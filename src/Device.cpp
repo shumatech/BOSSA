@@ -494,6 +494,45 @@ Device::create()
             break;
 
         //
+        // SAML21
+        //
+        case 0x1081000d: // E15A
+        case 0x1081001c: // E15B
+            _family = FAMILY_SAMD21;
+            flashPtr = new D2xNvmFlash(_samba, "ATSAML21x15", 512, 64, 0x20000800, 0x20001000) ;
+            break;
+
+        case 0x10810002: // J16A
+        case 0x10810007: // G16A
+        case 0x1081000c: // E16A
+        case 0x10810011: // J16B
+        case 0x10810016: // G16B
+        case 0x1081001b: // E16B
+            _family = FAMILY_SAML21;
+            flashPtr = new D2xNvmFlash(_samba, "ATSAML21x16", 1024, 64, 0x20001000, 0x20002000) ;
+            break;
+
+        case 0x10810001: // J17A
+        case 0x10810006: // G17A
+        case 0x1081000b: // E17A
+        case 0x10810010: // J17B
+        case 0x10810015: // G17B
+        case 0x1081001a: // E17B
+            _family = FAMILY_SAML21;
+            flashPtr = new D2xNvmFlash(_samba, "ATSAML21x17", 2048, 64, 0x20002000, 0x20004000) ;
+            break;
+
+        case 0x10810000: // J18A
+        case 0x10810005: // G18A
+        case 0x1081000a: // E18A
+        case 0x1081000f: // J18B
+        case 0x10810014: // G18B
+        case 0x10810019: // E18B
+            _family = FAMILY_SAML21;
+            flashPtr = new D2xNvmFlash(_samba, "ATSAML21x18", 4096, 64, 0x20004000, 0x20008000) ;
+            break;
+
+        //
         // SAMD51
         //
         case 0x60060006: // J18A
