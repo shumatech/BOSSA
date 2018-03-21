@@ -560,16 +560,19 @@ Device::create()
         // SAME51
         //
         case 0x61810003: // J18A
+            _family = FAMILY_SAME51;
             flashPtr = new D5xNvmFlash(_samba, "ATSAME51x18", 512, 512, 0x20004000, 0x20008000) ;
             break;
 
         case 0x61810002: // J19A
         case 0x61810001: // N19A
+            _family = FAMILY_SAME51;
             flashPtr = new D5xNvmFlash(_samba, "ATSAME51x19", 1024, 512, 0x20004000, 0x20008000) ;
             break;
 
         case 0x61810004: // J20A
         case 0x61810000: // N20A
+            _family = FAMILY_SAME51;
             flashPtr = new D5xNvmFlash(_samba, "ATSAME51x20", 2048, 512, 0x20004000, 0x20008000) ;
             break;
 
@@ -577,16 +580,19 @@ Device::create()
         // SAME53
         //
         case 0x61830006: // J18A
+            _family = FAMILY_SAME53;
             flashPtr = new D5xNvmFlash(_samba, "ATSAME53x18", 512, 512, 0x20004000, 0x20008000) ;
             break;
 
         case 0x61830005: // J19A
         case 0x61830003: // N19A
+            _family = FAMILY_SAME53;
             flashPtr = new D5xNvmFlash(_samba, "ATSAME53x19", 1024, 512, 0x20004000, 0x20008000) ;
             break;
 
         case 0x61830004: // J20A
         case 0x61830002: // N20A
+            _family = FAMILY_SAME53;
             flashPtr = new D5xNvmFlash(_samba, "ATSAME53x20", 2048, 512, 0x20004000, 0x20008000) ;
             break;
 
@@ -595,11 +601,13 @@ Device::create()
         //
         case 0x61840001: // P19A
         case 0x61840003: // N19A
+            _family = FAMILY_SAME54;
             flashPtr = new D5xNvmFlash(_samba, "ATSAME54x19", 1024, 512, 0x20004000, 0x20008000) ;
             break;
 
         case 0x61840000: // P20A
         case 0x61840002: // N20A
+            _family = FAMILY_SAME54;
             flashPtr = new D5xNvmFlash(_samba, "ATSAME54x20", 2048, 512, 0x20004000, 0x20008000) ;
             break;
 

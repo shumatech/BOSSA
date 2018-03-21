@@ -27,11 +27,15 @@ Supported Device Families
  * SAM3A\*
  * SAM7L\*
  * SAM9XE\*
+ * SAMR21\*
+ * SAML21\*
  * SAME51\*
- * SAME52\*
  * SAME53\*
  * SAME54\*
  * SAME70\*
+ * SAMS70\*
+ * SAMV70\*
+ * SAMV71\*
 
 \* Device families which are not tested for each release and could stop working.
 
