@@ -640,6 +640,15 @@ Device::reset()
         {
         case FAMILY_SAMD21:
         case FAMILY_SAMR21:
+        case FAMILY_SAML21:
+        case FAMILY_SAMD51:
+        case FAMILY_SAME51:
+        case FAMILY_SAME53:
+        case FAMILY_SAME54:
+        case FAMILY_SAME70:
+        case FAMILY_SAMS70:
+        case FAMILY_SAMV70:
+        case FAMILY_SAMV71:
             _samba.writeWord(0xE000ED0C, 0x05FA0004);
             break;
 
@@ -674,7 +683,8 @@ Device::reset()
         default:
             break;
         }
-    catch (exception& expected)
+    }
+    catch (std::exception& expected)
     {   // writeWord will most likely throw an exception when the CPU is reset
     }
 }
