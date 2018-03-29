@@ -1,0 +1,74 @@
+# travis-ci integration for BOSSA
+# Jacob Alexander 2018
+
+sudo: required
+
+# Language
+language:
+  - cpp
+
+# OS
+os:
+  - linux
+  - osx
+
+# Environment Variables
+env:
+  global:
+    - VERSION=${TRAVIS_TAG}
+
+# Package Setup
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update -qq; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get install tree libwxgtk3.0-dev libreadline-dev -y; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install tree wxmac; fi
+
+# System setup
+install:
+  # Info about OS
+  - uname -a
+
+  # Directory tree to validate kll.git
+  - tree
+
+  # Compiler Version
+  - ${CC} --version
+
+# Run build command
+script:
+  - make -j && make install
+
+# Setup Deploy
+before_deploy:
+  - mkdir -p deploy
+
+  # Copy files for deployment
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then cp bin/*.tgz deploy/.; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then cp bin/*.dmg deploy/.; fi
+  - if [[ "$SCRIPT" == "ic_keyboards.bash" ]]; then for f in Keyboards/firmware/*.dfu.bin; do cp -f ${f} deploy/${TRAVIS_TAG}.$(basename ${f}); done; fi
+  - if [[ "$SCRIPT" == "all.bash" ]]; then for f in Bootloader/Builds/bootloader/*.bootloader.bin; do cp -f ${f} deploy/${TRAVIS_TAG}.$(basename ${f}); done; fi
+
+  # Show files being deployed
+  - tree deploy
+
+# Deploy release
+deploy:
+  name: ${TRAVIS_TAG}
+  tag_name: ${TRAVIS_TAG}
+  provider: releases
+  api_key: $GITHUB_OAUTH_TOKEN
+  target_commitish: ${TRAVIS_COMMIT}
+  skip_cleanup: true
+  prerelease: true # XXX Set this to false to enable a stable release
+  file_glob: true
+  overwrite: true
+  file: deploy/*
+  on:
+    tags: true
+
+# Post test script commands
+after_script:
+  - bin/bossac --help
+  - tree
+
