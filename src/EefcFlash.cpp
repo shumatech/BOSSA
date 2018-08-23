@@ -243,7 +243,7 @@ EefcFlash::writeOptions()
         uint32_t page;
         std::vector<bool> current;
 
-        if (_regions.get().size() >= _lockRegions)
+        if (_regions.get().size() > _lockRegions)
             throw FlashRegionError();
 
         current = getLockRegions();
