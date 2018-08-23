@@ -3,7 +3,7 @@
 #
 # Version
 #
-VERSION=1.9
+VERSION=$(shell git describe --tags --dirty)
 WXVERSION=3.0
 
 #
@@ -41,15 +41,16 @@ COMMON_SRCS+=WinSerialPort.cpp WinPortFactory.cpp
 COMMON_LDFLAGS=-Wl,--enable-auto-import -static -static-libstdc++ -static-libgcc
 COMMON_LIBS=-ltermcap -Wl,--as-needed -lsetupapi
 BOSSA_RC=BossaRes.rc
-WIXDIR="C:\Program Files (x86)\WiX Toolset v3.10\bin"
+WIXDIR="C:\Program Files (x86)\WiX Toolset v3.11\bin"
 CODE_SIGN=$(INSTALLDIR)\\code_sign.p12
 TIMESTAMP=http://timestamp.comodoca.com/authenticode
 SIGNTOOL="C:\Program Files (x86)\Windows Kits\10\bin\x64\signtool.exe"
 INF2CAT="C:\Program Files (x86)\Windows Kits\10\bin\x86\Inf2Cat.exe"
+WINVER=$(shell echo $(VERSION) | cut -d - -f 1)
 
 define bossa_msi
 $(OBJDIR)\\bossa-$(1)-$(VERSION).wixobj: $(INSTALLDIR)\\bossa.wxs
-	$(WIXDIR)\\candle.exe -dVersion=$(VERSION) -arch $(1) -out $$@ -ext $(WIXDIR)\\WixUIExtension.dll -ext $(WIXDIR)\\WixDifxAppExtension.dll $$<
+	$(WIXDIR)\\candle.exe -dVersion=$(WINVER) -arch $(1) -out $$@ -ext $(WIXDIR)\\WixUIExtension.dll -ext $(WIXDIR)\\WixDifxAppExtension.dll $$<
 
 $(BINDIR)\\bossa-$(1)-$(VERSION).msi: $(OBJDIR)\\bossa-$(1)-$(VERSION).wixobj
 	$(WIXDIR)\\light.exe -cultures:null -out $$@ -pdbout $(OBJDIR)\\bossa.wixpdb -sice:ICE57 -ext $(WIXDIR)\\WixUIExtension.dll -ext $(WIXDIR)\\WixDifxAppExtension.dll $(WIXDIR)\\difxapp_$(1).wixlib $$<
@@ -193,8 +194,7 @@ ARMOBJCOPY=$(ARM)objcopy
 #
 # CXX Flags
 #
-# COMMON_CXXFLAGS+=-Wall -Werror -MT $@ -MD -MP -MF $(@:%.o=%.d) -DVERSION=\"$(VERSION)\" -g -O2
-COMMON_CXXFLAGS+=-Wall -MT $@ -MD -MP -MF $(@:%.o=%.d) -DVERSION=\"$(VERSION)\" -g -O2 $(CXXFLAGS)
+COMMON_CXXFLAGS+=-Wall -Werror -MT $@ -MD -MP -MF $(@:%.o=%.d) -DVERSION=\"$(VERSION)\" -g -O2 $(CXXFLAGS)
 WX_CXXFLAGS:=$(shell wx-config --cxxflags --version=$(WXVERSION)) -DWX_PRECOMP -Wno-ctor-dtor-privacy -O2 -fno-strict-aliasing
 BOSSA_CXXFLAGS=$(COMMON_CXXFLAGS) $(WX_CXXFLAGS)
 BOSSAC_CXXFLAGS=$(COMMON_CXXFLAGS)
