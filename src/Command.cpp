@@ -646,6 +646,7 @@ CommandMrf::invoke(char* argv[], int argc)
                 throw FileIoError(errno);
             if ((size_t) fbytes != min(count, sizeof(buf)))
                 throw FileShortError();
+            addr += fbytes;
             count -= fbytes;
         }
     }
