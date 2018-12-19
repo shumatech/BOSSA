@@ -280,10 +280,12 @@ BossaWindow::OnSerial(wxCommandEvent& event)
     Samba& samba = wxGetApp().samba;
 
     wxString port = _portComboBox->GetString(event.GetSelection());
+    errno = 0;
+
     if (!samba.connect(portFactory.create(std::string(port.mb_str()))))
     {
         Disconnected();
-        Error(wxString::Format(_("Could not connect to device on %s"), port.c_str()));
+        Error(wxString::Format(_("Could not connect to device on %s: %s"), port.c_str(), strerror(errno)));
         return;
     }
 
