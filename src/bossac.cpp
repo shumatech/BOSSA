@@ -33,6 +33,8 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <sys/time.h>
+#include <chrono>
+#include <thread>
 
 #include "CmdOpts.h"
 #include "Samba.h"
@@ -367,6 +369,7 @@ main(int argc, char* argv[])
             port->setRTS(true);
             port->setDTR(false);
             port->close();
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         }
 
         if (config.portArg.empty())
