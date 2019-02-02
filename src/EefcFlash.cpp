@@ -29,8 +29,12 @@
 #include "EefcFlash.h"
 
 #include <assert.h>
-#include <unistd.h>
 #include <stdio.h>
+#if defined(__WIN32__) || defined(WIN32)
+#include "usleep.h"
+#else
+#include <unistd.h>
+#endif
 
 #define EEFC_KEY        0x5a
 
