@@ -48,7 +48,7 @@ public:
     virtual SerialPort::Ptr create(const std::string& name, bool isUsb) = 0;
 };
 
-#if defined(__WIN32__)
+#if defined(__WIN32__) || defined(WIN32)
 #include "WinPortFactory.h"
 typedef WinPortFactory PortFactory;
 #elif defined(__linux__)
