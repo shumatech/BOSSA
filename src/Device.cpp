@@ -269,9 +269,9 @@ Device::create()
         _family = FAMILY_SAM3S;
         flashPtr = new EefcFlash(_samba, "ATSAM3S2", 0x400000, 512, 256, 1, 8, 0x20000800, 0x20008000, 0x400e0a00, false);
         break;
-    case 0x288a0560 : // A
-    case 0x289a0560 : // B
-    case 0x28aa0560 : // C
+    case 0x28890560 : // A
+    case 0x28990560 : // B
+    case 0x28a90560 : // C
         _family = FAMILY_SAM3S;
         flashPtr = new EefcFlash(_samba, "ATSAM3S1", 0x400000, 256, 256, 1, 4, 0x20000800, 0x20004000, 0x400e0a00, false);
         break;
