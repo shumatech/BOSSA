@@ -39,9 +39,10 @@
 
 class SambaError : public std::exception
 {
+	const char*	_operation;
 public:
-    SambaError() : exception() {};
-    const char* what() const throw() { return "SAM-BA operation failed"; }
+    SambaError(const char* operation) : exception(), _operation(operation) {};
+    const char* what() const throw() { return _operation; }
 };
 
 

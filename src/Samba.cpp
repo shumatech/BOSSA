@@ -108,6 +108,8 @@ Samba::init()
     }
     catch(SambaError& err)
     {
+	if (_debug)
+	    printf("Samba::init can't get version: %s\n", err.what());
         return false;
     }
 
@@ -188,7 +190,7 @@ Samba::writeByte(uint32_t addr, uint8_t value)
 
     snprintf((char*) cmd, sizeof(cmd), "O%08X,%02X#", addr, value);
     if (_port->write(cmd, sizeof(cmd) - 1) != sizeof(cmd) -  1)
-        throw SambaError();
+        throw SambaError("SAM-BA writeByte");
 
     // The SAM firmware has a bug that if the command and binary data
     // are received in the same USB data packet, then the firmware
@@ -208,9 +210,9 @@ Samba::readByte(uint32_t addr)
 
     snprintf((char*) cmd, sizeof(cmd), "o%08X,4#", addr);
     if (_port->write(cmd, sizeof(cmd) - 1) != sizeof(cmd) - 1)
-        throw SambaError();
+        throw SambaError("SAM-BA readByte request");
     if (_port->read(cmd, sizeof(uint8_t)) != sizeof(uint8_t))
-        throw SambaError();
+        throw SambaError("SAM-BA readByte response");
 
     value = cmd[0];
 
@@ -231,7 +233,7 @@ Samba::writeWord(uint32_t addr, uint32_t value)
 
     snprintf((char*) cmd, sizeof(cmd), "W%08X,%08X#", addr, value);
     if (_port->write(cmd, sizeof(cmd) - 1) != sizeof(cmd) - 1)
-        throw SambaError();
+        throw SambaError("SAM-BA writeWord");
 
     // The SAM firmware has a bug that if the command and binary data
     // are received in the same USB data packet, then the firmware
@@ -252,9 +254,9 @@ Samba::readWord(uint32_t addr)
 
     snprintf((char*) cmd, sizeof(cmd), "w%08X,4#", addr);
     if (_port->write(cmd, sizeof(cmd) - 1) != sizeof(cmd) - 1)
-        throw SambaError();
+        throw SambaError("SAM-BA readWord request");
     if (_port->read(cmd, sizeof(uint32_t)) != sizeof(uint32_t))
-        throw SambaError();
+        throw SambaError("SAM-BA readWord response");
 
     value = (cmd[3] << 24 | cmd[2] << 16 | cmd[1] << 8 | cmd[0] << 0);
 
@@ -359,7 +361,7 @@ Samba::readXmodem(uint8_t* buffer, int size)
                 _port->put(NAK);
         }
         if (retries == MAX_RETRIES)
-            throw SambaError();
+            throw SambaError("SAM-BA readXmodem, too many retries");
 
         _port->put(ACK);
 
@@ -379,7 +381,7 @@ Samba::readXmodem(uint8_t* buffer, int size)
         _port->put(NAK);
     }
     if (retries == MAX_RETRIES)
-        throw SambaError();
+        throw SambaError("SAM-BA readXmodem, too many retries");
 }
 
 void
@@ -396,7 +398,7 @@ Samba::writeXmodem(const uint8_t* buffer, int size)
             break;
     }
     if (retries == MAX_RETRIES)
-        throw SambaError();
+        throw SambaError("SAM-BA writeXmodem, too many retries");
 
     while (size > 0)
     {
@@ -412,14 +414,14 @@ Samba::writeXmodem(const uint8_t* buffer, int size)
         {
             bytes = _port->write(blk, sizeof(blk));
             if (bytes != sizeof(blk))
-                throw SambaError();
+		throw SambaError("SAM-BA writeXmodem, write failed");
 
             if (_port->get() == ACK)
                 break;
         }
 
         if (retries == MAX_RETRIES)
-            throw SambaError();
+	    throw SambaError("SAM-BA writeXmodem, too many retries");
 
         buffer += BLK_SIZE;
         size -= BLK_SIZE;
@@ -433,14 +435,14 @@ Samba::writeXmodem(const uint8_t* buffer, int size)
             break;
     }
     if (retries == MAX_RETRIES)
-        throw SambaError();
+	throw SambaError("SAM-BA writeXmodem, too many retries");
 }
 
 void
 Samba::readBinary(uint8_t* buffer, int size)
 {
     if (_port->read(buffer, size) != size)
-        throw SambaError();
+        throw SambaError("SAM-BA readBinary failed");
 }
 
 void
@@ -450,7 +452,7 @@ Samba::writeBinary(const uint8_t* buffer, int size)
     {
         int written = _port->write(buffer, size);
         if (written <= 0)
-            throw SambaError();
+            throw SambaError("SAM-BA writeBinary failed");
         buffer += written;
         size -= written;
     }
@@ -486,7 +488,7 @@ Samba::read(uint32_t addr, uint8_t* buffer, int size)
 
         snprintf((char*) cmd, sizeof(cmd), "R%08X,%08X#", addr, chunk);
         if (_port->write(cmd, sizeof(cmd) - 1) != sizeof(cmd) - 1)
-            throw SambaError();
+            throw SambaError("SAM-BA read request failed");
 
         if (_isUsb)
             readBinary(buffer, chunk);
@@ -509,7 +511,7 @@ Samba::write(uint32_t addr, const uint8_t* buffer, int size)
 
     snprintf((char*) cmd, sizeof(cmd), "S%08X,%08X#", addr, size);
     if (_port->write(cmd, sizeof(cmd) - 1) != sizeof(cmd) - 1)
-        throw SambaError();
+        throw SambaError("SAM-BA write failed");
 
     // The SAM firmware has a bug that if the command and binary data
     // are received in the same USB data packet, then the firmware
@@ -538,7 +540,7 @@ Samba::go(uint32_t addr)
 
     snprintf((char*) cmd, sizeof(cmd), "G%08X#", addr);
     if (_port->write(cmd, sizeof(cmd) - 1) != sizeof(cmd) - 1)
-        throw SambaError();
+        throw SambaError("SAM-BA go command failed");
 
     // The SAM firmware can get confused if another command is
     // received in the same USB data packet as the go command
@@ -563,7 +565,11 @@ Samba::version()
     size = _port->read(cmd, sizeof(cmd) - 1);
     _port->timeout(TIMEOUT_NORMAL);
     if (size <= 0)
-        throw SambaError();
+    {
+	if (_debug)
+	    printf("Samba::version read returned %d in %dms\n", size, TIMEOUT_NORMAL);
+        throw SambaError("SAM-BA version request failed");
+    }
 
     str = (char*) cmd;
     for (pos = 0; pos < size; pos++)
@@ -585,7 +591,7 @@ void
 Samba::chipErase(uint32_t start_addr)
 {
     if (!_canChipErase)
-        throw SambaError();
+        throw SambaError("SAM-BA chipErase not attempted, not available");
 
     uint8_t cmd[64];
 
@@ -594,22 +600,22 @@ Samba::chipErase(uint32_t start_addr)
 
     int l = snprintf((char*) cmd, sizeof(cmd), "X%08X#", start_addr);
     if (_port->write(cmd, l) != l)
-        throw SambaError();
+        throw SambaError("SAM-BA chipErase request failed");
     _port->timeout(TIMEOUT_LONG);
     _port->read(cmd, 3); // Expects "X\n\r"
     _port->timeout(TIMEOUT_NORMAL);
     if (cmd[0] != 'X')
-        throw SambaError();
+        throw SambaError("SAM-BA chipErase response failed");
 }
 
 void
 Samba::writeBuffer(uint32_t src_addr, uint32_t dst_addr, uint32_t size)
 {
     if (!_canWriteBuffer)
-        throw SambaError();
+        throw SambaError("SAM-BA writeBuffer not attempted, not available");
 
     if (size > checksumBufferSize())
-        throw SambaError();
+        throw SambaError("SAM-BA writeBuffer size too large");
             
     if (_debug)
         printf("%s(scr_addr=%#x, dst_addr=%#x, size=%#x)\n", __FUNCTION__, src_addr, dst_addr, size);
@@ -617,33 +623,33 @@ Samba::writeBuffer(uint32_t src_addr, uint32_t dst_addr, uint32_t size)
     uint8_t cmd[64];
     int l = snprintf((char*) cmd, sizeof(cmd), "Y%08X,0#", src_addr);
     if (_port->write(cmd, l) != l)
-        throw SambaError();
+        throw SambaError("SAM-BA writeBuffer request failed");
     _port->timeout(TIMEOUT_QUICK);
     cmd[0] = 0;
     _port->read(cmd, 3); // Expects "Y\n\r"
     _port->timeout(TIMEOUT_NORMAL);
     if (cmd[0] != 'Y')
-        throw SambaError();
+        throw SambaError("SAM-BA writeBuffer response failed");
 
     l = snprintf((char*) cmd, sizeof(cmd), "Y%08X,%08X#", dst_addr, size);
     if (_port->write(cmd, l) != l)
-        throw SambaError();
+        throw SambaError("SAM-BA writeBuffer request failed");
     _port->timeout(TIMEOUT_LONG);
     cmd[0] = 0;
     _port->read(cmd, 3); // Expects "Y\n\r"
     _port->timeout(TIMEOUT_NORMAL);
     if (cmd[0] != 'Y')
-        throw SambaError();
+        throw SambaError("SAM-BA writeBuffer response failed");
 }
 
 uint16_t
 Samba::checksumBuffer(uint32_t start_addr, uint32_t size)
 {
     if (!_canChecksumBuffer)
-        throw SambaError();
+        throw SambaError("SAM-BA checksumBuffer not attempted, not available");
 
     if (size > checksumBufferSize())
-        throw SambaError();
+        throw SambaError("SAM-BA checksumBuffer size too large");
         
     if (_debug)
         printf("%s(start_addr=%#x, size=%#x) = ", __FUNCTION__, start_addr, size);
@@ -651,19 +657,19 @@ Samba::checksumBuffer(uint32_t start_addr, uint32_t size)
     uint8_t cmd[64];
     int l = snprintf((char*) cmd, sizeof(cmd), "Z%08X,%08X#", start_addr, size);
     if (_port->write(cmd, l) != l)
-        throw SambaError();
+        throw SambaError("SAM-BA checksumBuffer request failed");
     _port->timeout(TIMEOUT_LONG);
     cmd[0] = 0;
     _port->read(cmd, 12); // Expects "Z00000000#\n\r"
     _port->timeout(TIMEOUT_NORMAL);
     if (cmd[0] != 'Z')
-        throw SambaError();
+        throw SambaError("SAM-BA checksumBuffer response failed");
 
     cmd[9] = 0;
     errno = 0;
     uint32_t res = strtol((char*) &cmd[1], NULL, 16);
     if (errno != 0)
-        throw SambaError();
+        throw SambaError("SAM-BA checksumBuffer response was not numeric");
     if (_debug)
         printf("%x\n", res);
     return res;

@@ -373,7 +373,7 @@ CommandConnect::invoke(char* argv[], int argc)
 
     if (!_samba.connect(_portFactory.create(argv[1])))
     {
-        printf("No device found on %s\n", argv[1]);
+        printf("Can't connect to run commands on device found on %s\n", argv[1]);
         _connected = false;
         return;
     }
