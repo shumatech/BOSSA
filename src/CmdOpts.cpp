@@ -133,7 +133,26 @@ CmdOpts::parse()
             switch (_opts[optIdx].arg.type)
             {
             case ArgInt:
-                *_opts[optIdx].arg.value.intPtr = strtol(optarg, NULL, 0);
+		{
+		    char*  end_p;
+		    *_opts[optIdx].arg.value.intPtr = strtol(optarg, &end_p, 0);
+		    if (end_p == optarg)
+		    {
+			// Invalid number, see if "false" or "true" was passed.
+			// Older Arduino IDEs use "-U true" instead of --usb-port=1.
+			// This allows platform.txt to be modified to pass --usb-port=true on these versions.
+			if (strcmp(optarg, "false") == 0)
+			    *_opts[optIdx].arg.value.intPtr = 0;
+			else if (strcmp(optarg, "true") == 0)
+			    *_opts[optIdx].arg.value.intPtr = 1;
+			else
+			{
+			    fprintf(stderr, "Invalid number %s\n", optarg);
+			    usage(stderr);
+			    exit(1);
+			}
+		    }
+		}
                 break;
             default:
             case ArgString:
