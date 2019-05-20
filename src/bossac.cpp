@@ -376,13 +376,20 @@ main(int argc, char* argv[])
         }
 
         bool res;
+	SerialPort::Ptr port;
         if (config.usbPort)
-            res = samba.connect(portFactory.create(config.portArg, config.usbPortArg != 0));
+            port = portFactory.create(config.portArg, config.usbPortArg != 0);
         else
-            res = samba.connect(portFactory.create(config.portArg));
+            port = portFactory.create(config.portArg);
+	if (!port)
+	{
+            fprintf(stderr, "bossac: No such port: %s\n", config.portArg.c_str());
+            return 1;
+	}
+	res = samba.connect(port);
         if (!res)
         {
-            fprintf(stderr, "No device found on %s\n", config.portArg.c_str());
+            fprintf(stderr, "bossac: Can't connect to port found on %s. Check it has a bootloader installed\n", config.portArg.c_str());
             return 1;
         }
 

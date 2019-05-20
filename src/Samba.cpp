@@ -176,7 +176,6 @@ void
 Samba::disconnect()
 {
     _port->close();
-    _port.release();
 }
 
 void
