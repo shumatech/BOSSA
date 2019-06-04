@@ -63,9 +63,10 @@ public:
     bool security;
     bool info;
     bool debug;
-    bool help;
     bool usbPort;
     bool arduinoErase;
+    bool help;
+    bool version;
 
     int readArg;
     int offsetArg;
@@ -91,9 +92,10 @@ BossaConfig::BossaConfig()
     lock = false;
     security = false;
     info = false;
-    help = false;
     usbPort = false;
     arduinoErase = false;
+    help = false;
+    version = false;
 
     readArg = 0;
     offsetArg = 0;
@@ -238,11 +240,6 @@ static Option opts[] =
       "print debug messages"
     },
     {
-      'h', "help", &config.help,
-      { ArgNone },
-      "display this help text"
-    },
-    {
       'U', "usb-port", &config.usbPort,
       { ArgOptional, ArgInt, "BOOL", { &config.usbPortArg } },
       "force serial port detection to USB if BOOL is 1 [default]\n"
@@ -257,7 +254,17 @@ static Option opts[] =
       'a', "arduino-erase", &config.arduinoErase,
       { ArgNone },
       "erase and reset via Arduino 1200 baud hack"
-    }
+    },
+    {
+      'h', "help", &config.help,
+      { ArgNone },
+      "display this help text"
+    },
+    {
+      'V', "version", &config.version,
+      { ArgNone },
+      "display version info"
+    },
 };
 
 int
@@ -324,22 +331,27 @@ main(int argc, char* argv[])
         return help(argv[0]);
     }
 
-    if (config.help)
+    if (config.help || config.version)
     {
-        printf("Usage: %s [OPTION...] [FILE]\n", argv[0]);
+        if (config.help)
+            printf("Usage: %s [OPTION...] [FILE]\n", argv[0]);
         printf("Basic Open Source SAM-BA Application (BOSSA) Version " VERSION "\n"
                "Flash programmer for Atmel SAM devices.\n"
                "Copyright (c) 2011-2018 ShumaTech (http://www.shumatech.com)\n"
-               "\n"
-               "Examples:\n"
-               "  bossac -e -w -v -b image.bin   # Erase flash, write flash with image.bin,\n"
-               "                                 # verify the write, and set boot from flash\n"
-               "  bossac -r0x10000 image.bin     # Read 64KB from flash and store in image.bin\n"
               );
-        printf("\nOptions:\n");
-        cmd.usage(stdout);
-        printf("\nReport bugs to <bugs@shumatech.com>\n");
-        return 1;
+        if (config.help)
+        {
+            printf("\n"
+                   "Examples:\n"
+                   "  bossac -e -w -v -b image.bin   # Erase flash, write flash with image.bin,\n"
+                   "                                 # verify the write, and set boot from flash\n"
+                   "  bossac -r0x10000 image.bin     # Read 64KB from flash and store in image.bin\n"
+                  );
+            printf("\nOptions:\n");
+            cmd.usage(stdout);
+            printf("\nReport bugs to <bugs@shumatech.com>\n");
+        }
+        return 0;
     }
 
     try
