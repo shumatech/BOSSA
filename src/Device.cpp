@@ -31,6 +31,7 @@
 #include "EefcFlash.h"
 #include "D2xNvmFlash.h"
 #include "D5xNvmFlash.h"
+#include "NullFlash.h"
 
 void
 Device::readChipId(uint32_t& chipId, uint32_t& extChipId)
@@ -609,6 +610,11 @@ Device::create()
         case 0x61840002: // N20A
             _family = FAMILY_SAME54;
             flashPtr = new D5xNvmFlash(_samba, "ATSAME54x20", 2048, 512, 0x20004000, 0x20008000) ;
+            break;
+
+        case 0xFAB10020:
+            _family = FAMILY_NRF52;
+            flashPtr = new NullFlash(_samba, "nRF52840xxA", 256, 4096, 0x20004000, 0x20008000) ;
             break;
 
         //

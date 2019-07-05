@@ -77,6 +77,8 @@ public:
         FAMILY_SAMS70,
         FAMILY_SAMV70,
         FAMILY_SAMV71,
+
+        FAMILY_NRF52,
     };
 
     Device(Samba& samba) : _samba(samba), _flash(nullptr), _family(FAMILY_NONE) {}
