@@ -89,10 +89,14 @@ public:
     uint32_t checksumBufferSize() { return 4096; }
     uint16_t checksumCalc(uint8_t c, uint16_t crc);
 
+    bool canIdentifyChip() { return _canIdentifyChip; }
+    std::string identifyChip();
+
 private:
     bool _canChipErase;
     bool _canWriteBuffer;
     bool _canChecksumBuffer;
+    bool _canIdentifyChip;
     int _readBufferSize;
     bool _debug;
     bool _isUsb;

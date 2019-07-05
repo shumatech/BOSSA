@@ -58,6 +58,7 @@ Samba::Samba() :
     _canChipErase(false),
     _canWriteBuffer(false),
     _canChecksumBuffer(false),
+    _canIdentifyChip(false),
     _readBufferSize(0),
     _debug(false),
     _isUsb(false)
@@ -119,6 +120,7 @@ Samba::init()
         {
             switch (ver[extIndex])
             {
+                case 'I': _canIdentifyChip = true; break;
                 case 'X': _canChipErase = true; break;
                 case 'Y': _canWriteBuffer = true; break;
                 case 'Z': _canChecksumBuffer = true; break;
@@ -557,6 +559,40 @@ Samba::version()
     int pos;
 
     cmd[0] = 'V';
+    cmd[1] = '#';
+    _port->write(cmd, 2);
+
+    _port->timeout(TIMEOUT_QUICK);
+    size = _port->read(cmd, sizeof(cmd) - 1);
+    _port->timeout(TIMEOUT_NORMAL);
+    if (size <= 0)
+        throw SambaError();
+
+    str = (char*) cmd;
+    for (pos = 0; pos < size; pos++)
+    {
+        if (!isprint(str[pos]))
+            break;
+    }
+    str[pos] = '\0';
+
+    std::string ver(str);
+
+    if (_debug)
+        printf("%s()=%s\n", __FUNCTION__, ver.c_str());
+
+    return ver;
+}
+
+std::string
+Samba::identifyChip()
+{
+    uint8_t cmd[256];
+    char* str;
+    int size;
+    int pos;
+
+    cmd[0] = 'I';
     cmd[1] = '#';
     _port->write(cmd, 2);
 

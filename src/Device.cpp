@@ -58,6 +58,12 @@ Device::create()
     // Device identification must be performed carefully to avoid reading from
     // addresses that devices do not support which will lock up the CPU
 
+    if (_samba.canIdentifyChip()) {
+
+    } else {
+
+    }
+
     // All devices support addresss 0 as the ARM reset vector so if the vector is
     // a ARM7TDMI branch, then assume we have an Atmel SAM7/9 CHIPID register
     if ((_samba.readWord(0x0) & 0xff000000) == 0xea000000)
