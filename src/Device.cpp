@@ -57,7 +57,7 @@ Device::create()
 
         if (id == "nRF52840-QIAA") {
             _family = FAMILY_NRF52;
-            flashPtr = new NullFlash(_samba, "nRF52840-QIAA", 256, 4096, 0x20004000, 0x20008000);
+            flashPtr = new NullFlash(_samba, "nRF52840-QIAA", 256, 4096, 0x00000000, 0x00000000);
         } else {
             throw DeviceUnsupportedError();
         }
