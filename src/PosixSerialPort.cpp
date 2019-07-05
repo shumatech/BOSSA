@@ -257,7 +257,13 @@ PosixSerialPort::write(const uint8_t* buffer, int len)
     if (_devfd == -1)
         return -1;
 
-    int res = ::write(_devfd, buffer, len);
+    int res;
+
+    do {
+        res = ::write(_devfd, buffer, len);
+    } while (res == -1 && errno == EAGAIN);
+
+
     // Used on macos to avoid upload errors
     if (_autoFlush)
         flush();
@@ -290,10 +296,7 @@ PosixSerialPort::put(int c)
 void
 PosixSerialPort::flush()
 {
-    // There isn't a reliable way to flush on a file descriptor
-    // so we just wait it out.  One millisecond is the USB poll
-    // interval so that should cover it.
-    usleep(1000);
+    fsync(_devfd);
 }
 
 bool
