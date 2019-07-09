@@ -74,8 +74,6 @@ public:
 
     const SerialPort& getSerialPort() { return *_port; }
 
-    void reset();
-
     // Extended SAM-BA functions
     bool canChipErase() { return _canChipErase; }
     void chipErase(uint32_t start_addr);
@@ -92,11 +90,15 @@ public:
     bool canIdentifyChip() { return _canIdentifyChip; }
     std::string identifyChip();
 
+    bool canReset() { return _canReset; }
+    void reset();
+
 private:
     bool _canChipErase;
     bool _canWriteBuffer;
     bool _canChecksumBuffer;
     bool _canIdentifyChip;
+    bool _canReset;
     int _readBufferSize;
     bool _debug;
     bool _isUsb;

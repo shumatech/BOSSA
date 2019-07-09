@@ -653,6 +653,11 @@ Device::reset()
 {
     try
     {
+        if (_samba.canReset()) {
+            _samba.reset();
+            return;
+        }
+
         switch (_family)
         {
         case FAMILY_SAMD21:

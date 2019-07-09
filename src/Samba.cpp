@@ -59,6 +59,7 @@ Samba::Samba() :
     _canWriteBuffer(false),
     _canChecksumBuffer(false),
     _canIdentifyChip(false),
+    _canReset(false),
     _readBufferSize(0),
     _debug(false),
     _isUsb(false)
@@ -121,6 +122,7 @@ Samba::init()
             switch (ver[extIndex])
             {
                 case 'I': _canIdentifyChip = true; break;
+                case 'K': _canReset = true; break;
                 case 'X': _canChipErase = true; break;
                 case 'Y': _canWriteBuffer = true; break;
                 case 'Z': _canChecksumBuffer = true; break;
@@ -706,3 +708,18 @@ Samba::checksumBuffer(uint32_t start_addr, uint32_t size)
     return res;
 }
 
+void
+Samba::reset()
+{
+    if (!_canReset)
+        throw SambaError();
+
+    if (_debug)
+        printf("%s()\n", __FUNCTION__);
+
+    uint8_t cmd[2];
+    cmd[0] = 'K';
+    cmd[1] = '#';
+    if (_port->write(cmd, 2) != 2)
+        throw SambaError();
+}
