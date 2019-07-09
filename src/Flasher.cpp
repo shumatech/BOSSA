@@ -208,6 +208,8 @@ Flasher::verify(const char* filename, uint32_t& pageErrors, uint32_t& totalError
 
             if (_samba.canChecksumBuffer())
             {
+                calcCrc = 0;
+
                 for (uint32_t i = 0; i < fbytes; i++)
                     calcCrc = _samba.checksumCalc(bufferA[i], calcCrc);
                 
