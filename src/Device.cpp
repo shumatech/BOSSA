@@ -50,19 +50,29 @@ void
 Device::create()
 {
     Flash* flashPtr;
-    uint32_t chipId = 0;
-    uint32_t cpuId = 0;
-    uint32_t extChipId = 0;
-    uint32_t deviceId = 0;
+
+    // If the bootloader supports automatic chip identification...
+    if (_samba.canIdentifyChip()) {
+        std::string id = _samba.identifyChip();
+
+        if (id == "nRF52840-QIAA") {
+            _family = FAMILY_NRF52;
+            flashPtr = new NullFlash(_samba, "nRF52840-QIAA", 256, 4096, 0x20004000, 0x20008000);
+        } else {
+            throw DeviceUnsupportedError();
+        }
+
+        _flash = std::unique_ptr<Flash>(flashPtr);
+        return;
+    }
 
     // Device identification must be performed carefully to avoid reading from
     // addresses that devices do not support which will lock up the CPU
 
-    if (_samba.canIdentifyChip()) {
-
-    } else {
-
-    }
+    uint32_t chipId = 0;
+    uint32_t cpuId = 0;
+    uint32_t extChipId = 0;
+    uint32_t deviceId = 0;
 
     // All devices support addresss 0 as the ARM reset vector so if the vector is
     // a ARM7TDMI branch, then assume we have an Atmel SAM7/9 CHIPID register
@@ -616,11 +626,6 @@ Device::create()
         case 0x61840002: // N20A
             _family = FAMILY_SAME54;
             flashPtr = new D5xNvmFlash(_samba, "ATSAME54x20", 2048, 512, 0x20004000, 0x20008000) ;
-            break;
-
-        case 0xFAB10020:
-            _family = FAMILY_NRF52;
-            flashPtr = new NullFlash(_samba, "nRF52840xxA", 256, 4096, 0x20004000, 0x20008000) ;
             break;
 
         //
