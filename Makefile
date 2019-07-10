@@ -28,7 +28,7 @@ INSTALLDIR=install
 #
 # Determine OS
 #
-OS:=$(shell uname -s | cut -c -7)
+OS?=$(shell uname -s | cut -c -7)
 
 #
 # Windows rules
@@ -39,7 +39,7 @@ WXVERSION=3.1
 EXE=.exe
 COMMON_SRCS+=WinSerialPort.cpp WinPortFactory.cpp
 COMMON_LDFLAGS=-Wl,--enable-auto-import -static -static-libstdc++ -static-libgcc
-COMMON_LIBS=-ltermcap -Wl,--as-needed -lsetupapi
+COMMON_LIBS=-Wl,--as-needed -lsetupapi
 BOSSA_RC=BossaRes.rc
 WIXDIR="C:\Program Files (x86)\WiX Toolset v3.11\bin"
 CODE_SIGN=$(INSTALLDIR)\\code_sign.p12
