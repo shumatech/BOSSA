@@ -82,11 +82,11 @@ public:
 
     bool canWriteBuffer() { return _canWriteBuffer; }
     void writeBuffer(uint32_t src_addr, uint32_t dst_addr, uint32_t size);
-    uint32_t writeBufferSize() { return 4096; }
+    uint32_t writeBufferSize() { return 2048; }
     
     bool canChecksumBuffer() { return _canChecksumBuffer; }
     uint16_t checksumBuffer(uint32_t start_addr, uint32_t size);
-    uint32_t checksumBufferSize() { return 4096; }
+    uint32_t checksumBufferSize() { return 2048; }
     uint16_t checksumCalc(uint8_t c, uint16_t crc);
 
 private:
