@@ -272,6 +272,7 @@ EefcFlash::writeOptions()
         waitFSR();
         writeFCR0(EEFC_FCMD_SGPB, 0);
     }
+    waitFSR();  // Verify that all flash operations have completed
 }
 
 void
