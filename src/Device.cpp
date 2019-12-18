@@ -418,6 +418,14 @@ Device::create()
         _family = FAMILY_SAMV71;
         flashPtr = new EefcFlash(_samba, "ATSAMV71x21", 0x400000, 4096, 512, 1, 128, 0x20401000, 0x20404000, 0x400e0c00, false);
         break;
+	//
+	// qNimble BOSSA-compatible bootloader
+	//
+	case 0x714e3000:
+        _family = FAMILY_SAM7X;
+        flashPtr = new EfcFlash(_samba, "qNimble BOSSAv1", 0x300000, 16384, 256, 2, 32, 0x202000, 0x220000, true);
+
+        break;
     //
     // No CHIPID devices
     //
