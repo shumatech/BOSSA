@@ -68,7 +68,7 @@ protected:
     void writeReg(uint8_t reg, uint32_t value);
 
     void waitReady();
-    void command(uint8_t cmd);
+    void command(uint8_t cmd, uint16_t wait = 1);
     void erase(uint32_t offset, uint32_t size);
     void readUserRow(std::unique_ptr<uint8_t[]>& userRow);
 };
