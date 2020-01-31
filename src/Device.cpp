@@ -424,6 +424,14 @@ Device::create()
     case 0:
         switch (deviceId & 0xffff00ff)
         {
+	//
+	// SAMC21
+	//
+        case 0x11010000: // J18A
+            _family = FAMILY_SAMC21;
+            flashPtr = new D2xNvmFlash(_samba, "ATSAMC21x18", 4096, 64, 0x20004000, 0x20008000) ;
+            break;
+
         //
         // SAMD21
         //
@@ -638,6 +646,7 @@ Device::reset()
     {
         switch (_family)
         {
+        case FAMILY_SAMC21:
         case FAMILY_SAMD21:
         case FAMILY_SAMR21:
         case FAMILY_SAML21:
