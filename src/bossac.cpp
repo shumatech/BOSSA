@@ -422,7 +422,12 @@ main(int argc, char* argv[])
         }
 
         if (config.unlock)
+        {
+            timer_start();
             flasher.lock(config.unlockArg, false);
+            flash->writeOptions();
+            printf("\nDone in %5.3f seconds\n", timer_stop());
+        }        
 
         if (config.erase)
         {
