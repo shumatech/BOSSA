@@ -112,19 +112,19 @@ Flasher::write(const char* filename, uint32_t foffset)
         {
             uint32_t offset = 0;
             uint32_t bufferSize = _samba.writeBufferSize();
-            uint8_t buffer[bufferSize];
+            std::vector<uint8_t> buffer(bufferSize);
             
-            while ((fbytes = fread(buffer, 1, bufferSize, infile)) > 0)
+            while ((fbytes = fread(buffer.data(), 1, bufferSize, infile)) > 0)
             {
                 _observer.onProgress(offset / pageSize, numPages);
                 
                 if (fbytes < bufferSize)
                 {
-                    memset(buffer + fbytes, 0, bufferSize - fbytes);
+                    memset(buffer.data() + fbytes, 0, bufferSize - fbytes);
                     fbytes = (fbytes + pageSize - 1) / pageSize * pageSize;
                 }
                 
-                _flash->loadBuffer(buffer, fbytes);
+                _flash->loadBuffer(buffer.data(), fbytes);
                 _flash->writeBuffer(foffset + offset, fbytes);
                 offset += fbytes;                
             }
@@ -132,14 +132,14 @@ Flasher::write(const char* filename, uint32_t foffset)
         }
         else
         {
-            uint8_t buffer[pageSize];
+            std::vector<uint8_t> buffer(pageSize);
             uint32_t pageOffset = foffset / pageSize;
 
-            while ((fbytes = fread(buffer, 1, pageSize, infile)) > 0)
+            while ((fbytes = fread(buffer.data(), 1, pageSize, infile)) > 0)
             {
                 _observer.onProgress(pageNum, numPages);
 
-                _flash->loadBuffer(buffer, fbytes);
+                _flash->loadBuffer(buffer.data(), fbytes);
                 _flash->writePage(pageOffset + pageNum);
 
                 pageNum++;
@@ -164,8 +164,8 @@ Flasher::verify(const char* filename, uint32_t& pageErrors, uint32_t& totalError
 {
     FILE* infile;
     uint32_t pageSize = _flash->pageSize();
-    uint8_t bufferA[pageSize];
-    uint8_t bufferB[pageSize];
+    std::vector<uint8_t> bufferA(pageSize);
+    std::vector<uint8_t> bufferB(pageSize);
     uint32_t pageNum = 0;
     uint32_t numPages;
     uint32_t pageOffset;
@@ -199,7 +199,7 @@ Flasher::verify(const char* filename, uint32_t& pageErrors, uint32_t& totalError
 
         _observer.onStatus("Verify %ld bytes of flash\n", fsize);
 
-        while ((fbytes = fread(bufferA, 1, pageSize, infile)) > 0)
+        while ((fbytes = fread(bufferA.data(), 1, pageSize, infile)) > 0)
         {
             byteErrors = 0;
             
@@ -215,7 +215,7 @@ Flasher::verify(const char* filename, uint32_t& pageErrors, uint32_t& totalError
                 
                 if (flashCrc != calcCrc)
                 {
-                    _flash->readPage(pageOffset + pageNum, bufferB);
+                    _flash->readPage(pageOffset + pageNum, bufferB.data());
 
                     for (uint32_t i = 0; i < fbytes; i++)
                     {
@@ -226,7 +226,7 @@ Flasher::verify(const char* filename, uint32_t& pageErrors, uint32_t& totalError
             }
             else
             {
-                _flash->readPage(pageOffset + pageNum, bufferB);
+                _flash->readPage(pageOffset + pageNum, bufferB.data());
 
                 for (uint32_t i = 0; i < fbytes; i++)
                 {
@@ -267,7 +267,7 @@ Flasher::read(const char* filename, uint32_t fsize, uint32_t foffset)
 {
     FILE* outfile;
     uint32_t pageSize = _flash->pageSize();
-    uint8_t buffer[pageSize];
+    std::vector<uint8_t> buffer(pageSize);
     uint32_t pageNum = 0;
     uint32_t pageOffset;
     uint32_t numPages;
@@ -297,11 +297,11 @@ Flasher::read(const char* filename, uint32_t fsize, uint32_t foffset)
         {
             _observer.onProgress(pageNum, numPages);
 
-            _flash->readPage(pageOffset + pageNum, buffer);
+            _flash->readPage(pageOffset + pageNum, buffer.data());
 
             if (pageNum == numPages - 1 && fsize % pageSize > 0)
                 pageSize = fsize % pageSize;
-            fbytes = fwrite(buffer, 1, pageSize, outfile);
+            fbytes = fwrite(buffer.data(), 1, pageSize, outfile);
             if (fbytes != pageSize)
                 throw FileShortError();
         }

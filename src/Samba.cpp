@@ -33,8 +33,12 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <unistd.h>
 #include <errno.h>
+#if defined(__WIN32__) || defined(WIN32)
+#include "usleep.h"
+#else
+#include <unistd.h>
+#endif
 
 using namespace std;
 

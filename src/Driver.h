@@ -42,7 +42,7 @@ public:
     virtual bool update() = 0;
 };
 
-#ifdef __WIN32__
+#if defined(__WIN32__) || defined(WIN32)
 #include "WinDriver.h"
 typedef WinDriver Driver;
 #else
