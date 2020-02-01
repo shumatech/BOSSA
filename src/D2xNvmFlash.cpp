@@ -17,6 +17,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <unistd.h>
 #include "D2xNvmFlash.h"
 
 // CMDEX field should be 0xA5 to allow execution of any command.
@@ -100,7 +101,7 @@ D2xNvmFlash::erase(uint32_t offset, uint32_t size)
         // Issue erase command
         uint32_t wordAddr = (eraseNum * eraseSize) / 2;
         writeReg(NVM_REG_ADDR, wordAddr);
-        command(NVM_CMD_ER);
+        command(NVM_CMD_ER, 6000);
     }
 }
 
@@ -227,7 +228,7 @@ D2xNvmFlash::writeOptions()
 
         // Erase user row
         writeReg(NVM_REG_ADDR, NVM_UR_ADDR / 2);
-        command(NVM_CMD_EAR);
+        command(NVM_CMD_EAR, 6000);
 
         // Write user row in page chunks
         for (uint32_t offset = 0; offset < NVM_UR_SIZE; offset += _size)
@@ -247,7 +248,7 @@ D2xNvmFlash::writeOptions()
 
             // Write the page
             writeReg(NVM_REG_ADDR, (NVM_UR_ADDR + offset) / 2);
-            command(NVM_CMD_WAP);
+            command(NVM_CMD_WAP, 2500);
         }
     }
 
@@ -286,7 +287,7 @@ D2xNvmFlash::writePage(uint32_t page)
     _wordCopy.runv();
 
     writeReg(NVM_REG_ADDR, addr / 2);
-    command(NVM_CMD_WP);
+    command(NVM_CMD_WP,2500);
 }
 
 void
@@ -319,12 +320,13 @@ D2xNvmFlash::writeReg(uint8_t reg, uint32_t value)
 }
 
 void
-D2xNvmFlash::command(uint8_t cmd)
+D2xNvmFlash::command(uint8_t cmd, uint16_t wait)
 {
     waitReady();
 
     writeReg(NVM_REG_CTRLA, CMDEX_KEY | cmd);
 
+    usleep(wait);
     waitReady();
 
     if (readReg(NVM_REG_INTFLAG) & 0x2)
