@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 #include "CmdOpts.h"
 #include "Samba.h"
@@ -370,6 +371,7 @@ main(int argc, char* argv[])
             SerialPort::Ptr port;
             port = portFactory.create(config.portArg, config.usbPortArg != 0);
 
+            printf("Arduino 1200 baud reset\n");
             if(!port->open(1200))
             {
                 fprintf(stderr, "Failed to open port at 1200bps\n");
@@ -379,6 +381,12 @@ main(int argc, char* argv[])
             port->setRTS(true);
             port->setDTR(false);
             port->close();
+
+            // wait for chip to reboot and USB port to re-appear
+            sleep(1);
+
+            if (config.debug)
+                printf("Arduino reset done\n");
         }
 
         if (config.portArg.empty())
