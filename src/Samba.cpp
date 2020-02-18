@@ -35,6 +35,7 @@
 #include <ctype.h>
 #include <unistd.h>
 #include <errno.h>
+#include <unistd.h>
 
 using namespace std;
 
@@ -521,6 +522,8 @@ Samba::write(uint32_t addr, const uint8_t* buffer, int size)
     if (_isUsb)
     {
         _port->flush();
+        // Short delay to ensure port is flushed in OS X
+        usleep(5000);       
         writeBinary(buffer, size);
     }
     else
