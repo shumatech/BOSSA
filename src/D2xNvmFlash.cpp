@@ -292,7 +292,23 @@ D2xNvmFlash::writePage(uint32_t page)
 void
 D2xNvmFlash::waitReady()
 {
-    while ((readReg(NVM_REG_INTFLAG) & 0x1) == 0);
+   uint32_t ReadR;
+   int count = 0;
+   int maxTries = 3;
+   do{
+       try
+       {
+           ReadR = (readReg(NVM_REG_INTFLAG) & 0x1);
+       }
+       catch(const SambaError& e)
+       {
+           count++;
+           if ( count == maxTries){
+               throw ::SambaError();
+           };
+       }
+
+   }while(ReadR  == 0);
 }
 
 void
