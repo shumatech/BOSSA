@@ -40,6 +40,10 @@
 #define NVM_CMD_SSB     0x16
 #define NVM_CMD_PBC     0x15
 
+#define DSU_ADDR              0x41002000
+#define DSU_STATUSB_OFFSET    0x2
+#define DSU_STATUSB_PROT_MASK 0x1
+
 #define ERASE_BLOCK_PAGES 16 // pages
 
 // NVM User Page
@@ -137,8 +141,9 @@ D5xNvmFlash::getLockRegions()
 bool
 D5xNvmFlash::getSecurity()
 {
-    // There doesn't seem to be a way to read this
-    return false;
+    uint8_t byte = _samba.readByte(DSU_ADDR + DSU_STATUSB_OFFSET);
+
+    return byte & DSU_STATUSB_PROT_MASK;
 }
 
 bool
