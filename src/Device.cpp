@@ -179,43 +179,43 @@ Device::create()
     case 0x29970ee0: // B
     case 0x29A70ee0: // C
         _family = FAMILY_SAM4S;
-        flashPtr = new EefcFlash(_samba, "ATSAM4SD32", 0x400000, 4096, 512, 2, 256, 0x20001000, 0x20010000, 0x400e0a00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAM4SD32", 0x400000, 4096, 512, 2, 256, 4, 0x20001000, 0x20010000, 0x400e0a00, false);
         break;
     case 0x29870c30: // A
     case 0x29970c30: // B
     case 0x29a70c30: // C
         _family = FAMILY_SAM4S;
-        flashPtr = new EefcFlash(_samba, "ATSAM4SD16", 0x400000, 2048, 512, 2, 256, 0x20001000, 0x20010000, 0x400e0a00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAM4SD16", 0x400000, 2048, 512, 2, 256, 4, 0x20001000, 0x20010000, 0x400e0a00, false);
         break;
     case 0x28870ce0: // A
     case 0x28970ce0: // B
     case 0x28A70ce0: // C
         _family = FAMILY_SAM4S;
-        flashPtr = new EefcFlash(_samba, "ATSAM4SA16", 0x400000, 2048, 512, 1, 256, 0x20001000, 0x20010000, 0x400e0a00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAM4SA16", 0x400000, 2048, 512, 1, 256, 4, 0x20001000, 0x20010000, 0x400e0a00, false);
         break;
     case 0x288c0ce0 : // A
     case 0x289c0ce0 : // B
     case 0x28ac0ce0 : // C
         _family = FAMILY_SAM4S;
-        flashPtr = new EefcFlash(_samba, "ATSAM4S16", 0x400000, 2048, 512, 1, 128, 0x20001000, 0x20020000, 0x400e0a00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAM4S16", 0x400000, 2048, 512, 1, 128, 4, 0x20001000, 0x20020000, 0x400e0a00, false);
         break;
     case 0x288c0ae0 : // A
     case 0x289c0ae0 : // B
     case 0x28ac0ae0 : // C
         _family = FAMILY_SAM4S;
-        flashPtr = new EefcFlash(_samba, "ATSAM4S8", 0x400000, 1024, 512, 1, 64, 0x20001000, 0x20020000, 0x400e0a00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAM4S8", 0x400000, 1024, 512, 1, 64, 4, 0x20001000, 0x20020000, 0x400e0a00, false);
         break;
     case 0x288b09e0 : // A
     case 0x289b09e0 : // B
     case 0x28ab09e0 : // C
         _family = FAMILY_SAM4S;
-        flashPtr = new EefcFlash(_samba, "ATSAM4S4", 0x400000, 512, 512, 1, 16, 0x20001000, 0x20010000, 0x400e0a00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAM4S4", 0x400000, 512, 512, 1, 16, 4, 0x20001000, 0x20010000, 0x400e0a00, false);
         break;
     case 0x288b07e0 : // A
     case 0x289b07e0 : // B
     case 0x28ab07e0 : // C
         _family = FAMILY_SAM4S;
-        flashPtr = new EefcFlash(_samba, "ATSAM4S2", 0x400000, 256, 512, 1, 16, 0x20001000, 0x20010000, 0x400e0a00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAM4S2", 0x400000, 256, 512, 1, 16, 4, 0x20001000, 0x20010000, 0x400e0a00, false);
         break;
     //
     // SAM3N
@@ -224,25 +224,25 @@ Device::create()
     case 0x29440960 : // B
     case 0x29540960 : // C
         _family = FAMILY_SAM3N;
-        flashPtr = new EefcFlash(_samba, "ATSAM3N4", 0x400000, 1024, 256, 1, 16, 0x20001000, 0x20006000, 0x400e0a00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAM3N4", 0x400000, 1024, 256, 1, 16, 4, 0x20001000, 0x20006000, 0x400e0a00, false);
         break;
     case 0x29390760 : // A
     case 0x29490760 : // B
     case 0x29590760 : // C
         _family = FAMILY_SAM3N;
-        flashPtr = new EefcFlash(_samba, "ATSAM3N2", 0x400000, 512, 256, 1, 8, 0x20001000, 0x20004000, 0x400e0a00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAM3N2", 0x400000, 512, 256, 1, 8, 4, 0x20001000, 0x20004000, 0x400e0a00, false);
         break;
     case 0x29380560 : // A
     case 0x29480560 : // B
     case 0x29580560 : // C
         _family = FAMILY_SAM3N;
-        flashPtr = new EefcFlash(_samba, "ATSAM3N1", 0x400000, 256, 256, 1, 4, 0x20000800, 0x20002000, 0x400e0a00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAM3N1", 0x400000, 256, 256, 1, 4, 4, 0x20000800, 0x20002000, 0x400e0a00, false);
         break;
     case 0x29380360 : // A
     case 0x29480360 : // B
     case 0x29580360 : // C
         _family = FAMILY_SAM3N;
-        flashPtr = new EefcFlash(_samba, "ATSAM3N0", 0x400000, 128, 256, 1, 1, 0x20000800, 0x20002000, 0x400e0a00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAM3N0", 0x400000, 128, 256, 1, 1, 4, 0x20000800, 0x20002000, 0x400e0a00, false);
         break;
     //
     // SAM3S
@@ -250,30 +250,30 @@ Device::create()
     case 0x299b0a60 : // B
     case 0x29ab0a60 : // C
         _family = FAMILY_SAM3S;
-        flashPtr = new EefcFlash(_samba, "ATSAM3SD8", 0x400000, 2048, 256, 1, 16, 0x20001000, 0x20010000, 0x400e0a00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAM3SD8", 0x400000, 2048, 256, 1, 16, 4, 0x20001000, 0x20010000, 0x400e0a00, false);
         break;
     case 0x289b0a60 : // B
     case 0x28ab0a60 : // C
         _family = FAMILY_SAM3S;
-        flashPtr = new EefcFlash(_samba, "ATSAM3S8", 0x400000, 2048, 256, 1, 16, 0x20001000, 0x20010000, 0x400e0a00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAM3S8", 0x400000, 2048, 256, 1, 16, 4, 0x20001000, 0x20010000, 0x400e0a00, false);
         break;
     case 0x28800960 : // A
     case 0x28900960 : // B
     case 0x28a00960 : // C
         _family = FAMILY_SAM3S;
-        flashPtr = new EefcFlash(_samba, "ATSAM3S4", 0x400000, 1024, 256, 1, 16, 0x20001000, 0x2000c000, 0x400e0a00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAM3S4", 0x400000, 1024, 256, 1, 16, 4, 0x20001000, 0x2000c000, 0x400e0a00, false);
         break;
     case 0x288a0760 : // A
     case 0x289a0760 : // B
     case 0x28aa0760 : // C
         _family = FAMILY_SAM3S;
-        flashPtr = new EefcFlash(_samba, "ATSAM3S2", 0x400000, 512, 256, 1, 8, 0x20000800, 0x20008000, 0x400e0a00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAM3S2", 0x400000, 512, 256, 1, 8, 4, 0x20000800, 0x20008000, 0x400e0a00, false);
         break;
     case 0x28890560 : // A
     case 0x28990560 : // B
     case 0x28a90560 : // C
         _family = FAMILY_SAM3S;
-        flashPtr = new EefcFlash(_samba, "ATSAM3S1", 0x400000, 256, 256, 1, 4, 0x20000800, 0x20004000, 0x400e0a00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAM3S1", 0x400000, 256, 256, 1, 4, 4, 0x20000800, 0x20004000, 0x400e0a00, false);
         break;
     //
     // SAM3U
@@ -281,17 +281,17 @@ Device::create()
     case 0x28000960 : // C
     case 0x28100960 : // E
         _family = FAMILY_SAM3U;
-        flashPtr = new EefcFlash(_samba, "ATSAM3U4", 0xE0000, 1024, 256, 2, 32, 0x20001000, 0x20008000, 0x400e0800, false);
+        flashPtr = new EefcFlash(_samba, "ATSAM3U4", 0xE0000, 1024, 256, 2, 32, 4, 0x20001000, 0x20008000, 0x400e0800, false);
         break;
     case 0x280a0760 : // C
     case 0x281a0760 : // E
         _family = FAMILY_SAM3U;
-        flashPtr = new EefcFlash(_samba, "ATSAM3U2", 0x80000, 512, 256, 1, 16, 0x20001000, 0x20004000, 0x400e0800, false);
+        flashPtr = new EefcFlash(_samba, "ATSAM3U2", 0x80000, 512, 256, 1, 16, 4, 0x20001000, 0x20004000, 0x400e0800, false);
         break;
     case 0x28090560 : // C
     case 0x28190560 : // E
         _family = FAMILY_SAM3U;
-        flashPtr = new EefcFlash(_samba, "ATSAM3U1", 0x80000, 256, 256, 1, 8, 0x20001000, 0x20002000, 0x400e0800, false);
+        flashPtr = new EefcFlash(_samba, "ATSAM3U1", 0x80000, 256, 256, 1, 8, 4, 0x20001000, 0x20002000, 0x400e0800, false);
         break;
     //
     // SAM3X
@@ -300,49 +300,49 @@ Device::create()
     case 0x285e0a60 : // 8E
     case 0x284e0a60 : // 8C
         _family = FAMILY_SAM3X;
-        flashPtr = new EefcFlash(_samba, "ATSAM3X8", 0x80000, 2048, 256, 2, 32, 0x20001000, 0x20010000, 0x400e0a00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAM3X8", 0x80000, 2048, 256, 2, 32, 4, 0x20001000, 0x20010000, 0x400e0a00, false);
         break;
     case 0x285b0960 : // 4E
     case 0x284b0960 : // 4C
         _family = FAMILY_SAM3X;
-        flashPtr = new EefcFlash(_samba, "ATSAM3X4", 0x80000, 1024, 256, 2, 16, 0x20001000, 0x20008000, 0x400e0a00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAM3X4", 0x80000, 1024, 256, 2, 16, 4, 0x20001000, 0x20008000, 0x400e0a00, false);
         break;
     //
     // SAM3A
     //
     case 0x283e0A60 : // 8C
         _family = FAMILY_SAM3A;
-        flashPtr = new EefcFlash(_samba, "ATSAM3A8", 0x80000, 2048, 256, 2, 32, 0x20001000, 0x20010000, 0x400e0a00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAM3A8", 0x80000, 2048, 256, 2, 32, 4, 0x20001000, 0x20010000, 0x400e0a00, false);
         break;
     case 0x283b0960 : // 4C
         _family = FAMILY_SAM3A;
-        flashPtr = new EefcFlash(_samba, "ATSAM3A4", 0x80000, 1024, 256, 2, 16, 0x20001000, 0x20008000, 0x400e0a00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAM3A4", 0x80000, 1024, 256, 2, 16, 4, 0x20001000, 0x20008000, 0x400e0a00, false);
         break;
     //
     // SAM7L
     //
     case 0x27330740 :
         _family = FAMILY_SAM7L;
-        flashPtr = new EefcFlash(_samba, "ATSAM7L128", 0x100000, 512, 256, 1, 16, 0x2ffb40, 0x300700, 0xffffff60, false);
+        flashPtr = new EefcFlash(_samba, "ATSAM7L128", 0x100000, 512, 256, 1, 16, 0, 0x2ffb40, 0x300700, 0xffffff60, false);
         break;
     case 0x27330540 :
         _family = FAMILY_SAM7L;
-        flashPtr = new EefcFlash(_samba, "ATSAM7L64", 0x100000, 256, 256, 1, 8, 0x2ffb40, 0x300700, 0xffffff60, false);
+        flashPtr = new EefcFlash(_samba, "ATSAM7L64", 0x100000, 256, 256, 1, 8, 0, 0x2ffb40, 0x300700, 0xffffff60, false);
         break;
     //
     // SAM9XE
     //
     case 0x329aa3a0 :
         _family = FAMILY_SAM9XE;
-        flashPtr = new EefcFlash(_samba, "ATSAM9XE512", 0x200000, 1024, 512, 1, 32, 0x300000, 0x307000, 0xfffffa00, true);
+        flashPtr = new EefcFlash(_samba, "ATSAM9XE512", 0x200000, 1024, 512, 1, 32, 0, 0x300000, 0x307000, 0xfffffa00, true);
         break;
     case 0x329a93a0 :
         _family = FAMILY_SAM9XE;
-        flashPtr = new EefcFlash(_samba, "ATSAM9XE256", 0x200000, 512, 512, 1, 16, 0x300000, 0x307000, 0xfffffa00, true);
+        flashPtr = new EefcFlash(_samba, "ATSAM9XE256", 0x200000, 512, 512, 1, 16, 0, 0x300000, 0x307000, 0xfffffa00, true);
         break;
     case 0x329973a0 :
         _family = FAMILY_SAM9XE;
-        flashPtr = new EefcFlash(_samba, "ATSAM9XE128", 0x200000, 256, 512, 1, 8, 0x300000, 0x303000, 0xfffffa00, true);
+        flashPtr = new EefcFlash(_samba, "ATSAM9XE128", 0x200000, 256, 512, 1, 8, 0, 0x300000, 0x303000, 0xfffffa00, true);
         break;
     //
     // SAM4E
@@ -353,12 +353,12 @@ Device::create()
         case 0x00120200: // E
         case 0x00120201: // C
             _family = FAMILY_SAM4E;
-            flashPtr = new EefcFlash(_samba, "ATSAM4E16", 0x400000, 2048, 512, 1, 128, 0x20001000, 0x20020000, 0x400e0a00, false);
+            flashPtr = new EefcFlash(_samba, "ATSAM4E16", 0x400000, 2048, 512, 1, 128, 4, 0x20001000, 0x20020000, 0x400e0a00, false);
             break;
         case 0x00120208: // E
         case 0x00120209: // C
             _family = FAMILY_SAM4E;
-            flashPtr = new EefcFlash(_samba, "ATSAM4E8", 0x400000, 1024, 512, 1, 64, 0x20001000, 0x20020000, 0x400e0a00, false);
+            flashPtr = new EefcFlash(_samba, "ATSAM4E8", 0x400000, 1024, 512, 1, 64, 4, 0x20001000, 0x20020000, 0x400e0a00, false);
             break;
         }
         break;
@@ -367,56 +367,56 @@ Device::create()
     //
     case 0x210d0a00:
         _family = FAMILY_SAME70;
-        flashPtr = new EefcFlash(_samba, "ATSAME70x19", 0x400000, 1024, 512, 1, 32, 0x20401000, 0x20404000, 0x400e0c00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAME70x19", 0x400000, 1024, 512, 1, 32, 4, 0x20401000, 0x20404000, 0x400e0c00, false);
         break;
     case 0x21020c00:
         _family = FAMILY_SAME70;
-        flashPtr = new EefcFlash(_samba, "ATSAME70x20", 0x400000, 2048, 512, 1, 64, 0x20401000, 0x20404000, 0x400e0c00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAME70x20", 0x400000, 2048, 512, 1, 64, 4, 0x20401000, 0x20404000, 0x400e0c00, false);
         break;
     case 0x21020e00:
         _family = FAMILY_SAME70;
-        flashPtr = new EefcFlash(_samba, "ATSAME70x21", 0x400000, 4096, 512, 1, 128, 0x20401000, 0x20404000, 0x400e0c00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAME70x21", 0x400000, 4096, 512, 1, 128, 4, 0x20401000, 0x20404000, 0x400e0c00, false);
         break;
     //
     // SAMS70
     //
     case 0x211d0a00:
         _family = FAMILY_SAMS70;
-        flashPtr = new EefcFlash(_samba, "ATSAMS70x19", 0x400000, 1024, 512, 1, 32, 0x20401000, 0x20404000, 0x400e0c00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAMS70x19", 0x400000, 1024, 512, 1, 32, 4, 0x20401000, 0x20404000, 0x400e0c00, false);
         break;
     case 0x21120c00:
         _family = FAMILY_SAMS70;
-        flashPtr = new EefcFlash(_samba, "ATSAMS70x20", 0x400000, 2048, 512, 1, 64, 0x20401000, 0x20404000, 0x400e0c00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAMS70x20", 0x400000, 2048, 512, 1, 64, 4, 0x20401000, 0x20404000, 0x400e0c00, false);
         break;
     case 0x21120e00:
         _family = FAMILY_SAMS70;
-        flashPtr = new EefcFlash(_samba, "ATSAMS70x21", 0x400000, 4096, 512, 1, 128, 0x20401000, 0x20404000, 0x400e0c00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAMS70x21", 0x400000, 4096, 512, 1, 128, 4, 0x20401000, 0x20404000, 0x400e0c00, false);
         break;
     //
     // SAMV70
     //
     case 0x213d0a00:
         _family = FAMILY_SAMV70;
-        flashPtr = new EefcFlash(_samba, "ATSAMV70x19", 0x400000, 1024, 512, 1, 32, 0x20401000, 0x20404000, 0x400e0c00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAMV70x19", 0x400000, 1024, 512, 1, 32, 4, 0x20401000, 0x20404000, 0x400e0c00, false);
         break;
     case 0x21320c00:
         _family = FAMILY_SAMV70;
-        flashPtr = new EefcFlash(_samba, "ATSAMV70x20", 0x400000, 2048, 512, 1, 64, 0x20401000, 0x20404000, 0x400e0c00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAMV70x20", 0x400000, 2048, 512, 1, 64, 4, 0x20401000, 0x20404000, 0x400e0c00, false);
         break;
     //
     // SAMV71
     //
     case 0x212d0a00:
         _family = FAMILY_SAMV71;
-        flashPtr = new EefcFlash(_samba, "ATSAMV71x19", 0x400000, 1024, 512, 1, 32, 0x20401000, 0x20404000, 0x400e0c00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAMV71x19", 0x400000, 1024, 512, 1, 32, 4, 0x20401000, 0x20404000, 0x400e0c00, false);
         break;
     case 0x21220c00:
         _family = FAMILY_SAMV71;
-        flashPtr = new EefcFlash(_samba, "ATSAMV71x20", 0x400000, 2048, 512, 1, 64, 0x20401000, 0x20404000, 0x400e0c00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAMV71x20", 0x400000, 2048, 512, 1, 64, 4, 0x20401000, 0x20404000, 0x400e0c00, false);
         break;
     case 0x21220e00:
         _family = FAMILY_SAMV71;
-        flashPtr = new EefcFlash(_samba, "ATSAMV71x21", 0x400000, 4096, 512, 1, 128, 0x20401000, 0x20404000, 0x400e0c00, false);
+        flashPtr = new EefcFlash(_samba, "ATSAMV71x21", 0x400000, 4096, 512, 1, 128, 4, 0x20401000, 0x20404000, 0x400e0c00, false);
         break;
     //
     // No CHIPID devices

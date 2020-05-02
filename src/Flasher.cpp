@@ -68,6 +68,15 @@ FlasherInfo::print()
         printf("BOD          : %s\n", bod ? "true" : "false");
     if (canBor)
         printf("BOR          : %s\n", bor ? "true" : "false");
+    if (uniqueId.size() > 0)
+    {
+        printf("Unique Id    : ");
+        for (uint32_t word = 0; word < uniqueId.size(); word++)
+        {
+            printf("%08x", uniqueId[word]);
+        }
+        printf("\n");
+    }
 }
 
 void
@@ -362,6 +371,7 @@ Flasher::info(FlasherInfo& info)
     info.bootFlash = _flash->getBootFlash();
     info.bod = _flash->getBod();
     info.bor = _flash->getBor();
+    info.uniqueId = _flash->getUniqueId();
 
     info.canBootFlash = _flash->canBootFlash();
     info.canBod = _flash->canBod();

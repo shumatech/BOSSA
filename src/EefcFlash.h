@@ -44,6 +44,7 @@ public:
               uint32_t size,
               uint32_t planes,
               uint32_t lockRegions,
+              uint32_t uniqueIdWords,
               uint32_t user,
               uint32_t stack,
               uint32_t regs,
@@ -66,6 +67,8 @@ public:
     bool getBootFlash();
     bool canBootFlash() { return true; }
 
+    std::vector<uint32_t> getUniqueId();
+
     void writeOptions();
 
     void writePage(uint32_t page);
@@ -75,6 +78,7 @@ public:
 
 private:
     uint32_t _regs;
+    uint32_t _uniqueIdWords;
     bool _canBrownout;
     bool _eraseAuto;
 

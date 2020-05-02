@@ -86,6 +86,7 @@ public:
     bool        canChecksumBuffer;
     
     std::vector<bool> lockRegions;
+    std::vector<uint32_t> uniqueId;
 };
 
 class Flasher
