@@ -147,6 +147,8 @@ public:
     virtual void setBootFlash(bool enable);
     virtual bool canBootFlash() = 0;
 
+    virtual std::vector<uint32_t> getUniqueId() = 0;
+
     virtual void writeOptions() = 0;
 
     virtual void writePage(uint32_t page) = 0;

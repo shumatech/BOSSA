@@ -54,6 +54,8 @@ public:
     bool getBootFlash();
     bool canBootFlash() { return false; }
 
+    std::vector<uint32_t> getUniqueId() { return std::vector<uint32_t>(); }
+
     void writeOptions();
 
     void writePage(uint32_t page);

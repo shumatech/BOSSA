@@ -57,6 +57,14 @@
 #define EEFC_FCMD_SGPB  0xb
 #define EEFC_FCMD_CGPB  0xc
 #define EEFC_FCMD_GGPB  0xd
+#define EEFC_FCMD_STUI  0xe
+#define EEFC_FCMD_SPUI  0xf
+#define EEFC_FCMD_GCALB 0x10
+#define EEFC_FCMD_ES    0x11
+#define EEFC_FCMD_WUS   0x12
+#define EEFC_FCMD_EUS   0x13
+#define EEFC_FCMD_STUS  0x14
+#define EEFC_FCMD_SPUS  0x15
 
 const uint32_t
 EefcFlash::PagesPerErase = 8;
@@ -68,12 +76,13 @@ EefcFlash::EefcFlash(Samba& samba,
                      uint32_t size,
                      uint32_t planes,
                      uint32_t lockRegions,
+                     uint32_t uniqueIdWords,
                      uint32_t user,
                      uint32_t stack,
                      uint32_t regs,
                      bool canBrownout)
     : Flash(samba, name, addr, pages, size, planes, lockRegions, user, stack),
-      _regs(regs), _canBrownout(canBrownout), _eraseAuto(true)
+      _regs(regs), _uniqueIdWords(uniqueIdWords), _canBrownout(canBrownout), _eraseAuto(true)
 {
     assert(planes == 1 || planes == 2);
     assert(pages <= 4096);
@@ -218,6 +227,36 @@ EefcFlash::getBootFlash()
     writeFCR0(EEFC_FCMD_GGPB, 0);
     waitFSR();
     return (readFRR0() & (1 << (_canBrownout ? 3 : 1)));
+}
+
+std::vector<uint32_t>
+EefcFlash::getUniqueId()
+{
+    std::vector<uint32_t> value;
+
+    // No unique id for this chip
+    if (_uniqueIdWords == 0)
+        return value;
+
+    waitFSR();
+
+    // Start read
+    writeFCR0(EEFC_FCMD_STUI, 0);
+
+    // Unique id (so far, only 128-bit, or 0 if feature is not available)
+    uint32_t addr = address();
+    for (uint8_t word = 0; word < _uniqueIdWords; word++)
+    {
+        // Read from the beginning of the flash region
+        // Other flash reads are not allowed while reading the unique id
+        value.push_back(_samba.readWord(addr + word * 4));
+    }
+
+    // End read
+    writeFCR0(EEFC_FCMD_SPUI, 0);
+
+    waitFSR();
+    return value;
 }
 
 void
