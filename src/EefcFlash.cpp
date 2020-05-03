@@ -283,7 +283,23 @@ EefcFlash::writePage(uint32_t page)
     _wordCopy.setDstAddr(_addr + page * _size);
     _wordCopy.setSrcAddr(_onBufferA ? _pageBufferA : _pageBufferB);
     _onBufferA = !_onBufferA;
-    waitFSR();
+    // Some chip families have page restrictions on calling EEFC_FCMD_EWP on all pages
+    // e.g. 16K boundary on SAM4S
+    // Print a warning indicating that the flash must be erased first
+    try
+    {
+        waitFSR();
+    }
+    catch (FlashCmdError& exc)
+    {
+        if (page > 0)
+        {
+            printf("\nNOTE: Some chip families may not support auto-erase on all flash regions.\n");
+            printf("      Try erasing the flash first (bossash), or erasing at the same time (bossac).");
+            fflush(stdout);
+        }
+        throw;
+    }
     _wordCopy.runv();
     if (_planes == 2 && page >= _pages / 2)
         writeFCR1(_eraseAuto ? EEFC_FCMD_EWP : EEFC_FCMD_WP, page - _pages / 2);
