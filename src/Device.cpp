@@ -531,6 +531,10 @@ Device::create()
             _family = FAMILY_SAML21;
             flashPtr = new D2xNvmFlash(_samba, "ATSAML21x18", 4096, 64, 0x20004000, 0x20008000) ;
             break;
+        case 0x10810028: // ATSAMR34J18
+            _family = FAMILY_SAML21;
+            flashPtr = new D2xNvmFlash(_samba, "ATSAMR34J18", 4096, 64, 0x20004000, 0x20008000) ;
+            break;
 
         //
         // SAMD51
