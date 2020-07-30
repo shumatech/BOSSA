@@ -107,6 +107,10 @@ D2xNvmFlash::erase(uint32_t offset, uint32_t size)
 void
 D2xNvmFlash::eraseAll(uint32_t offset)
 {
+    if (offset == 0) {
+        // Not bailing out will provoke the bootloader to be erased
+        throw FlashEraseError();
+    }
     // Use the extended Samba command if available
     if (_samba.canChipErase())
     {
