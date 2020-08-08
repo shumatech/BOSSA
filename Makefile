@@ -153,7 +153,14 @@ WXVERSION=2.8
 
 endif
 
+#
+# FreeBSD rules. Tested on 12.1.
+#
 ifeq (${OS},FreeBSD)
+
+# Readline and Wxwidgets are installed under /usr/local on Freebsd
+COMMON_CXXFLAGS=-I/usr/local/include
+COMMON_LDFLAGS=-L/usr/local/lib
 
 # This is only needed for bossash, but we can't add it to BOSSASH_LIBS here
 # because that one is redefined later.
