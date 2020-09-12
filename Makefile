@@ -33,7 +33,7 @@ OS:=$(shell uname -s | cut -c -7)
 #
 # Windows rules
 #
-ifeq ($(OS),MINGW32)
+ifeq ($(OS),MINGW64)
 # Use wxWindows development branch to work around font scaling issues on Windows
 WXVERSION=3.1
 EXE=.exe
