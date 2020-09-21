@@ -261,7 +261,7 @@ $(foreach src,$(BOSSA_SRCS),$(eval $(call bossa_obj,$(src))))
 #
 # Resource rules
 #
-ifeq ($(OS),MINGW32)
+ifeq ($(OS),MINGW64)
 $(OBJDIR)/$(BOSSA_RC:%.rc=%.o): $(RESDIR)/$(BOSSA_RC)
 	@echo RC $<
 	$(Q)`wx-config --rescomp --version=$(WXVERSION)` -o $@ $<
