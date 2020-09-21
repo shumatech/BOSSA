@@ -559,6 +559,7 @@ Device::create()
         //
         // SAME51
         //
+        case 0x61810006: // G18A        
         case 0x61810003: // J18A
             _family = FAMILY_SAME51;
             flashPtr = new D5xNvmFlash(_samba, "ATSAME51x18", 512, 512, 0x20004000, 0x20008000) ;
