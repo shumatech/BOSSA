@@ -31,6 +31,7 @@
 #include "EefcFlash.h"
 #include "D2xNvmFlash.h"
 #include "D5xNvmFlash.h"
+#include "CalwFlash.h"
 
 void
 Device::readChipId(uint32_t& chipId, uint32_t& extChipId)
@@ -53,6 +54,7 @@ Device::create()
     uint32_t cpuId = 0;
     uint32_t extChipId = 0;
     uint32_t deviceId = 0;
+    uint32_t rstVct = 0;
 
     // Device identification must be performed carefully to avoid reading from
     // addresses that devices do not support which will lock up the CPU
@@ -78,7 +80,8 @@ Device::create()
         else if (cpuId == 0xC240)
         {
             // SAM4 processors have a reset vector to the SAM-BA ROM
-            if ((_samba.readWord(0x4) & 0xfff00000) == 0x800000)
+            rstVct = _samba.readWord(0x4);
+            if ((rstVct & 0xfff00000) == 0x800000 || rstVct == 0x24d5)
             {
                 readChipId(chipId, extChipId);
             }
@@ -419,6 +422,21 @@ Device::create()
         flashPtr = new EefcFlash(_samba, "ATSAMV71x21", 0x400000, 4096, 512, 1, 128, 0x20401000, 0x20404000, 0x400e0c00, false);
         break;
     //
+    // SAM4L
+    //
+    case 0x2b0b0ae0:
+        _family = FAMILY_SAM4L;
+        flashPtr = new CalwFlash(_samba, "ATSAM4Lx8", 0x0, 1024, 512, 1, 16, 0x20001000, 0x20010000, 0x400a0000);
+        break;
+    case 0x2b0a09e0:
+        _family = FAMILY_SAM4L;
+        flashPtr = new CalwFlash(_samba, "ATSAM4Lx4", 0x0, 512, 512, 1, 16, 0x20001000, 0x20008000, 0x400a0000);
+        break;
+    case 0x2b0a07e0:
+        _family = FAMILY_SAM4L;
+        flashPtr = new CalwFlash(_samba, "ATSAM4Lx2", 0x0, 256, 512, 1, 16, 0x20001000, 0x20008000, 0x400a0000);
+        break;
+    //
     // No CHIPID devices
     //
     case 0:
@@ -680,6 +698,12 @@ Device::reset()
             _samba.writeWord(0xFFFFFD00, 0xA500000D);
             break;
 
+        case FAMILY_SAM4L:
+        {
+            CalwFlash *cf = dynamic_cast<CalwFlash*>(_flash.get());
+            cf->resetCPU();
+            break;
+        }
         default:
             break;
         }
