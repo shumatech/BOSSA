@@ -58,6 +58,16 @@
 #define CALW_FCMD_HSEN  0x10
 #define CALW_FCMD_HSDIS 0x11
 
+                                 /* SCS_BASE  + SCB offset + AIRCR offset) */
+#define NVIC_SCB_AIRCR            (0xE000E000UL + 0x0D00UL + 0x00CUL)
+#define SCB_AIRCR_VECTKEY         0x5FAUL
+#define SCB_AIRCR_VECTKEY_Pos     16U
+#define SCB_AIRCR_SYSRESETREQ_Pos 2U
+#define SCB_AIRCR_SYSRESETREQ_Msk (1UL << SCB_AIRCR_SYSRESETREQ_Pos)
+#define SCB_AIRCR_RESET_CPU_VAL   ((SCB_AIRCR_VECTKEY << \
+                                    SCB_AIRCR_VECTKEY_Pos) | \
+                                  SCB_AIRCR_SYSRESETREQ_Msk)
+
 CalwFlash::CalwFlash(Samba& samba,
                      const std::string& name,
                      uint32_t addr,
@@ -156,6 +166,8 @@ void
 CalwFlash::resetCPU(void)
 {
     printf("Reset CPU\n");
+
+    _samba.writeWord(NVIC_SCB_AIRCR, SCB_AIRCR_RESET_CPU_VAL);
 }
 
 void
