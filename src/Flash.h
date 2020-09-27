@@ -88,6 +88,14 @@ public:
 
 };
 
+class FlashOverrideSambaError : public std::exception
+{
+public:
+    FlashOverrideSambaError() : exception() {};
+    const char* what() const throw() { return "SAM-BA bootloader shouldn't be erased. Check flash start address."; }
+
+};
+
 template<class T>
 class FlashOption
 {

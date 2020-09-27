@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 // BOSSA
 //
-// Copyright (c) 2011-2018, ShumaTech
+// Copyright (c) 2011-2020, ShumaTech
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -26,81 +26,59 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef _DEVICE_H
-#define _DEVICE_H
+#ifndef _CALWFLASH_H
+#define _CALWFLASH_H
 
+#include <stdint.h>
 #include <exception>
 
-#include "Samba.h"
 #include "Flash.h"
 
-class DeviceUnsupportedError : public std::exception
+class CalwFlash : public Flash
 {
 public:
-    DeviceUnsupportedError() : exception() {};
-    const char* what() const throw() { return "Device unsupported"; }
-};
+    CalwFlash(Samba& samba,
+             const std::string& name,
+             uint32_t addr,
+             uint32_t pages,
+             uint32_t size,
+             uint32_t planes,
+             uint32_t lockRegions,
+             uint32_t user,
+             uint32_t stack,
+	     uint32_t regs);
+    virtual ~CalwFlash();
 
-class Device
-{
-public:
-    enum Family {
-        FAMILY_NONE,
+    void eraseAll(uint32_t offset);
+    void eraseAuto(bool enable) { }
 
-        FAMILY_SAM7S,
-        FAMILY_SAM7SE,
-        FAMILY_SAM7X,
-        FAMILY_SAM7XC,
-        FAMILY_SAM7L,
+    std::vector<bool> getLockRegions();
 
-        FAMILY_SAM3N,
-        FAMILY_SAM3S,
-        FAMILY_SAM3U,
-        FAMILY_SAM3X,
-        FAMILY_SAM3A,
+    bool getSecurity() { return false; }
 
-        FAMILY_SAM4S,
-        FAMILY_SAM4E,
+    bool getBod() { return false; }
+    bool canBod() { return true; }
 
-        FAMILY_SAM4L,
+    bool getBor() { return false; }
+    bool canBor() { return false; }
 
-        FAMILY_SAM9XE,
+    bool getBootFlash() { return false; }
+    bool canBootFlash() { return true; }
 
-        FAMILY_SAMD21,
-        FAMILY_SAMR21,
-        FAMILY_SAML21,
+    void writeOptions() { }
 
-        FAMILY_SAMD51,
-        FAMILY_SAME51,
-        FAMILY_SAME53,
-        FAMILY_SAME54,
+    void writePage(uint32_t page);
+    void readPage(uint32_t page, uint8_t* data);
 
-        FAMILY_SAME70,
-        FAMILY_SAMS70,
-        FAMILY_SAMV70,
-        FAMILY_SAMV71,
-    };
-
-    Device(Samba& samba) : _samba(samba), _flash(nullptr), _family(FAMILY_NONE) {}
-    virtual ~Device() {}
-
-    void create();
-
-    Family getFamily() { return _family; }
-
-    typedef std::unique_ptr<Flash> const FlashPtr;
-
-    FlashPtr& getFlash() { return _flash; }
-
-    void reset();
+    void resetCPU(void);
 
 private:
-    Samba& _samba;
-    std::unique_ptr<Flash> _flash;
-    Family _family;
+    uint32_t _regs;
 
-    void readChipId(uint32_t& chipId, uint32_t& extChipId);
+    void writeFCR(uint32_t arg);
+    void writeFCMD(uint8_t cmd, uint32_t arg);
+    void waitFSR(int seconds = 1);
+    uint32_t readFSR();
 };
 
-#endif // _DEVICE_H
-
+#endif // _CALWFLASH_H
