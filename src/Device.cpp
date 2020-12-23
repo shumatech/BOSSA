@@ -423,7 +423,7 @@ Device::create()
 	//
 	case 0x714e3000:
         _family = FAMILY_SAM7X;
-        flashPtr = new EfcFlash(_samba, "qNimble BOSSAv1", 0x300000, 16384, 256, 2, 32, 0x202000, 0x220000, true);
+        flashPtr = new EfcFlash(_samba, "qNimble BOSSAv1", 0x300000, 32768, 256, 1, 32, 0x202000, 0x220000, true);
 
         break;
     //
