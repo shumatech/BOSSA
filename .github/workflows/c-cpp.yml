@@ -1,0 +1,42 @@
+name: C/C++ CI
+
+on:
+  create:
+    tags:
+      - '*'
+jobs:    
+  publish:
+    name: Publish for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: bin/bossac
+            asset_name: qbossa-linux-amd64
+          - os: windows-latest
+            artifact_name: bin/bossac.exe
+            asset_name: qbossa-windows-amd64.exe
+          - os: macos-latest
+            artifact_name: bin/bossac
+            asset_name: qbossa-macos-amd64  
+    steps:      
+    - uses: actions/checkout@v2
+    - name: Inject slug/short variables
+      uses: rlespinasse/github-slug-action@v3.x            
+    - name: info
+      run: |
+          echo ${{matrix.artifact_name}}
+          echo ${{matrix.os}}
+          echo ${{matrix.asset_name}}
+    - name: make
+      run: make bossac                  
+    - name: Upload file
+      uses: svenstaro/upload-release-action@v2
+      with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{matrix.artifact_name}}
+          asset_name: ${{matrix.asset_name}}
+          tag: ${{github.ref}}
+          overwrite: true
+          body: "Release ${{env.GITHUB_REF_SLUG}} of qNimble verion of BOSSA"
