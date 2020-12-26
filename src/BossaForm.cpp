@@ -271,7 +271,7 @@ AboutDialog::AboutDialog( wxWindow* parent, wxWindowID id, const wxString& title
 	_bossaBitmap = new wxStaticBitmap( this, wxID_ANY, wxNullBitmap, wxDefaultPosition, wxDefaultSize, 0 );
 	_topBoxSizer->Add( _bossaBitmap, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 5 );
 	
-	_titleStaticText = new wxStaticText( this, wxID_ANY, wxT("Basic Open Source SAM-BA Application"), wxDefaultPosition, wxDefaultSize, 0 );
+	_titleStaticText = new wxStaticText( this, wxID_ANY, wxT("qNimble's Basic Open Source SAM-BA Application"), wxDefaultPosition, wxDefaultSize, 0 );
 	_titleStaticText->Wrap( -1 );
 	_topBoxSizer->Add( _titleStaticText, 0, wxALL, 5 );
 	

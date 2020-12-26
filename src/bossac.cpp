@@ -336,7 +336,7 @@ main(int argc, char* argv[])
     {
         if (config.help)
             printf("Usage: %s [OPTION...] [FILE]\n", argv[0]);
-        printf("Basic Open Source SAM-BA Application (BOSSA) Version " VERSION "\n"
+        printf("qNimble's Basic Open Source SAM-BA Application (qBOSSA) Version " VERSION "\n"
                "Flash programmer for Atmel SAM devices.\n"
                "Copyright (c) 2011-2018 ShumaTech (http://www.shumatech.com)\n"
               );
@@ -344,9 +344,9 @@ main(int argc, char* argv[])
         {
             printf("\n"
                    "Examples:\n"
-                   "  bossac -e -w -v -b image.bin   # Erase flash, write flash with image.bin,\n"
+                   "  qbossac -e -w -v -b image.bin   # Erase flash, write flash with image.bin,\n"
                    "                                 # verify the write, and set boot from flash\n"
-                   "  bossac -r0x10000 image.bin     # Read 64KB from flash and store in image.bin\n"
+                   "  qbossac -r0x10000 image.bin     # Read 64KB from flash and store in image.bin\n"
                   );
             printf("\nOptions:\n");
             cmd.usage(stdout);
