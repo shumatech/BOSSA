@@ -29,12 +29,17 @@ INSTALLDIR=install
 # Determine OS
 #
 OS:=$(shell uname -s | cut -c -7)
-OS_SHORT:=$(shell uname -s | cut -c -5)
-
+ifeq ($(OS),MSYS_NT)
+OS:=WIN
+else ifeq ($(OS),MINGW32)
+OS:=WIN
+else ifeq ($(OS),MINGW64)
+OS:=WIN
+endif
 #
 # Windows rules
 #
-ifeq ($(OS_SHORT),MINGW)
+ifeq ($(OS),WIN)
 # Use wxWindows development branch to work around font scaling issues on Windows
 WXVERSION=3.1
 EXE=.exe

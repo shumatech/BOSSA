@@ -6,37 +6,58 @@ on:
       - '*'
 jobs:    
   publish:
-    name: Publish for ${{ matrix.os }}
+    name: Publish for ${{ matrix.os }}-${{matrix.arch}}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
           - os: ubuntu-latest
             artifact_name: bin/bossac
-            asset_name: qbossa-linux-amd64
+            asset_name: qbossa
+            arch: amd64
+            suffix: -linux-amd64
           - os: windows-latest
             artifact_name: bin/bossac.exe
-            asset_name: qbossa-windows-amd64.exe
+            asset_name: qbossa
+            arch: i686
+            msystem: MINGW32
+            suffix: -win32.exe
+          - os: windows-latest
+            artifact_name: bin/bossac.exe
+            asset_name: qbossa
+            arch: x86_64
+            msystem: MINGW64
+            suffix: -win64.exe
           - os: macos-latest
             artifact_name: bin/bossac
-            asset_name: qbossa-macos-amd64  
+            asset_name: qbossa
+            arch: amd64
+            suffix: -mac
+
     steps:      
     - uses: actions/checkout@v2
     - name: Inject slug/short variables
       uses: rlespinasse/github-slug-action@v3.x            
-    - name: info
-      run: |
-          echo ${{matrix.artifact_name}}
-          echo ${{matrix.os}}
-          echo ${{matrix.asset_name}}
-    - name: make
-      run: make bossac                  
+    - name: get msys2
+      uses: msys2/setup-msys2@v2
+      if: ${{matrix.os == 'windows-latest'}}
+      with:
+          msystem: ${{ matrix.msystem }}
+          install: git base-devel binutils mingw-w64-${{ matrix.arch }}-toolchain
+          release: false
+    - name: make (win)
+      if: ${{matrix.os == 'windows-latest'}}
+      shell: msys2 {0}
+      run:  make bossac
+    - name: make (not win)
+      if: ${{matrix.os != 'windows-latest'}}
+      run: make bossac
     - name: Upload file
       uses: svenstaro/upload-release-action@v2
       with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ${{matrix.artifact_name}}
-          asset_name: ${{matrix.asset_name}}
+          asset_name: ${{matrix.asset_name}}-${{env.GITHUB_REF_SLUG}}${{matrix.suffix}}
           tag: ${{github.ref}}
           overwrite: true
           body: "Release ${{env.GITHUB_REF_SLUG}} of qNimble verion of BOSSA"
