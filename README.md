@@ -36,6 +36,7 @@ Supported Device Families
  * SAMS70\*
  * SAMV70\*
  * SAMV71\*
+ * qNimble Quarto\*
 
 \* Device families which are not tested for each release and could stop working.
 

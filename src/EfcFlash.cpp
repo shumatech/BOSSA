@@ -65,7 +65,7 @@ EfcFlash::EfcFlash(Samba& samba,
       _canBootFlash(canBootFlash)
 {
     assert(planes == 1 || planes == 2);
-    assert(pages <= planes * 1024);
+    assert(pages <= planes * 65536);
     assert(lockRegions <= 32);
 
     eraseAuto(true);
