@@ -97,7 +97,7 @@ public:
     void set(const T& value) { _value = value; _dirty = true; }
     const T& get() { return _value; }
     bool isDirty() { return _dirty; }
-    
+
 private:
     T    _value;
     bool _dirty;
@@ -148,6 +148,8 @@ public:
     virtual bool canBootFlash() = 0;
 
     virtual void writeOptions() = 0;
+
+    virtual void ready() = 0;
 
     virtual void writePage(uint32_t page) = 0;
     virtual void readPage(uint32_t page, uint8_t* data) = 0;

@@ -113,7 +113,7 @@ class BossaObserver : public FlasherObserver
 public:
     BossaObserver() : _lastTicks(-1) {}
     virtual ~BossaObserver() {}
-    
+
     virtual void onStatus(const char *message, ...);
     virtual void onProgress(int num, int div);
 private:
@@ -124,7 +124,7 @@ void
 BossaObserver::onStatus(const char *message, ...)
 {
     va_list ap;
-    
+
     va_start(ap, message);
     vprintf(message, ap);
     va_end(ap);
@@ -137,10 +137,10 @@ BossaObserver::onProgress(int num, int div)
     int bars = 30;
 
     ticks = num * bars / div;
-    
+
     if (ticks == _lastTicks)
         return;
-    
+
     printf("\r[");
     while (ticks-- > 0)
     {
@@ -153,7 +153,7 @@ BossaObserver::onProgress(int num, int div)
     }
     printf("] %d%% (%d/%d pages)", num * 100 / div, num, div);
     fflush(stdout);
-    
+
     _lastTicks = 0;
 }
 
@@ -490,8 +490,11 @@ main(int argc, char* argv[])
 
         flash->writeOptions();
 
-        if (config.reset)
+        if (config.reset) {
+            // Ensure flash operation are complete prior to reset
+            flash->ready();
             device.reset();
+        }
     }
     catch (exception& e)
     {

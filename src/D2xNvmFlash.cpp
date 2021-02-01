@@ -259,6 +259,11 @@ D2xNvmFlash::writeOptions()
 }
 
 void
+D2xNvmFlash::ready()
+{
+}
+
+void
 D2xNvmFlash::writePage(uint32_t page)
 {
     if (page >= _pages)
