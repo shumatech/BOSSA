@@ -425,6 +425,44 @@ Device::create()
         switch (deviceId & 0xffff00ff)
         {
         //
+        // SAMC21
+        //
+        case 0x1101000D: // E15A 
+        case 0x11010008: // G15A 
+        case 0x11010003: // J15A 
+            _family = FAMILY_SAMC21;
+            // we shall change code as RAM is too small
+            // as it is it won't work!
+            flashPtr = new D2xNvmFlash(_samba, "ATSAMC21x15", 512, 64, 0x20000800, 0x20001000) ;
+            break;
+
+        case 0x1101000C: // E16A 
+        case 0x11010007: // G16A 
+        case 0x11010002: // J16A 
+            _family = FAMILY_SAMC21;
+            // corrected start ram for bootloader copy to flash (was 0x20000800
+            // as the code needs something more than 4K of RAM.
+            // see above commento for ATSAMC21x15
+            flashPtr = new D2xNvmFlash(_samba, "ATSAMC21x16", 1024, 64, 0x20000800, 0x20002000) ;
+            break;
+
+        case 0x1101000B: // E17A 
+        case 0x11010006: // G17A 
+        case 0x11010001: // J17A 
+        case 0x11010021: // N17A 
+            _family = FAMILY_SAMC21;
+            flashPtr = new D2xNvmFlash(_samba, "ATSAMC21x17", 2048, 64, 0x20002000, 0x20004000) ;
+            break;
+
+        case 0x1101000A: // E18A 
+        case 0x11010005: // G18A 
+        case 0x11010000: // J18A 
+        case 0x11010020: // N18A 
+            _family = FAMILY_SAMC21;
+            flashPtr = new D2xNvmFlash(_samba, "ATSAMC21x18", 4096, 64, 0x20004000, 0x20008000) ;
+            break;
+
+        //
         // SAMD21
         //
         case 0x10010003: // J15A
@@ -498,7 +536,7 @@ Device::create()
         //
         case 0x1081000d: // E15A
         case 0x1081001c: // E15B
-            _family = FAMILY_SAMD21;
+            _family = FAMILY_SAML21;
             flashPtr = new D2xNvmFlash(_samba, "ATSAML21x15", 512, 64, 0x20000800, 0x20001000) ;
             break;
 
@@ -638,6 +676,7 @@ Device::reset()
     {
         switch (_family)
         {
+        case FAMILY_SAMC21:
         case FAMILY_SAMD21:
         case FAMILY_SAMR21:
         case FAMILY_SAML21:
