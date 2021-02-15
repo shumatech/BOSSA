@@ -432,6 +432,7 @@ Device::create()
         case 0x11010003: // J15A 
             _family = FAMILY_SAMC21;
             // we shall change code as RAM is too small
+            // as it is it won't work!
             flashPtr = new D2xNvmFlash(_samba, "ATSAMC21x15", 512, 64, 0x20000800, 0x20001000) ;
             break;
 
@@ -439,7 +440,10 @@ Device::create()
         case 0x11010007: // G16A 
         case 0x11010002: // J16A 
             _family = FAMILY_SAMC21;
-            flashPtr = new D2xNvmFlash(_samba, "ATSAMC21x16", 1024, 64, 0x20001000, 0x20002000) ;
+            // corrected start ram for bootloader copy to flash (was 0x20000800
+            // as the code needs something more than 4K of RAM.
+            // see above commento for ATSAMC21x15
+            flashPtr = new D2xNvmFlash(_samba, "ATSAMC21x16", 1024, 64, 0x20000800, 0x20002000) ;
             break;
 
         case 0x1101000B: // E17A 
