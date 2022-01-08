@@ -28,7 +28,7 @@ INSTALLDIR=install
 #
 # Determine OS
 #
-OS:=$(shell uname -s | cut -c -7)
+OS?=$(shell uname -s | cut -c -7)
 
 #
 # Windows rules
