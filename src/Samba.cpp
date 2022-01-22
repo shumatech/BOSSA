@@ -52,7 +52,9 @@ using namespace std;
 #define TIMEOUT_NORMAL  1000
 #define TIMEOUT_LONG    5000
 
+#ifndef min
 #define min(a, b)   ((a) < (b) ? (a) : (b))
+#endif
 
 Samba::Samba() :
     _canChipErase(false),
@@ -106,7 +108,7 @@ Samba::init()
     {
         ver = version();
     }
-    catch(SambaError& err)
+    catch(const SambaError&)
     {
         return false;
     }

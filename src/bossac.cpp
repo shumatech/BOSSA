@@ -288,7 +288,7 @@ timer_stop()
 {
     struct timeval end;
     gettimeofday(&end, NULL);
-    return (end.tv_sec - start_time.tv_sec) + (end.tv_usec - start_time.tv_usec) / 1000000.0;
+    return (float)((end.tv_sec - start_time.tv_sec) + (end.tv_usec - start_time.tv_usec) / 1000000.0);
 }
 
 int
@@ -464,19 +464,19 @@ main(int argc, char* argv[])
         if (config.boot)
         {
             printf("Set boot flash %s\n", config.bootArg ? "true" : "false");
-            flash->setBootFlash(config.bootArg);
+            flash->setBootFlash(config.bootArg != 0);
         }
 
         if (config.bod)
         {
             printf("Set brownout detect %s\n", config.bodArg ? "true" : "false");
-            flash->setBod(config.bodArg);
+            flash->setBod(config.bodArg != 0);
         }
 
         if (config.bor)
         {
             printf("Set brownout reset %s\n", config.borArg ? "true" : "false");
-            flash->setBor(config.borArg);
+            flash->setBor(config.borArg != 0);
         }
 
         if (config.security)

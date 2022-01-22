@@ -230,7 +230,7 @@ ProgressDialog::ProgressDialog( wxWindow* parent, wxWindowID id, const wxString&
 	
 	_infoStaticText = new wxStaticText( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
 	_infoStaticText->Wrap( -1 );
-	_progressBoxSizer->Add( _infoStaticText, 0, wxALIGN_CENTER|wxALL|wxEXPAND, 5 );
+	_progressBoxSizer->Add( _infoStaticText, 0, wxALL|wxEXPAND, 5 );		// DC do not use wxALIGN_CENTER with wxEXPAND, it triggers an assertion failure in wxWidgets
 	
 	_statusGauge = new wxGauge( this, wxID_ANY, 100, wxDefaultPosition, wxDefaultSize, wxGA_HORIZONTAL );
 	_statusGauge->SetValue( 0 ); 
