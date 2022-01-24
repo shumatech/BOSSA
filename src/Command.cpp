@@ -32,22 +32,12 @@
 #include <errno.h>
 #include <string.h>
 #include <assert.h>
-//#include <readline/readline.h>
-//#include <readline/history.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 
 #include "Command.h"
 
-#ifndef min
 #define min(a, b)   ((a) < (b) ? (a) : (b))
-#endif
-
-#if defined(_WIN32) || defined(_WIN64)
-#define snprintf _snprintf
-#define vsnprintf _vsnprintf
-#define strcasecmp _stricmp
-#define strncasecmp _strnicmp
-typedef long ssize_t;
-#endif
 
 using namespace std;
 
@@ -148,7 +138,7 @@ Command::argUint32(const char* arg, uint32_t* value)
     if (ll < 0 || ll > UINT32_MAX)
         return error("Number \"%s\" is out of range", arg);
 
-    *value = (uint32_t)ll;
+    *value = ll;
 
     return true;
 }
@@ -156,7 +146,7 @@ Command::argUint32(const char* arg, uint32_t* value)
 bool
 Command::argBool(const char* arg, bool* value)
 {
-    size_t len = strlen(arg);
+    int len = strlen(arg);
     if (strncasecmp(arg, "true", len) == 0)
         *value = true;
     else if (strncasecmp(arg, "false", len) == 0)
@@ -170,7 +160,7 @@ Command::argBool(const char* arg, bool* value)
 bool
 Command::argState(const char* arg, bool* value)
 {
-    size_t len = strlen(arg);
+    int len = strlen(arg);
     if (strncasecmp(arg, "enable", len) == 0)
         *value = true;
     else if (strncasecmp(arg, "disable", len) == 0)
@@ -213,7 +203,7 @@ Command::createDevice()
     {
         _device.create();
     }
-    catch (DeviceUnsupportedError&)
+    catch (DeviceUnsupportedError& e)
     {
         printf("Device is not supported\n");
         return false;
@@ -225,6 +215,10 @@ Command::createDevice()
 void
 Command::hexdump(uint32_t addr, uint8_t *buf, size_t count)
 {
+    int lpad;
+    int rpad;
+    size_t size;
+    size_t offset;
     const uint32_t ROW_SIZE = 16;
     const uint32_t ROW_MASK = ~(ROW_SIZE - 1);
 
@@ -232,28 +226,28 @@ Command::hexdump(uint32_t addr, uint8_t *buf, size_t count)
 
     while (count > 0)
     {
-        size_t lpad = (addr % ROW_SIZE);
-        size_t rpad = ROW_SIZE - min(lpad + count, ROW_SIZE);
-        size_t size = ROW_SIZE - rpad - lpad;
+        lpad = (addr % ROW_SIZE);
+        rpad = ROW_SIZE - min(lpad + count, ROW_SIZE);
+        size = ROW_SIZE - rpad - lpad;
 
         printf("%08x | ", addr & ROW_MASK);
 
-        printf("%*s", 3 * (int)lpad, "");
-        for (size_t offset = 0; offset < size; offset++)
+        printf("%*s", 3 * lpad, "");
+        for (offset = 0; offset < size; offset++)
             printf("%02x ", buf[offset]);
-        printf("%*s", 3 * (int)rpad, "");
+        printf("%*s", 3 * rpad, "");
 
         printf("| ");
 
-        printf("%*s", (int)lpad, "");
-        for (size_t offset = 0; offset < size; offset++)
+        printf("%*s", lpad, "");
+        for (offset = 0; offset < size; offset++)
             printf("%c", isprint(buf[offset]) ? buf[offset] : '.');
-        printf("%*s", (int)rpad, "");
+        printf("%*s", rpad, "");
 
         printf("\n");
 
         buf += size;
-        addr += (uint32_t)size;
+        addr += size;
         count -= size;
     }
 }
@@ -647,7 +641,7 @@ CommandMrf::invoke(char* argv[], int argc)
         {
             fbytes = min(count, sizeof(buf));
             _samba.read(addr, buf, fbytes);
-            fbytes = (ssize_t)fwrite(buf, 1, fbytes, infile);
+            fbytes = fwrite(buf, 1, fbytes, infile);
             if (fbytes < 0)
                 throw FileIoError(errno);
             if ((size_t) fbytes != min(count, sizeof(buf)))
@@ -781,7 +775,7 @@ CommandMwf::invoke(char* argv[], int argc)
 
         for (fpos = 0; fpos < fsize; fpos += fbytes)
         {
-            fbytes = (ssize_t)fread(buf, 1, min((size_t)fsize, sizeof(buf)), infile);
+            fbytes = fread(buf, 1, min((size_t)fsize, sizeof(buf)), infile);
             if (fbytes < 0)
                 throw FileIoError(errno);
             if (fbytes == 0)
@@ -1247,4 +1241,3 @@ CommandOptions::invoke(char* argv[], int argc)
 {
     _flash->writeOptions();
 }
-

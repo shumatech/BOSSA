@@ -84,10 +84,12 @@ Shell::~Shell()
 Command*
 Shell::find(const char* name)
 {
+    CommandList::iterator it;
+    int len;
     Command *command = NULL;
 
-    size_t len = strlen(name);
-    for (CommandList::iterator it = _commandList.begin();
+    len = strlen(name);
+    for (it = _commandList.begin();
         it != _commandList.end();
         it++)
     {

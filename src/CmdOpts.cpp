@@ -27,11 +27,11 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ///////////////////////////////////////////////////////////////////////////////
 #include <stdlib.h>
+#include <getopt.h>
 #include <string.h>
 #include <assert.h>
 #include <vector>
 
-#include <getopt.h>
 #include "CmdOpts.h"
 
 CmdOpts::CmdOpts(int argc, char* argv[], int numOpts, Option* opts) :
