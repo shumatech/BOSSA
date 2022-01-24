@@ -684,7 +684,7 @@ Device::reset()
             break;
         }
     }
-    catch (std::exception& expected)
+    catch (const std::exception&)
     {   // writeWord will most likely throw an exception when the CPU is reset
     }
 }

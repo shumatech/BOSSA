@@ -36,6 +36,10 @@
 #include <string>
 #include <algorithm>
 
+#if defined(_WIN32) || defined(_WIN64)
+#define F_OK    0   // test file for existence only when calling access()
+#define access(...)     _access(__VA_ARGS__)
+#endif
 
 using namespace std;
 

@@ -10,3 +10,14 @@ tags
 *.bak
 install/*.crt
 install/*.p12
+
+# Extras for building with MSVC
+x64/
+ipch/
+*.sdf
+*.suo
+*.user
+*.filters
+*.unsuccessfulbuild
+*.cache
+*.lastbuildstate
