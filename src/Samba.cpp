@@ -203,6 +203,8 @@ Samba::writeByte(uint32_t addr, uint8_t value)
     // port object's flush method before writing the data.
     if (_isUsb)
         _port->flush();
+
+    usleep(10000);
 }
 
 uint8_t
@@ -246,6 +248,8 @@ Samba::writeWord(uint32_t addr, uint32_t value)
     // port object's flush method before writing the data.
     if (_isUsb)
         _port->flush();
+
+    usleep(10000);
 }
 
 
@@ -459,6 +463,7 @@ Samba::writeBinary(const uint8_t* buffer, int size)
         buffer += written;
         size -= written;
     }
+    usleep(10000);
 }
 
 void
