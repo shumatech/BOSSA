@@ -36,6 +36,7 @@
 #include <termios.h>
 #include <errno.h>
 #include <sys/ioctl.h>
+#include <sys/select.h>
 
 #include <string>
 
