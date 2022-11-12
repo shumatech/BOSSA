@@ -293,7 +293,7 @@ CommandBod::CommandBod() :
 void
 CommandBod::invoke(char* argv[], int argc)
 {
-    bool value;
+    bool value = false;
     
     if (!argNum(argc, 2) ||
         !argBool(argv[1], &value) ||
@@ -320,7 +320,7 @@ CommandBootf::CommandBootf() :
 void
 CommandBootf::invoke(char* argv[], int argc)
 {
-    bool value;
+    bool value = false;
     
     if (!argNum(argc, 2) ||
         !argBool(argv[1], &value) ||
@@ -341,7 +341,7 @@ CommandBor::CommandBor() :
 void
 CommandBor::invoke(char* argv[], int argc)
 {
-    bool value;
+    bool value = false;
     
     if (!argNum(argc, 2) ||
         !argBool(argv[1], &value) ||
@@ -393,7 +393,7 @@ CommandDebug::CommandDebug() :
 void
 CommandDebug::invoke(char* argv[], int argc)
 {
-    bool state;
+    bool state = false;
 
     if (!argNum(argc, 2) ||
         !argState(argv[1], &state))
@@ -413,8 +413,8 @@ CommandDump::CommandDump() :
 void
 CommandDump::invoke(char* argv[], int argc)
 {
-    uint32_t addr;
-    uint32_t count;
+    uint32_t addr = 0;
+    uint32_t count = 0;
 
     if (!argNum(argc, 3) ||
         !argUint32(argv[1], &addr) ||
@@ -483,7 +483,7 @@ CommandGo::CommandGo() :
 void
 CommandGo::invoke(char* argv[], int argc)
 {
-    uint32_t addr;
+    uint32_t addr = 0;
 
     if (!argNum(argc, 2) ||
         !argUint32(argv[1], &addr) ||
@@ -588,7 +588,7 @@ CommandMrb::CommandMrb() :
 void
 CommandMrb::invoke(char* argv[], int argc)
 {
-    uint32_t addr;
+    uint32_t addr = 0;
     uint32_t count = 1;
     uint8_t value;
 
@@ -619,8 +619,8 @@ CommandMrf::CommandMrf() :
 void
 CommandMrf::invoke(char* argv[], int argc)
 {
-    uint32_t addr;
-    uint32_t count;
+    uint32_t addr = 0;
+    uint32_t count = 0;
     FILE* infile;
     uint8_t buf[1024];
     ssize_t fbytes;
@@ -670,7 +670,7 @@ CommandMrw::CommandMrw() :
 void
 CommandMrw::invoke(char* argv[], int argc)
 {
-    uint32_t addr;
+    uint32_t addr = 0;
     uint32_t count = 1;
     uint32_t value;
 
@@ -701,8 +701,8 @@ CommandMwb::CommandMwb() :
 void
 CommandMwb::invoke(char* argv[], int argc)
 {
-    uint32_t addr;
-    uint32_t value;
+    uint32_t addr = 0;
+    uint32_t value = 0;
 
     if (!argRange(argc, 2, 3) ||
         !argUint32(argv[1], &addr) ||
@@ -749,7 +749,7 @@ CommandMwf::CommandMwf() :
 void
 CommandMwf::invoke(char* argv[], int argc)
 {
-    uint32_t addr;
+    uint32_t addr = 0;
     FILE* infile;
     uint8_t buf[1024];
     ssize_t fsize;
@@ -804,8 +804,8 @@ CommandMww::CommandMww() :
 void
 CommandMww::invoke(char* argv[], int argc)
 {
-    uint32_t addr;
-    uint32_t value;
+    uint32_t addr = 0;
+    uint32_t value = 0;
 
     if (!argRange(argc, 2, 3) ||
         !argUint32(argv[1], &addr) ||
@@ -875,11 +875,9 @@ CommandPio::invoke(char* argv[], int argc)
         return;
     }
 
-    if (argv[1][2] == '\0')
-    {
-        line = 0xffffffff;
-    }
-    else
+    line = 0xffffffff;
+
+    if (argv[1][2] != '\0')
     {
         if (!argUint32(&argv[1][2], &line))
             return;
@@ -1063,7 +1061,7 @@ CommandPio::invoke(char* argv[], int argc)
     }
     else if (strncasecmp(argv[2], "pullup", len) == 0)
     {
-        bool state;
+        bool state = false;
         if (!argNum(argc, 4) ||
             !argState(argv[3], &state))
             return;
@@ -1076,7 +1074,7 @@ CommandPio::invoke(char* argv[], int argc)
     }
     else if (strncasecmp(argv[2], "multidrive", len) == 0)
     {
-        bool state;
+        bool state = false;
         if (!argNum(argc, 4) ||
             !argState(argv[3], &state))
             return;
