@@ -98,7 +98,7 @@ WinSerialPort::open(int baud, int data, SerialPort::Parity parity, SerialPort::S
     }
 
     dcbSerialParams.BaudRate = baud;
-
+    dcbSerialParams.fDtrControl = DTR_CONTROL_DISABLE;
     dcbSerialParams.ByteSize = data;
 
     switch (parity)
