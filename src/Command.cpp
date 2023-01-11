@@ -780,7 +780,7 @@ CommandMwf::invoke(char* argv[], int argc)
                 throw FileIoError(errno);
             if (fbytes == 0)
                 break;
-            _samba.write(addr, buf, fbytes);
+            _samba.write(addr + fpos, buf, fbytes);
         }
     }
     catch (...)
@@ -831,7 +831,7 @@ CommandMww::invoke(char* argv[], int argc)
 
         _samba.writeWord(addr, value);
         printf("%08x : %08x\n", addr, value);
-        addr++;
+        addr += 4;
     } while (argc == 2);
 }
 
