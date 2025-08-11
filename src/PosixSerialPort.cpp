@@ -290,10 +290,7 @@ PosixSerialPort::put(int c)
 void
 PosixSerialPort::flush()
 {
-    // There isn't a reliable way to flush on a file descriptor
-    // so we just wait it out.  One millisecond is the USB poll
-    // interval so that should cover it.
-    usleep(1000);
+    tcdrain(_devfd);
 }
 
 bool
