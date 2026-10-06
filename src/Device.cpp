@@ -378,6 +378,13 @@ Device::create()
         flashPtr = new EefcFlash(_samba, "ATSAME70x21", 0x400000, 4096, 512, 1, 128, 0x20401000, 0x20404000, 0x400e0c00, false);
         break;
     //
+    // PIC32CZ CA70
+    //
+    case 0x21AF0E00:
+        _family = FAMILY_SAME70;    // we don't use a separate family for PIC32CZ CA70
+        flashPtr = new EefcFlash(_samba, "PIC32CZ2051CA70", 0x400000, 4096, 512, 1, 128, 0x20401000, 0x20404000, 0x400e0c00, false);
+        break;
+    //
     // SAMS70
     //
     case 0x211d0a00:
@@ -684,7 +691,7 @@ Device::reset()
             break;
         }
     }
-    catch (std::exception& expected)
+    catch (const std::exception&)
     {   // writeWord will most likely throw an exception when the CPU is reset
     }
 }

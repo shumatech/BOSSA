@@ -30,6 +30,7 @@
 #include <getopt.h>
 #include <string.h>
 #include <assert.h>
+#include <vector>
 
 #include "CmdOpts.h"
 
@@ -83,9 +84,9 @@ CmdOpts::usage(FILE* out)
 int
 CmdOpts::parse()
 {
-    struct option long_opts[_numOpts + 1];
-    char optstring[_numOpts * 3 + 1];
-    char* optPtr = optstring;
+    std::vector<option> long_opts(_numOpts + 1);
+    std::vector<char> optstring(_numOpts * 3 + 1);
+    char* optPtr = optstring.data();
     int optIdx;
     int rc;
 
@@ -118,7 +119,7 @@ CmdOpts::parse()
     memset(&long_opts[_numOpts], 0, sizeof(long_opts[_numOpts]));
     *optPtr = '\0';
     optIdx = 0;
-    while ((rc = getopt_long(_argc, _argv, optstring, long_opts, &optIdx)) != -1)
+    while ((rc = getopt_long(_argc, _argv, optstring.data(), long_opts.data(), &optIdx)) != -1)
     {
         if (rc == '?')
             return -1;

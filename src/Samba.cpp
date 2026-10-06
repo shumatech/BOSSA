@@ -52,7 +52,9 @@ using namespace std;
 #define TIMEOUT_NORMAL  1000
 #define TIMEOUT_LONG    5000
 
+#ifndef min
 #define min(a, b)   ((a) < (b) ? (a) : (b))
+#endif
 
 Samba::Samba() :
     _canChipErase(false),
@@ -106,7 +108,7 @@ Samba::init()
     {
         ver = version();
     }
-    catch(SambaError& err)
+    catch(const SambaError&)
     {
         return false;
     }
@@ -141,7 +143,7 @@ Samba::init()
 bool
 Samba::connect(SerialPort::Ptr port, int bps)
 {
-    _port = move(port);
+    _port = std::move(port);
 
     // Try to connect at a high speed if USB
     _isUsb = _port->isUsb();
@@ -508,6 +510,26 @@ Samba::write(uint32_t addr, const uint8_t* buffer, int size)
     if (_debug)
         printf("%s(addr=%#x,size=%#x)\n", __FUNCTION__, addr, size);
 
+#ifdef __APPLE__
+    // On macOS, the SAM firmware only accepts the first 384 bytes of a
+    // larger USB send command and parses the remainder as commands.  To
+    // avoid this, split the data into separate send commands that each
+    // fit within that limit.
+    const int maxChunk = 256;
+    if (_isUsb && size > maxChunk)
+    {
+        while (size > 0)
+        {
+            int chunk = size > maxChunk ? maxChunk : size;
+            write(addr, buffer, chunk);
+            addr += chunk;
+            buffer += chunk;
+            size -= chunk;
+        }
+        return;
+    }
+#endif
+
     snprintf((char*) cmd, sizeof(cmd), "S%08X,%08X#", addr, size);
     if (_port->write(cmd, sizeof(cmd) - 1) != sizeof(cmd) - 1)
         throw SambaError();
@@ -522,6 +544,11 @@ Samba::write(uint32_t addr, const uint8_t* buffer, int size)
     {
         _port->flush();
         writeBinary(buffer, size);
+#ifdef __APPLE__
+        // macOS can otherwise combine the end of the data with the next
+        // command in the same USB transfer
+        _port->flush();
+#endif
     }
     else
     {

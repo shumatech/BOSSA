@@ -249,7 +249,11 @@ WinSerialPort::put(int c)
 void
 WinSerialPort::flush()
 {
-    Sleep(1);
+    // Wait until the driver has sent everything written so far.  This
+    // keeps a command and the data that follows it in separate USB
+    // packets without the cost of a fixed delay.
+    if (_handle != INVALID_HANDLE_VALUE)
+        FlushFileBuffers(_handle);
 }
 
 void

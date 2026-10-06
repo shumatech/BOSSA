@@ -1,0 +1,94 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    name: Linux ${{ matrix.machine }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            machine: x86_64
+          - runner: ubuntu-24.04-arm
+            machine: aarch64
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwxgtk3.2-dev libreadline-dev libx11-dev
+
+      - name: Keep make from regenerating the committed applet and bitmap sources
+        run: touch src/*.cpp
+
+      - name: Build
+        run: make -j"$(nproc)" dist
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: bossa-linux-${{ matrix.machine }}
+          path: bin/*.tgz
+
+  macos:
+    name: macOS ${{ matrix.machine }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15-intel
+            machine: x86_64
+          - runner: macos-15
+            machine: arm64
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install dependencies
+        run: brew install wxwidgets@3.2 readline dylibbundler
+
+      - name: Keep make from regenerating the committed applet and bitmap sources
+        run: touch src/*.cpp
+
+      - name: Build
+        run: make -j"$(sysctl -n hw.ncpu)" CXXFLAGS="-I$(brew --prefix readline)/include" LDFLAGS="-L$(brew --prefix readline)/lib" dist
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: bossa-macos-${{ matrix.machine }}
+          path: bin/*.dmg
+
+  windows:
+    name: Windows x86_64
+    runs-on: windows-2025
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: make zip
+          pacboy: gcc:p wxwidgets3.2-msw:p readline:p termcap:p
+
+      - uses: actions/checkout@v7
+
+      - name: Keep make from regenerating the committed applet and bitmap sources
+        run: touch src/*.cpp
+
+      - name: Build
+        run: make -j"$(nproc)" dist
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: bossa-windows-x86_64
+          path: bin/*.zip

@@ -113,7 +113,7 @@ class BossaObserver : public FlasherObserver
 public:
     BossaObserver() : _lastTicks(-1) {}
     virtual ~BossaObserver() {}
-    
+
     virtual void onStatus(const char *message, ...);
     virtual void onProgress(int num, int div);
 private:
@@ -124,7 +124,7 @@ void
 BossaObserver::onStatus(const char *message, ...)
 {
     va_list ap;
-    
+
     va_start(ap, message);
     vprintf(message, ap);
     va_end(ap);
@@ -137,10 +137,10 @@ BossaObserver::onProgress(int num, int div)
     int bars = 30;
 
     ticks = num * bars / div;
-    
+
     if (ticks == _lastTicks)
         return;
-    
+
     printf("\r[");
     while (ticks-- > 0)
     {
@@ -153,7 +153,7 @@ BossaObserver::onProgress(int num, int div)
     }
     printf("] %d%% (%d/%d pages)", num * 100 / div, num, div);
     fflush(stdout);
-    
+
     _lastTicks = 0;
 }
 
@@ -288,7 +288,7 @@ timer_stop()
 {
     struct timeval end;
     gettimeofday(&end, NULL);
-    return (end.tv_sec - start_time.tv_sec) + (end.tv_usec - start_time.tv_usec) / 1000000.0;
+    return (float)((end.tv_sec - start_time.tv_sec) + (end.tv_usec - start_time.tv_usec) / 1000000.0);
 }
 
 int
@@ -464,19 +464,19 @@ main(int argc, char* argv[])
         if (config.boot)
         {
             printf("Set boot flash %s\n", config.bootArg ? "true" : "false");
-            flash->setBootFlash(config.bootArg);
+            flash->setBootFlash(config.bootArg != 0);
         }
 
         if (config.bod)
         {
             printf("Set brownout detect %s\n", config.bodArg ? "true" : "false");
-            flash->setBod(config.bodArg);
+            flash->setBod(config.bodArg != 0);
         }
 
         if (config.bor)
         {
             printf("Set brownout reset %s\n", config.borArg ? "true" : "false");
-            flash->setBor(config.borArg);
+            flash->setBor(config.borArg != 0);
         }
 
         if (config.security)
@@ -491,7 +491,10 @@ main(int argc, char* argv[])
         flash->writeOptions();
 
         if (config.reset)
+        {
+            flash->ready();
             device.reset();
+        }
     }
     catch (exception& e)
     {

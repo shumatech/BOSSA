@@ -1,10 +1,10 @@
 .DEFAULT_GOAL := all
 
 #
-# Version
+# Version, maintained only in the 64-bit Release configuration of the MSVC project
 #
-VERSION?=$(shell git describe --tags --dirty)
-WXVERSION=3.0
+VERSION?=$(shell sed -n "/<ItemDefinitionGroup.*'Release|x64'/,/<\/ItemDefinitionGroup>/s/.*VERSION=\"\([^\"]*\)\".*/\1/p" Bossa.vcxproj | head -1)
+WXVERSION=3.2
 
 #
 # Source files
@@ -26,20 +26,27 @@ RESDIR=res
 INSTALLDIR=install
 
 #
-# Determine OS
+# Determine OS and machine
+# Windows sets OS to Windows_NT in the environment, MSYS2 included, so uname is only needed elsewhere
 #
+ifneq ($(OS),Windows_NT)
 OS:=$(shell uname -s | cut -c -7)
+endif
+MACHINE?=$(shell uname -m)
 
 #
 # Windows rules
 #
-ifeq ($(OS),MINGW32)
+ifeq ($(OS),Windows_NT)
 # Use wxWindows development branch to work around font scaling issues on Windows
-WXVERSION=3.1
+# Following line commented out by droftarts, as libwxgtk3.2-dev is the current version 06/11/24
+# WXVERSION=3.1
 EXE=.exe
 COMMON_SRCS+=WinSerialPort.cpp WinPortFactory.cpp
 COMMON_LDFLAGS=-Wl,--enable-auto-import -static -static-libstdc++ -static-libgcc
 COMMON_LIBS=-ltermcap -Wl,--as-needed -lsetupapi
+# The shared wx config defines WXUSINGDLL, whose import symbols a -static link cannot resolve
+WX_CONFIG_FLAGS=--static=yes
 BOSSA_RC=BossaRes.rc
 WIXDIR="C:\Program Files (x86)\WiX Toolset v3.11\bin"
 CODE_SIGN=$(INSTALLDIR)\\code_sign.p12
@@ -77,6 +84,10 @@ install64: $(BINDIR)\\bossa-x64-$(VERSION).msi
 .PHONY: install
 install: strip install32 install64
 
+.PHONY: dist
+dist: strip
+	cd $(BINDIR) && zip -9 bossa-$(VERSION)-windows-$(MACHINE).zip bossa$(EXE) bossac$(EXE) bossash$(EXE)
+
 endif
 
 #
@@ -88,10 +99,10 @@ COMMON_LIBS=-Wl,--as-needed
 COMMON_CXXFLAGS=-std=c++11
 WX_LIBS+=-lX11
 
-MACHINE:=$(shell uname -m)
-
-install: strip
-	tar cvzf $(BINDIR)/bossa-$(MACHINE)-$(VERSION).tgz -C $(BINDIR) bossa$(EXE) bossac$(EXE) bossash$(EXE)
+.PHONY: dist install
+dist: strip
+	tar cvzf $(BINDIR)/bossa-$(VERSION)-linux-$(MACHINE).tgz -C $(BINDIR) bossa$(EXE) bossac$(EXE) bossash$(EXE)
+install: dist
 endif
 
 #
@@ -99,20 +110,44 @@ endif
 #
 ifeq ($(OS),Darwin)
 COMMON_SRCS+=PosixSerialPort.cpp OSXPortFactory.cpp
-COMMON_CXXFLAGS=-arch x86_64 -mmacosx-version-min=10.9
-COMMON_LDFLAGS=-arch x86_64 -mmacosx-version-min=10.9
+# arm64 only exists from macOS 11 on
+ifeq ($(MACHINE),arm64)
+MACOSX_MIN=11.0
+else
+MACOSX_MIN=10.9
+endif
+COMMON_CXXFLAGS=-arch $(MACHINE) -mmacosx-version-min=$(MACOSX_MIN)
+COMMON_LDFLAGS=-arch $(MACHINE) -mmacosx-version-min=$(MACOSX_MIN)
+# Homebrew lives in /opt/homebrew on Apple Silicon and /usr/local on Intel, and
+# both can be installed side by side, so use the wxWidgets matching the target.
+# Homebrew installs the 3.2 tool as wx-config-3.2 to keep it out of the way of wxwidgets 3.3
+ifeq ($(MACHINE),arm64)
+WX_BREW_PREFIX=/opt/homebrew
+else
+WX_BREW_PREFIX=/usr/local
+endif
+WXCONFIG?=$(firstword $(wildcard $(WX_BREW_PREFIX)/bin/wx-config-$(WXVERSION) $(WX_BREW_PREFIX)/bin/wx-config) wx-config)
 APP=BOSSA.app
 DMG=bossa-$(VERSION).dmg
 VOLUME=BOSSA
 BACKGROUND=$(INSTALLDIR)/background.png
-.PHONY: install
-app:
+.PHONY: app install
+# The wxWidgets libraries and their dependencies are copied into the bundle so
+# that it runs without Homebrew.  Rewriting the library paths invalidates the
+# code signatures, so the bundle is signed again (ad hoc) afterwards.
+app: strip-bossa
+	rm -rf $(BINDIR)/$(APP)
 	mkdir -p $(BINDIR)/$(APP)/Contents/MacOS
 	mkdir -p $(BINDIR)/$(APP)/Contents/Resources
 	cp -f $(INSTALLDIR)/Info.plist $(BINDIR)/$(APP)/Contents
 	echo -n "APPL????" > $(BINDIR)/$(APP)/Contents/PkgInfo
-	ln -f $(BINDIR)/bossa $(BINDIR)/$(APP)/Contents/MacOS/bossa
+	cp -f $(BINDIR)/bossa $(BINDIR)/$(APP)/Contents/MacOS/bossa
 	cp -f $(RESDIR)/BossaIcon.icns $(BINDIR)/$(APP)/Contents/Resources
+	dylibbundler -od -b -x $(BINDIR)/$(APP)/Contents/MacOS/bossa \
+		-d $(BINDIR)/$(APP)/Contents/Frameworks -p @executable_path/../Frameworks/ \
+		-s $$($(WXCONFIG) --prefix)/lib
+	codesign --force -s - $(BINDIR)/$(APP)/Contents/Frameworks/*
+	codesign --force -s - $(BINDIR)/$(APP)
 install: strip app
 	hdiutil create -ov -megabytes 5 -fs HFS+ -volname $(VOLUME) $(BINDIR)/$(DMG)
 	hdiutil attach -noautoopen $(BINDIR)/$(DMG)
@@ -127,6 +162,16 @@ install: strip app
 	hdiutil detach /Volumes/$(VOLUME)/
 	hdiutil convert -format UDBZ -o $(BINDIR)/tmp$(DMG) $(BINDIR)/$(DMG)
 	mv -f $(BINDIR)/tmp$(DMG) $(BINDIR)/$(DMG)
+
+# Unlike the install DMG this needs no Finder, so it also works on a headless build machine
+DIST_DMG=bossa-$(VERSION)-macos-$(MACHINE).dmg
+.PHONY: dist
+dist: strip app
+	rm -rf $(OBJDIR)/dmg
+	mkdir -p $(OBJDIR)/dmg
+	cp -R $(BINDIR)/$(APP) $(BINDIR)/bossac$(EXE) $(BINDIR)/bossash$(EXE) $(OBJDIR)/dmg/
+	ln -s /Applications $(OBJDIR)/dmg/Applications
+	hdiutil create -ov -volname $(VOLUME) -srcfolder $(OBJDIR)/dmg -format UDZO $(BINDIR)/$(DIST_DMG)
 endif
 
 #
@@ -162,6 +207,12 @@ COMMON_SRCS+=PosixSerialPort.cpp BSDPortFactory.cpp
 endif
 
 #
+# Homebrew installs the 3.2 tool as wx-config-3.2 to keep it out of the way of
+# wxwidgets 3.3.  macOS chooses its own above.
+#
+WXCONFIG?=wx-config
+
+#
 # Object files
 #
 COMMON_OBJS=$(foreach src,$(COMMON_SRCS),$(OBJDIR)/$(src:%.cpp=%.o))
@@ -195,7 +246,7 @@ ARMOBJCOPY=$(ARM)objcopy
 # CXX Flags
 #
 COMMON_CXXFLAGS+=-Wall -Werror -MT $@ -MD -MP -MF $(@:%.o=%.d) -DVERSION=\"$(VERSION)\" -g -O2 $(CXXFLAGS)
-WX_CXXFLAGS:=$(shell wx-config --cxxflags --version=$(WXVERSION)) -DWX_PRECOMP -Wno-ctor-dtor-privacy -O2 -fno-strict-aliasing
+WX_CXXFLAGS:=$(shell $(WXCONFIG) $(WX_CONFIG_FLAGS) --cxxflags --version=$(WXVERSION)) -DWX_PRECOMP -Wno-ctor-dtor-privacy -O2 -fno-strict-aliasing
 BOSSA_CXXFLAGS=$(COMMON_CXXFLAGS) $(WX_CXXFLAGS)
 BOSSAC_CXXFLAGS=$(COMMON_CXXFLAGS)
 BOSSASH_CXXFLAGS=$(COMMON_CXXFLAGS)
@@ -212,7 +263,7 @@ BOSSASH_LDFLAGS=$(COMMON_LDFLAGS)
 # Libs
 #
 COMMON_LIBS+=
-WX_LIBS:=$(shell wx-config --libs --version=$(WXVERSION)) $(WX_LIBS)
+WX_LIBS:=$(shell $(WXCONFIG) $(WX_CONFIG_FLAGS) --libs --version=$(WXVERSION)) $(WX_LIBS)
 BOSSA_LIBS=$(COMMON_LIBS) $(WX_LIBS)
 BOSSAC_LIBS=$(COMMON_LIBS)
 BOSSASH_LIBS=-lreadline $(COMMON_LIBS)
@@ -222,6 +273,10 @@ BOSSASH_LIBS=-lreadline $(COMMON_LIBS)
 #
 all: $(BINDIR)/bossa$(EXE) $(BINDIR)/bossac$(EXE) $(BINDIR)/bossash$(EXE)
 bossac: $(BINDIR)/bossac$(EXE)
+
+.PHONY: version
+version:
+	@echo $(VERSION)
 
 #
 # Common rules
@@ -261,10 +316,10 @@ $(foreach src,$(BOSSA_SRCS),$(eval $(call bossa_obj,$(src))))
 #
 # Resource rules
 #
-ifeq ($(OS),MINGW32)
+ifeq ($(OS),Windows_NT)
 $(OBJDIR)/$(BOSSA_RC:%.rc=%.o): $(RESDIR)/$(BOSSA_RC)
 	@echo RC $<
-	$(Q)`wx-config --rescomp --version=$(WXVERSION)` -o $@ $<
+	$(Q)`$(WXCONFIG) $(WX_CONFIG_FLAGS) --rescomp --version=$(WXVERSION)` -o $@ $<
 endif
 
 #
