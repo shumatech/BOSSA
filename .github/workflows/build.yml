@@ -38,6 +38,33 @@ jobs:
           name: bossa-linux-${{ matrix.machine }}
           path: bin/*.tgz
 
+  linux-armv7l:
+    name: Linux armv7l
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-qemu-action@v4
+        with:
+          platforms: arm
+
+      - name: Keep make from regenerating the committed applet and bitmap sources
+        run: touch src/*.cpp
+
+      # GitHub offers no 32-bit ARM runner, so the build runs in an emulated container
+      - name: Build
+        run: |
+          docker run --rm --platform linux/arm/v7 -v "$PWD:/src" -w /src arm32v7/ubuntu:24.04 bash -c '
+            set -e
+            apt-get update
+            DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential libwxgtk3.2-dev libreadline-dev libx11-dev
+            make -j"$(nproc)" dist'
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: bossa-linux-armv7l
+          path: bin/*.tgz
+
   macos:
     name: macOS ${{ matrix.machine }}
     runs-on: ${{ matrix.runner }}
